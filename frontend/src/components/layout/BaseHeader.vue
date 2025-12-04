@@ -12,17 +12,36 @@ const title = import.meta.env.VITE_APP_NAME
 
 const links = [
   {
-    label: 'Page',
-    to: '#'
+    label: 'Services',
+    to: '#services'
+  },
+  {
+    label: 'Our Barbers',
+    to: '#barbers'
+  },
+  {
+    label: 'Reviews',
+    to: '#reviews'
+  },
+  {
+    label: 'Contact',
+    to: '#contatcs'
+  },
+  {
+    label: 'Book now',
+    to: '#booknow'
   }
 ]
 </script>
 
 <template>
-  <header class="bg-white">
+  <header class="bg-background">
     <div class="flex justify-between p-3 border-b-2 flex-wrap">
       <RouterLink to="/" class="flex items-center space-x-3">
-        <span class="self-center text-2xl font-semibold">{{ title }}</span>
+        <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+          <span className="font-bold text-primary text-lg">✂</span>
+        </div>
+        <span className="text-xl self-center font-bold">{{ title }}</span>
       </RouterLink>
       <Sheet>
         <SheetTrigger asChild>
