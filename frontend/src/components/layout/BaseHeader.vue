@@ -7,6 +7,7 @@ import {
   navigationMenuTriggerStyle
 } from '@components/ui/navigation-menu'
 import { Sheet, SheetContent, SheetTrigger } from '@components/ui/sheet'
+import Button from '@components/ui/Button.vue'
 
 const title = import.meta.env.VITE_APP_NAME
 
@@ -26,23 +27,21 @@ const links = [
   {
     label: 'Contact',
     to: '#contatcs'
-  },
-  {
-    label: 'Book now',
-    to: '#booknow'
   }
 ]
 </script>
 
 <template>
-  <header class="bg-background">
-    <div class="flex justify-between p-3 border-b-2 flex-wrap">
-      <RouterLink to="/" class="flex items-center space-x-3">
-        <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-          <span className="font-bold text-primary text-lg">✂</span>
-        </div>
-        <span className="text-xl self-center font-bold">{{ title }}</span>
-      </RouterLink>
+  <header class="sticky bg-primary text-primary-foreground">
+    <div class="flex justify-between p-3 flex-wrap">
+      <div class="w-40">
+        <RouterLink to="/" class="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+            <span className="font-bold text-primary text-lg">✂</span>
+          </div>
+          <span className="text-xl self-center font-bold">{{ title }}</span>
+        </RouterLink>
+      </div>
       <Sheet>
         <SheetTrigger asChild>
           <button variant="outline" size="icon" class="lg:hidden">
@@ -81,7 +80,7 @@ const links = [
           </div>
         </SheetContent>
       </Sheet>
-      <NavigationMenu class="hidden lg:block">
+      <NavigationMenu class="flex hidden lg:block">
         <NavigationMenuList>
           <NavigationMenuItem v-for="link of links" :key="link.to">
             <RouterLink v-slot="{ isActive, href, navigate }" :to="link.to" custom>
@@ -97,6 +96,13 @@ const links = [
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
+      <div class="w-40 flex justify-end">
+        <RouterLink to="/" class="items-center space-x-3">
+          <Button to="/booking" class="hidden md:block bg-accent text-accent-foreground px-6 py-2 rounded-lg font-semibold hover:opacity-70 transition-opacity">
+            Book now
+          </Button>
+        </RouterLink>
+      </div>
     </div>
   </header>
 </template>
