@@ -20,7 +20,7 @@ const services = [
 ] 
 </script>
 <template>
-    <section class="py-15 bg-card text-card-foreground font-sans">
+    <section id="services" class="py-15 bg-card text-card-foreground font-sans">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
                 <h2 class="text-4xl md:text-5xl font-bold mb-4">Our Services</h2>
