@@ -7,7 +7,7 @@ import {
   navigationMenuTriggerStyle
 } from '@components/ui/navigation-menu'
 import { Sheet, SheetContent, SheetTrigger } from '@components/ui/sheet'
-import Button from '@components/ui/Button.vue'
+import {Button} from '@components/ui/button'
 
 const title = import.meta.env.VITE_APP_NAME
 
@@ -33,7 +33,7 @@ const links = [
 
 <template>
   <header class="sticky bg-primary text-primary-foreground">
-    <div class="flex justify-between p-3 flex-wrap">
+    <div class="flex justify-between p-4 flex-wrap">
       <div class="w-40">
         <RouterLink to="/" class="flex items-center space-x-3">
           <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
@@ -96,12 +96,10 @@ const links = [
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
-      <div class="w-40 flex justify-end">
-        <RouterLink to="/" class="items-center space-x-3">
-          <Button to="/booking" class="hidden md:block bg-accent text-accent-foreground px-6 py-2 rounded-lg font-semibold hover:opacity-70 transition-opacity">
+      <div class="w-40 flex justify-end items-center space-x-3">
+          <Button as-child class="hidden md:block px-8" to="/booking">
             Book now
           </Button>
-        </RouterLink>
       </div>
     </div>
   </header>
