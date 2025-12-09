@@ -1,5 +1,5 @@
 <template>
-  <section class="relative bg-primary text-primary-foreground min-h-[93vh] flex items-center">
+  <section id="hero" class="relative bg-primary text-primary-foreground min-h-[93vh] flex items-center">
     <div class="relative mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 max-w-3xl">
         <h1 class="text-5xl md:text-7xl font-extrabold mb-6 text-balance leading-22">
           Book Your Fresh Cut Today

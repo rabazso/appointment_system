@@ -21,21 +21,27 @@ const links = [
     to: '#barbers'
   },
   {
-    label: 'Reviews',
-    to: '#reviews'
-  },
-  {
     label: 'Contact',
     to: '#contatcs'
   }
 ]
+const scroll =(id)=> {
+  const element = document.querySelector(id)
+  if(id === '#hero'){
+    scrollTo(top)
+    return
+  }
+  if(element){
+    element.scrollIntoView()
+  }
+}
 </script>
 
 <template>
-  <header class="sticky bg-primary text-primary-foreground">
+  <header id="header" class="sticky top-0 bg-primary text-primary-foreground">
     <div class="flex justify-between p-4 flex-wrap">
       <div class="w-40">
-        <RouterLink to="/" class="flex items-center space-x-3">
+        <RouterLink to="/" class="flex items-center space-x-3" @click="scroll('#hero')">
           <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
             <span className="font-bold text-primary text-lg">✂</span>
           </div>
@@ -88,7 +94,7 @@ const links = [
                 :active="isActive"
                 :href
                 :class="navigationMenuTriggerStyle()"
-                @click="navigate"
+                @click="scroll(link.to)"
               >
                 {{ link.label }}
               </NavigationMenuLink>
