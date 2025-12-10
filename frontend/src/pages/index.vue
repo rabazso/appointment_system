@@ -11,7 +11,7 @@ const counter = useCounter()
 </template>
 
 <route lang="yaml">
-name: index
+name: home
 meta:
-  title: Főoldal
+  title: Home
 </route>
