@@ -1,9 +1,19 @@
 import axios from 'axios'
+import { router } from '@/router/index'
 
-export const api = axios.create({
+const axiosClient = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL,
-    headers:{
-        "Accept": "application/json",
-        "Content-Type": "application/json" 
-    }
+    withCredentials: true,
+    withXSRFToken: true
 })
+
+axiosClient.interceptors.response.use((response) => {
+  return response;
+}, error => {
+  if (error.response && error.response.status === 401) {
+    router.push({name: 'Login'});
+  }
+  throw error;
+})
+
+export default axiosClient
