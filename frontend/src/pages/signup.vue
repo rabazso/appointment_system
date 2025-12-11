@@ -29,7 +29,7 @@ const errors = ref({
 })
 
 function submit(){
-    axiosClient.get('sanctum/csrf-cookie').then(response => {
+    axiosClient.get('/sanctum/csrf-cookie').then(response => {
         axiosClient.post('/register', data.value).then(response => {
             router.push({name: Home})
         }).catch(error => {
