@@ -50,7 +50,7 @@ function submit(){
                     <div v-if="errorMessage" class="mt-4 py-2 px-3 rounded text-white bg-red-400">
                     {{errorMessage}}
                     </div>
-                <form>
+                <form autocomplete="off">
                     <div class="grid w-full items-center gap-4">
                     <div class="flex flex-col space-y-1.5">
                         <Label for="email">Email</Label>

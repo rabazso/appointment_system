@@ -53,7 +53,7 @@ function submit(){
                 <CardDescription class="">Already have an account?</CardDescription>
                 </CardHeader>
                 <CardContent>
-                <form>
+                <form autocomplete="off">
                     <div class="grid w-full items-center gap-4">
                         <div class="flex flex-col space-y-1.5">
                             <Label for="name">Name</Label>
