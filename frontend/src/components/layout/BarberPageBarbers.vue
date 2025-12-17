@@ -1,6 +1,7 @@
 <script setup>
     import {Button} from '@components/ui/button'
     import {Card, CardHeader, CardContent, CardTitle, CardDescription} from '@components/ui/card'
+import Footer from './Footer.vue'
     const imageLocation = (barber)=>{
         return '/images/' + barber.image
     }
