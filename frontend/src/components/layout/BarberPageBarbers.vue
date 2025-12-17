@@ -34,16 +34,28 @@
 <template>
     <section id="barbers" class="bg-white">
         <div v-for="(barber, index) in barbers" :key="barber.id" :class="['py-16 px-4 sm:px-6 lg:px-8 flex justify-center', index % 2 === 1 ? 'bg-black text-white' : 'bg-white text-black']">
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="max-w-4xl w-full flex flex-col md:flex-row items-center md:items-start gap-8">
+                <div class="w-64 h-64 bg-gray-300 rounded-lg overflow-hidden flex-shrink-0">
+                    <img :src="imageLocation(barber)" :alt="barber.name"  class="w-full h-full object-cover">
+                </div>
+                <div>
+                    
+                </div>
+
+
+
                 <Card v-for="barber in barbers" :key="barber.id" class="hover:scale-105 transition-transform duration-300" :to="forwardPage(barber)">
                     <CardHeader>
-                        <img :src="imageLocation(barber)" :alt="barber.name"  class="w-full h-full rounded-lg">
+                        
                     </CardHeader>
                     <CardContent>
                         <CardTitle class="text-xl font-bold text-primary mb-1">{{ barber.name }}</CardTitle>
                         <CardDescription class="text-accent font-semibold">{{ barber.shortdesc }}</CardDescription>
                     </CardContent>
                 </Card>
+
+
+
             </div>
             <div class="text-center mt-8">
                 <Button variant="secondary" class="text-lg md:text-xl font-bold w-full" to="/barbers">
