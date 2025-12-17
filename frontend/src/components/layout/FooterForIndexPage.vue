@@ -2,7 +2,7 @@
 const title = import.meta.env.VITE_APP_NAME
 </script>
 <template>
-    <footer class="bg-black text-white p-8 md:grid md:grid-cols-3 md:gap-8 flex flex-col items-start gap-8">
+    <footer class="bg-white text-black p-8 md:grid md:grid-cols-3 md:gap-8 flex flex-col items-start gap-8">
         <div class="col-span-1">
             <h2 class="text-2xl font-bold mb-4">Contact</h2>
             <p class="flex items-start mb-2">

@@ -3,6 +3,7 @@ import BaseHeader from '@components/layout/BaseHeader.vue'
 import Hero from '@components/layout/Hero.vue'
 import BarbersPreview from '@components/layout/BarbersPreview.vue';
 import Services from '@components/layout/Services.vue';
+import FooterForIndexPage from '@components/layout/FooterForIndexPage.vue';
 </script>
 
 <template>
@@ -10,4 +11,5 @@ import Services from '@components/layout/Services.vue';
   <Hero />
   <BarbersPreview />
   <Services />
+  <FooterForIndexPage />
 </template>
