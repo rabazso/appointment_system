@@ -39,15 +39,15 @@
                     <img :src="imageLocation(barber)" :alt="barber.name"  class="w-full h-full object-cover">
                 </div>
                 <div class="flex flex-col text-left space-y-4">
-                    <h2>{{ barber.name }}</h2>
-                    <p>{{ barber.shortdesc }}</p>
-                    <p>{{ barber.longdesc }}</p>
+                    <h2 class="text-4xl font-bold">{{ barber.name }}</h2>
+                    <p class="text-accent font-bold uppercase tracking-tight text-sm">{{ barber.shortdesc }}</p>
+                    <p class="max-w-md opacity-90 leading-relaxed">{{ barber.longdesc }}</p>
+                    <div class="pt-4">
+                        <Button as-child class="px-7 py-7 text-lg" to="/booking">
+                            Book your appointment
+                        </Button>
+                    </div>
                 </div>
-            </div>
-            <div class="text-center mt-8">
-                <Button variant="secondary" class="text-lg md:text-xl font-bold w-full" to="/barbers">
-                    See More...
-                </Button>
             </div>
         </div>
     </section>
