@@ -1,4 +1,5 @@
 <script setup>
+import BarberPageBarbers from '@components/layout/BarberPageBarbers.vue';
 import BarberPageHero from '@components/layout/BarberPageHero.vue';
 import BaseHeader from '@components/layout/BaseHeader.vue';
 import Hero from '@components/layout/Hero.vue';
@@ -7,4 +8,5 @@ import Hero from '@components/layout/Hero.vue';
 <template>
 <BaseHeader></BaseHeader>
 <BarberPageHero></BarberPageHero>
+<BarberPageBarbers></BarberPageBarbers>
 </template>
