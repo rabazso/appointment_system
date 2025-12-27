@@ -8,7 +8,7 @@ return new class extends Migration {
         Schema::create('working_hours', function (Blueprint $table) {
     $table->id();
     $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
-    $table->tinyInteger('weekday');
+    $table->string('weekday');
     $table->time('start_time');
     $table->time('end_time');
 });

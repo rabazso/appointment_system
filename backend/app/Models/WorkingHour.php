@@ -10,4 +10,6 @@ class WorkingHour extends Model
     {
         return $this->belongsTo(Employee::class);
     }
+
+    public $timestamps = false;
 }
