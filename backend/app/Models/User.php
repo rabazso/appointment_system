@@ -1,11 +1,24 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class User extends Models
+class User extends Authenticatable
 {
-    protected $fillable = ['name','email','password','phone'];
+    use HasApiTokens;
 
-    public function employee(){ return $this->hasOne(Employee::class); }
-    public function appointments(){ return $this->hasMany(Appointment::class, 'customer_id'); }
+    protected $fillable = ['name', 'email', 'phone', 'password'];
+
+    protected $hidden = ['password'];
+
+    public function employee()
+    {
+        return $this->hasOne(Employee::class);
+    }
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class, 'customer_id');
+    }
 }

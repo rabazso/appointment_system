@@ -4,7 +4,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
-    protected $fillable = ['appointment_id','rating','comment'];
-    
-    public function appointment(){ return $this->belongsTo(Appointment::class); }
+    protected $fillable = ['appointment_id', 'rating', 'comment'];
+
+    public function appointment()
+    {
+        return $this->belongsTo(Appointment::class);
+    }
 }

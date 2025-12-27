@@ -4,11 +4,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    protected $fillable = ['name','description'];
-    
-    public function employees(){
-        return $this->belongsToMany(Employee::class,'employee_services')
-            ->withPivot(['price','duration'])
-            ->withTimestamps();
+    protected $fillable = ['name', 'description'];
+
+    public function employees()
+    {
+        return $this->belongsToMany(Employee::class)
+            ->withPivot(['price', 'duration']);
     }
 }
