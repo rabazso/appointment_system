@@ -4,6 +4,7 @@ import Index from '@pages/index.vue'
 import Login from '@pages/login.vue'
 import Register from '@pages/signup.vue'
 import Barbers from '@pages/barbers.vue'
+import Contact from '@pages/contact.vue'
 
 const routes = [
   {
@@ -25,6 +26,11 @@ const routes = [
     path: '/barbers',
     name: 'Barbers',
     component: Barbers,
+  },
+  {
+    path: '/contact',
+    name: 'Contact',
+    component: Contact,
   },
 ]
 
