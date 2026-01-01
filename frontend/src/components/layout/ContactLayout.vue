@@ -1,3 +1,8 @@
+<script setup>
+const address = "Budapest, Clark Ádám tér"
+const encodedAddress = encodeURIComponent(address)
+const mapURL = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+</script>
 <template>
     <div>
         <h1 class="text-2xl text-center font-bold mb-4 mt-4">Contact</h1>
@@ -21,5 +26,6 @@
                 Sun: closed
             </p>
         </div>
+        <iframe :src="mapURL" frameborder="0"></iframe>
     </div>
 </template>
