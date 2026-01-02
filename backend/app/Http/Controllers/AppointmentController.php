@@ -15,4 +15,13 @@ class AppointmentController extends Controller
             $options,
         );
     }
+
+    public function AppointmentsByEmployee(Request $request, AppointmentCalculator $calculator)
+    {
+        $options = $calculator->appointmentsByEmployee($request);
+
+        return response()->json(
+            $options,
+        );
+    }
 }

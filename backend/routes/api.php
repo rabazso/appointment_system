@@ -17,6 +17,7 @@ Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/reviews', [ReviewController::class, 'index']);
 
 Route::get('/appointments/all', [AppointmentController::class, 'allAppointments']);
+Route::get('/appointments/employee', [AppointmentController::class, 'AppointmentsByEmployee']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
