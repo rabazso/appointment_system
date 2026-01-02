@@ -13,26 +13,33 @@ class AppointmentCalculator
     const SLOT_MINUTES = 30;
     const DAYS_AHEAD   = 28;
 
-    public function allAppointments(Request $request): array
+    public function Appointments(Request $request): array
     {
-        $employees = Employee::with('workingHours')->get();
-        $appointments = Appointment::where('start_datetime', '>=', now()->startOfDay())->get();
-
+        $employeeId = $request->get('employee_id');
+        $serviceId  = $request->get('service_id');
+        
         $availableSlots = collect();
-
+        
         $from = now()->startOfDay();
-        $to   = now()->addDays(self::DAYS_AHEAD)->endOfDay();
+
+        $to = now()->startOfDay()->addDays(self::DAYS_AHEAD)->endOfDay();
+
+         $employees = Employee::with([
+        'workingHours',
+        'appointments' => fn($x) => $x->where('start_datetime', '>=', $from),
+        ])
+        ->when($employeeId, fn($x) => $x->where('id', $employeeId))
+        ->when($serviceId, fn($x) => $x->whereHas('services', fn($y) => $y->where('services.id', $serviceId)))
+        ->get();
+
 
         for ($date = $from->copy(); $date->lte($to); $date->addDay()) {
-            $dayliSlots = collect();
+            
+            $dailySlots = collect();
 
             foreach ($employees as $employee) {
 
-                if ($date < now()->startOfDay()){
-                    continue;
-                }
-
-                $working = $employee->workingHours->firstWhere('weekday', $date->dayOfWeekIso);
+                $working = $employee->workingHours->where('weekday', $date->dayOfWeekIso)->first();
 
                 if (!$working) continue;
 
@@ -50,15 +57,13 @@ class AppointmentCalculator
                         continue;
                     }
 
-                    $isFree = !$appointments->contains(function ($appointment) use ($employee, $slotStart, $slotEnd) {
-                        return $appointment->employee_id == $employee->id &&
-                               $slotStart < $appointment->end_datetime &&
-                               $slotEnd > $appointment->start_datetime;
-                    });
+                     $isFree = $employee->appointments
+                    ->filter(fn($x) => $slotStart < $x->end_datetime && $slotEnd > $x->start_datetime)
+                    ->isEmpty();
 
                     if ($isFree) {
                         
-                        $dayliSlots->push($slotStart->format('H:i'));
+                        $dailySlots->push($slotStart->format('H:i'));
                     }
                     
                     $slotStart->addMinutes(self::SLOT_MINUTES);
@@ -66,75 +71,13 @@ class AppointmentCalculator
                 }
             }
 
-            if ($dayliSlots->isNotEmpty()) {
-            $availableSlots[$date->format('Y-m-d')] = $dayliSlots->unique()->sort()->all();
+            if ($dailySlots->isNotEmpty()) {
+            $availableSlots[$date->format('Y-m-d')] = $dailySlots->unique()->sort()->all();
             }
         }
 
         return [
             'time_slots' => $availableSlots,
         ];
-    }
-
-    public function appointmentsByEmployee(Request $request): array
-    {
-        $employeeId = $request->get('employee_id'); 
-        $employee = Employee::with('workingHours')->find($employeeId);
-
-        if (!$employee) {
-            return ['time_slots' => []];
-        }
-        
-        $appointments = Appointment::where('employee_id', $employeeId)
-            ->where('start_datetime', '>=', now()->startOfDay())
-            ->get();
-
-        $availableSlots = collect();
-
-        $from = now()->startOfDay();
-        $to   = now()->addDays(self::DAYS_AHEAD)->endOfDay();
-
-        for ($date = $from->copy(); $date->lte($to); $date->addDay()) {
-
-            $dayliSlots = collect();
-
-            $working = $employee->workingHours->firstWhere('weekday', $date->dayOfWeekIso);
-            if (!$working) continue;
-
-            $start = Carbon::parse($date->toDateString() . ' ' . $working->start_time);
-            $end   = Carbon::parse($date->toDateString() . ' ' . $working->end_time);
-
-            $slotStart = $start->copy();
-            $slotEnd = $start->copy()->addMinutes(self::SLOT_MINUTES);
-            
-            while ($slotEnd->lte($end)){
-
-                 if ($slotStart->lt(now())) {
-                        $slotStart->addMinutes(self::SLOT_MINUTES);
-                        $slotEnd->addMinutes(self::SLOT_MINUTES);
-                        continue;
-                    }
-
-                $isFree = !$appointments->contains(function ($appointment) use ($slotStart, $slotEnd) {
-                    return $slotStart < $appointment->end_datetime &&
-                           $slotEnd > $appointment->start_datetime;
-                });
-
-                if ($isFree) {
-                    $dayliSlots->push($slotStart->format('H:i'));
-                }
-
-                $slotStart->addMinutes(self::SLOT_MINUTES);
-                $slotEnd->addMinutes(self::SLOT_MINUTES);
-            }
-
-            if ($dayliSlots->isNotEmpty()) {
-                $availableSlots[$date->format('Y-m-d')] = $dayliSlots->unique()->sort()->all();
-            }
-        }
-
-        return [
-            'time_slots' => $availableSlots,
-        ];  
     }
 }
