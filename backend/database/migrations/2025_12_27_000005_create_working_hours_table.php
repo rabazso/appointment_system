@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up() {
         Schema::create('working_hours', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
-    $table->string('weekday');
-    $table->time('start_time');
-    $table->time('end_time');
+            $table->id();
+            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
+            $table->integer('weekday');
+            $table->time('start_time');
+            $table->time('end_time');
 });
 
     }

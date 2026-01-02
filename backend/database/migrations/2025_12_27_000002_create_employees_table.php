@@ -7,10 +7,10 @@ use App\Models\User;
 return new class extends Migration {
     public function up() {
         Schema::create('employees', function (Blueprint $table) {
-    $table->id();
-    $table->foreignIdFor(User::class);
-    $table->text('bio')->nullable();
-    $table->string('photo_url')->nullable();
+            $table->id();
+            $table->foreignIdFor(User::class);
+            $table->text('bio')->nullable();
+            $table->string('photo_url')->nullable();
 });
 
     }

@@ -64,16 +64,15 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        $weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
         foreach ($employees as $employee) {
-            foreach ($weekdays as $day) {
+            for ($day = 1; $day <= 5; $day++) {
                 WorkingHour::create([
                     'employee_id' => $employee->id,
                     'weekday' => $day,
                     'start_time' => '12:00:00',
                     'end_time' => '20:00:00',
                 ]);
-            }
-        }
+    }
+}
     }
 }
