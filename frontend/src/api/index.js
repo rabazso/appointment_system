@@ -12,6 +12,26 @@ export const setAuthToken = (token) => {
     }
 };
 
+export const register = async (data) => {
+    const response = await API.post('/register', data);
+    const token = response.data.token;
+    if (token) setAuthToken(token);
+    return response.data;
+};
+
+export const login = async (data) => {
+    const response = await API.post('/login', data);
+    const token = response.data.token;
+    if (token) setAuthToken(token);
+    return response.data;
+};
+
+export const logout = async () => {
+    const response = await API.post('/logout');
+    setAuthToken(null);
+    return response.data;
+};
+
 export const getServices = () => API.get('/services');
 export const getEmployees = () => API.get('/employees');
 export const getEmployeesByService= (serviceId) => API.get(`/employees?service_id=${serviceId}`);
