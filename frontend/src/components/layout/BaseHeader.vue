@@ -14,15 +14,15 @@ const title = import.meta.env.VITE_APP_NAME
 const links = [
   {
     label: 'Services',
-    to: '#services'
+    to: '/#services'
   },
   {
     label: 'Our Barbers',
-    to: '#barbers'
+    to: '/#barbers'
   },
   {
     label: 'Contact',
-    to: '#contatcs'
+    to: '/contact'
   }
 ]
 const scroll =(id)=> {
