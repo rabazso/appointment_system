@@ -9,7 +9,7 @@ class Service extends Model
     public function employees()
     {
         return $this->belongsToMany(Employee::class, 'employee_services')
-            ->withPivot(['price', 'duration']);
+            ->withPivot(['price']);
     }
 
     public $timestamps = false;
