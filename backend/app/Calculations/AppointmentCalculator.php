@@ -2,21 +2,22 @@
 
 namespace App\Calculations;
 
+use App\Models\Service;
 use App\Models\Employee;
-use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 class AppointmentCalculator
 {
-    const SLOT_MINUTES = 30;
     const DAYS_AHEAD   = 28;
+    const SLOT_MINUTES = 30;
 
     public function Appointments(Request $request): array
     {
+        $serviceId = $request->get('service_id');
+        $serviceDuration = Service::find($serviceId)->duration;
+        
         $employeeId = $request->get('employee_id');
-        $serviceId  = $request->get('service_id');
         
         $availableSlots = collect();
         
@@ -24,7 +25,7 @@ class AppointmentCalculator
 
         $to = now()->startOfDay()->addDays(self::DAYS_AHEAD)->endOfDay();
 
-         $employees = Employee::with([
+        $employees = Employee::with([
         'workingHours',
         'appointments' => fn($x) => $x->where('start_datetime', '>=', $from),
         ])
@@ -47,7 +48,7 @@ class AppointmentCalculator
                 $end   = Carbon::parse($date->toDateString() . ' ' . $working->end_time);
 
                 $slotStart = $start->copy();
-                $slotEnd = $start->copy()->addMinutes(self::SLOT_MINUTES);
+                $slotEnd = $start->copy()->addMinutes($serviceDuration);
 
                 while ($slotEnd->lte($end)) {
 
