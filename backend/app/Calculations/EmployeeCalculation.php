@@ -11,23 +11,37 @@ class EmployeeCalculation
 {
     public function Employees(Request $request): array
     {
-        $serviceId = $request->get('service_id');
+        $serviceId   = $request->get('service_id');
+        $appointment = $request->get('appointment');
 
-        $serviceDuration = Service::findOrFail($serviceId)->duration;
+        if ($serviceId && $appointment) {
+            $service = Service::find($serviceId);
 
-        $appointment = Carbon::parse($request->get('appointment'));
-        $slotStart = $appointment->copy();
-        $slotEnd   = $appointment->copy()->addMinutes($serviceDuration);
+            $slotStart = Carbon::parse($appointment);
+            $slotEnd = Carbon::parse($appointment)->addMinutes($service->duration);
+        }
 
         $employees = Employee::query()
-            ->whereHas('services', fn ($x) =>
-                $x->where('services.id', $serviceId)
+            ->when(
+                $serviceId,
+                fn($x) =>
+                $x->whereHas(
+                    'services',
+                    fn($y) =>
+                    $y->where('services.id', $serviceId)
+                )
             )
-            ->when($appointment, fn($x) =>
-                $x->whereDoesntHave('appointments', fn ($y) =>
+
+            ->when(
+                $appointment && $serviceId,
+                fn($x) =>
+                $x->whereDoesntHave(
+                    'appointments',
+                    fn($y) =>
                     $y->where('start_datetime', '<', $slotEnd)
-                    ->where('end_datetime', '>', $slotStart)
-                ))
+                        ->where('end_datetime', '>', $slotStart)
+                )
+            )
             ->get();
 
         return [

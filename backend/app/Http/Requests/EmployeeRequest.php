@@ -22,7 +22,7 @@ class EmployeeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'service_id' => ['required', 'integer', 'exists:services,id'],
+            'service_id' => ['nullable', 'integer', 'exists:services,id'],
             'appointment' => ['nullable', 'date_format:Y-m-d H:i']
         ];
     }

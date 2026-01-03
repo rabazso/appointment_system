@@ -16,26 +16,25 @@ class AppointmentCalculation
     {
         $serviceId = $request->get('service_id');
         $serviceDuration = Service::find($serviceId)->duration;
-        
+
         $employeeId = $request->get('employee_id');
-        
+
         $availableSlots = collect();
-        
+
         $from = now()->startOfDay();
 
         $to = now()->startOfDay()->addDays(self::DAYS_AHEAD)->endOfDay();
 
         $employees = Employee::with([
-        'workingHours',
-        'appointments' => fn($x) => $x->where('start_datetime', '>=', $from),
+            'workingHours',
+            'appointments' => fn($x) => $x->where('start_datetime', '>=', $from),
         ])
-        ->when($employeeId, fn($x) => $x->where('id', $employeeId))
-        ->when($serviceId, fn($x) => $x->whereHas('services', fn($y) => $y->where('services.id', $serviceId)))
-        ->get();
-
+            ->whereHas('services', fn($y) => $y->where('services.id', $serviceId))
+            ->when($employeeId, fn($x) => $x->where('id', $employeeId))
+            ->get();
 
         for ($date = $from->copy(); $date->lte($to); $date->addDay()) {
-            
+
             $dailySlots = collect();
 
             foreach ($employees as $employee) {
@@ -58,22 +57,22 @@ class AppointmentCalculation
                         continue;
                     }
 
-                     $isFree = $employee->appointments
-                    ->filter(fn($x) => $slotStart < $x->end_datetime && $slotEnd > $x->start_datetime)
-                    ->isEmpty();
+                    $isFree = $employee->appointments
+                        ->filter(fn($x) => $slotStart < $x->end_datetime && $slotEnd > $x->start_datetime)
+                        ->isEmpty();
 
                     if ($isFree) {
-                        
+
                         $dailySlots->push($slotStart->format('H:i'));
                     }
-                    
+
                     $slotStart->addMinutes(self::SLOT_MINUTES);
                     $slotEnd->addMinutes(self::SLOT_MINUTES);
                 }
             }
 
             if ($dailySlots->isNotEmpty()) {
-            $availableSlots[$date->toDateString()] = $dailySlots->unique()->sort()->all();
+                $availableSlots[$date->toDateString()] = $dailySlots->unique()->sort()->all();
             }
         }
 
