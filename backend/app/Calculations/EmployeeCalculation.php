@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class EmployeeCalculation
 {
-    public function employees(Request $request): array
+    public function Employees(Request $request): array
     {
         $serviceId = $request->get('service_id');
 

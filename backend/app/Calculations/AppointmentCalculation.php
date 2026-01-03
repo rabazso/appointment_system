@@ -7,7 +7,7 @@ use App\Models\Employee;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-class AppointmentCalculator
+class AppointmentCalculation
 {
     const DAYS_AHEAD   = 28;
     const SLOT_MINUTES = 30;
