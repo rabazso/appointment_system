@@ -73,7 +73,7 @@ class AppointmentCalculation
             }
 
             if ($dailySlots->isNotEmpty()) {
-            $availableSlots[$date->format('Y-m-d')] = $dailySlots->unique()->sort()->all();
+            $availableSlots[$date->toDateString()] = $dailySlots->unique()->sort()->all();
             }
         }
 
