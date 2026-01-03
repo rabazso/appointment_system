@@ -15,18 +15,19 @@ class EmployeeCalculation
 
         $serviceDuration = Service::findOrFail($serviceId)->duration;
 
-        $appointmentStart = Carbon::parse($request->get('appointment_start'));
-        $slotStart = $appointmentStart->copy();
-        $slotEnd   = $appointmentStart->copy()->addMinutes($serviceDuration);
+        $appointment = Carbon::parse($request->get('appointment'));
+        $slotStart = $appointment->copy();
+        $slotEnd   = $appointment->copy()->addMinutes($serviceDuration);
 
         $employees = Employee::query()
             ->whereHas('services', fn ($x) =>
                 $x->where('services.id', $serviceId)
             )
-            ->whereDoesntHave('appointments', fn ($x) =>
-                $x->where('start_datetime', '<', $slotEnd)
-                  ->where('end_datetime', '>', $slotStart)
-            )
+            ->when($appointment, fn($x) =>
+                $x->whereDoesntHave('appointments', fn ($y) =>
+                    $y->where('start_datetime', '<', $slotEnd)
+                    ->where('end_datetime', '>', $slotStart)
+                ))
             ->get();
 
         return [
