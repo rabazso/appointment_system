@@ -50,6 +50,7 @@ class DatabaseSeeder extends Seeder
         foreach ($serviceNames as $name) {
             $services[] = Service::create([
                 'name' => $name,
+                'duration' => 30, 
                 'description' => $faker->sentence,
             ]);
         }
@@ -59,7 +60,6 @@ class DatabaseSeeder extends Seeder
             foreach ($assignedServices as $service) {
             $employee->services()->attach($service->id, [
                 'price' => $faker->numberBetween(30, 100),
-                'duration' => $faker->numberBetween(30, 120),
             ]);
             }
         }

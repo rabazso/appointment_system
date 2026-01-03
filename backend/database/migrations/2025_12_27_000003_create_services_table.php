@@ -8,6 +8,7 @@ return new class extends Migration {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->integer('duration');
             $table->text('description')->nullable();
 });
 

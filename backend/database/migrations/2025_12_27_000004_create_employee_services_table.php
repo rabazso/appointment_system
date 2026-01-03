@@ -9,7 +9,6 @@ return new class extends Migration {
             $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
             $table->integer('price');
-            $table->integer('duration');
             $table->primary(['employee_id', 'service_id']);
 });
 
