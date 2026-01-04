@@ -5,6 +5,7 @@ import Login from '@pages/login.vue'
 import Register from '@pages/signup.vue'
 import Barbers from '@pages/barbers.vue'
 import Contact from '@pages/contact.vue'
+import Booking from '@pages/booking.vue'
 
 const routes = [
   {
@@ -32,6 +33,11 @@ const routes = [
     name: 'Contact',
     component: Contact,
   },
+  {
+    path: '/booking',
+    name: 'Booking',
+    component: Booking
+  }
 ]
 
 export const router = createRouter({
