@@ -8,6 +8,18 @@ import {
 } from '@components/ui/navigation-menu'
 import { Sheet, SheetContent, SheetTrigger } from '@components/ui/sheet'
 import {Button} from '@components/ui/button'
+import {ref} from 'vue'
+
+const props = defineProps({
+  variant: {type:String, required: false}
+})
+
+let bgcolor = ref('bg-primary')
+let textcolor = ref('text-primary-foreground')
+if(props.variant === 'background'){
+  bgcolor = ref('bg-background')
+  textcolor = ref('text-foreground')
+}
 
 const title = import.meta.env.VITE_APP_NAME
 
@@ -38,7 +50,7 @@ const scroll =(id)=> {
 </script>
 
 <template>
-  <header id="header" class="sticky top-0 bg-primary text-primary-foreground">
+  <header id="header" class="sticky top-0" :class="bgcolor, textcolor">
     <div class="flex justify-between p-4 flex-wrap">
       <div class="w-40">
         <RouterLink to="/" class="flex items-center space-x-3" @click="scroll('#hero')">
@@ -93,7 +105,7 @@ const scroll =(id)=> {
               <NavigationMenuLink
                 :active="isActive"
                 :href
-                :class="navigationMenuTriggerStyle()"
+                :class="bgcolor, textcolor, navigationMenuTriggerStyle()"
                 @click="scroll(link.to)"
               >
                 {{ link.label }}
