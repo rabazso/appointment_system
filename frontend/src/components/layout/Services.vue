@@ -1,23 +1,14 @@
 <script setup>
 import {Card, CardHeader, CardContent, CardTitle, CardDescription} from '@components/ui/card'
 import {Button} from '@components/ui/button'
-const services = [
-    {
-        id: 1,
-        name: 'Hair cutting',
-        desc: 'We offer professional and personalized solutions to create your perfect look.'
-    },
-    {
-        id:2,
-        name: 'Shaving',
-        desc: 'We offer a unique traditional shaving experience, turning an ordinary procedure into a relaxing ritual.'
-    },
-    {
-        id:3,
-        name: "Beard",
-        desc: "We offer professional beard care, including trimming, styling, and the use of high-quality grooming products."
-    }
-] 
+    import { getServices } from '@/api/index'
+import {ref, onMounted } from 'vue';
+
+const services = ref([])
+    onMounted(async ()=>{
+        services.value = (await getServices()).data
+    })
+
 </script>
 <template>
     <section id="services" class="py-15 bg-primary text-primary-foreground font-sans">
@@ -32,7 +23,7 @@ const services = [
                         <CardTitle class="text-2xl text-card-foreground font-bold mb-4">{{ service.name }}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <CardDescription class="text-lg text-card-foreground/70 mb-8 leading-6">{{ service.desc }}</CardDescription>
+                        <CardDescription class="text-lg text-card-foreground/70 mb-8 leading-6">{{ service.description }}</CardDescription>
                     </CardContent>
                 </Card>
             </div>

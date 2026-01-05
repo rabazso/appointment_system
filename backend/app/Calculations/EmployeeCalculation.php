@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class EmployeeCalculation
 {
-    public function Employees(Request $request): array
+    public function Employees(Request $request)
     {
         $serviceId   = $request->get('service_id');
         $appointment = $request->get('appointment');
@@ -22,6 +22,7 @@ class EmployeeCalculation
         }
 
         $employees = Employee::query()
+            ->with('user')
             ->when(
                 $serviceId,
                 fn($x) =>
@@ -42,10 +43,19 @@ class EmployeeCalculation
                         ->where('end_datetime', '>', $slotStart)
                 )
             )
-            ->get();
-
-        return [
-            'employees' => $employees,
-        ];
+            ->get()
+            ->map(function ($employee) {
+                return [
+                    'id' => $employee->id,
+                    'name' => $employee->user->name,
+                    'bio' => $employee->bio,
+                    'photo_url' => $employee->photo_url,
+                    'email' => $employee->user->email
+                    
+                ];
+            });
+            
+            return $employees;
+        
     }
 }

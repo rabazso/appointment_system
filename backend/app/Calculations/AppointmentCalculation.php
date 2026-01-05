@@ -12,7 +12,7 @@ class AppointmentCalculation
     const DAYS_AHEAD   = 28;
     const SLOT_MINUTES = 30;
 
-    public function Appointments(Request $request): array
+    public function Appointments(Request $request)
     {
         $serviceId = $request->get('service_id');
         $serviceDuration = Service::find($serviceId)->duration;
@@ -76,8 +76,6 @@ class AppointmentCalculation
             }
         }
 
-        return [
-            'time_slots' => $availableSlots,
-        ];
+        return $availableSlots;
     }
 }
