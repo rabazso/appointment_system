@@ -60,7 +60,7 @@ const handleSubmit = (()=> {
                 <AccordionContent>
                     <CardContent class="pt-4">
                         <RadioGroup v-model="selectedService" @update:modelValue="openSection = 'barber'">
-                            <div class="grid gap-3 grid-cols-2">
+                            <div class="grid gap-3 md:grid-cols-2">
                                 <Label v-for="service in services" :key="service.id" class="flex gap-3 rounded-lg border-2 p-4" :class="selectedService === service.id ? 'border-primary bg-primary/5' : 'border-border bg-background' ">
                                     <RadioGroupItem :value="service.id" />
                                     <div class="flex-1">
@@ -97,7 +97,7 @@ const handleSubmit = (()=> {
                 <AccordionContent>
                     <CardContent class="pt-4">
                         <RadioGroup v-model="selectedBarber" @update:modelValue="openSection = 'datetime'">
-                            <div class="grid gap-3 grid-cols-2">
+                            <div class="grid gap-3 md:grid-cols-2">
                                 <Label v-for="barber in barbers" :key="barber.id" class="flex gap-3 rounded-lg border-2 p-4" :class="selectedBarber === barber.id ? 'border-primary bg-primary/5' : 'border-border bg-background' ">
                                     <RadioGroupItem :value="barber.id" />
                                     <div class="flex-1">
@@ -180,7 +180,7 @@ const handleSubmit = (()=> {
         </CardContent>
     </Card>
 
-    <Button type="submit" size="lg" class="w-full text-lg font-bold" v-if="selectedBarber && selectedService && selectedTime && date">
+    <Button type="submit" size="lg" class="w-full text-lg font-bold mt-3" v-if="selectedBarber && selectedService && selectedTime && date">
         Confirm booking
     </Button>
 </form>
