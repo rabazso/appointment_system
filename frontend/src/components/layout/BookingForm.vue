@@ -1,5 +1,5 @@
 <script setup>
-import {ref, watch, nextTick} from 'vue'
+import {ref, watch, nextTick, onMounted} from 'vue'
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from '@components/ui/accordion'
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@components/ui/card'
 import {RadioGroup, RadioGroupItem} from '@components/ui/radio-group'
@@ -9,28 +9,24 @@ import {Calendar } from '@components/ui/calendar'
 import { CalendarDate, fromDate, getLocalTimeZone, today } from '@internationalized/date'
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@components/ui/select'
 import { Button } from '@components/ui/button'
+import { getServices, getEmployees } from '@/api/index'
 
+const services = ref([])
+onMounted(async ()=>{
+    services.value = (await getServices()).data
+})
 
-const services = [
-  { id: "1", name: "Hair Cutting", duration: "30 min", price: 35 },
-  { id: "2", name: "Shaving", duration: "45 min", price: 50 },
-  { id: "3", name: "Beard", duration: "30 min", price: 40 },
-  { id: "4", name: "Hair + Beard", duration: "60 min", price: 70 }
-]
+const selectedService = ref('')
 
-const barbers = [
-  { id: "1", name: "BNarber1", shortdesc: "Haircuts", experience: "12 years" },
-  { id: "2", name: "Barber2", shortdesc: "Modern Styles", experience: "8 years" },
-  { id: "3", name: "Barber3", shortdesc: "Shaves", experience: "10 years" },
-  { id: "4", name: "BNarber4", shortdesc: "Beard", experience: "15 years" }
-]
+const barbers = ref([])
+barbers.value = (await getEmployees(selectedService)).data
 
 const timeSlots = ['9:00', '10:00', '11:00', '12:00']
 
 const date = ref(fromDate(new Date(), getLocalTimeZone()))
 const defaultPlaceholder = today(getLocalTimeZone())
 
-const selectedService = ref('')
+
 const selectedBarber = ref('')
 const selectedTime = ref('')
 const openSection = ref('service')
@@ -80,9 +76,8 @@ watch(isVisible, async(visible)=>{
                                                 <Scissors class="size-4"></Scissors>
                                                 <p class="font-semibold">{{ service.name }}</p>
                                             </div>
-                                            <p class="font-bold text-accent">${{ service.price }}</p>
                                         </div>
-                                        <p class="text-sm text-muted-foreground">{{ service.duration }}</p>
+                                        <p class="text-sm text-muted-foreground">{{ service.duration }} mins</p>
                                     </div>
                                 </Label>
                             </div>
@@ -115,7 +110,7 @@ watch(isVisible, async(visible)=>{
                                         <div class="flex items-center gap-2">
                                             <p class="font-semibold">{{ barber.name }}</p>
                                         </div>
-                                        <p class="text-muted-foreground text-sm mt-1">{{ barber.shortdesc }}</p>
+                                        <p class="text-muted-foreground text-sm mt-1">{{ barber.service.price }}</p>
                                     </div>
                                 </Label>
                             </div>
