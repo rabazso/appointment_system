@@ -32,7 +32,6 @@ class EmployeeCalculation
                     $y->where('services.id', $serviceId)
                 )
             )
-
             ->when(
                 $appointment && $serviceId,
                 fn($x) =>
@@ -44,19 +43,26 @@ class EmployeeCalculation
                 )
             )
             ->get()
-            ->map(function ($employee) use($serviceId) {
-                $service = $employee->services->firstWhere('id', $serviceId);
-                return [
+            ->map(function ($employee) use ($serviceId) {
+                $data = [
                     'id' => $employee->id,
                     'name' => $employee->user->name,
                     'bio' => $employee->bio,
                     'photo_url' => $employee->photo_url,
                     'email' => $employee->user->email,
-                    'services' => ['service_id' => $service->pivot->service_id, 'price' => $service->pivot->price,] 
                 ];
+
+                if ($serviceId) {
+                    $service = $employee->services->Where('id', $serviceId)->First();
+
+                    $data['services'] = [
+                        'service_id' => $service->pivot->service_id,
+                        'price' => $service->pivot->price
+                    ];
+                }
+                return $data;
             });
-            
-            return $employees;
-        
+
+        return $employees;
     }
 }
