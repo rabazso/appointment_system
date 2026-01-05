@@ -44,14 +44,15 @@ class EmployeeCalculation
                 )
             )
             ->get()
-            ->map(function ($employee) {
+            ->map(function ($employee) use($serviceId) {
+                $service = $employee->services->firstWhere('id', $serviceId);
                 return [
                     'id' => $employee->id,
                     'name' => $employee->user->name,
                     'bio' => $employee->bio,
                     'photo_url' => $employee->photo_url,
-                    'email' => $employee->user->email
-                    
+                    'email' => $employee->user->email,
+                    'services' => ['service_id' => $service->pivot->service_id, 'price' => $service->pivot->price,] 
                 ];
             });
             

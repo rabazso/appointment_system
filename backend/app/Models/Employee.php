@@ -14,7 +14,7 @@ class Employee extends Model
     public function services()
     {
         return $this->belongsToMany(Service::class, 'employee_services')
-            ->withPivot(['price', 'duration']);
+            ->withPivot(['price']);
     }
 
     public function workingHours()
