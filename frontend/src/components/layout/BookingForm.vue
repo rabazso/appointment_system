@@ -7,33 +7,54 @@ import {Label} from '@components/ui/label'
 import { Scissors } from 'lucide-vue-next'
 import {Calendar } from '@components/ui/calendar'
 import { CalendarDate, fromDate, getLocalTimeZone, today } from '@internationalized/date'
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@components/ui/select'
 import { Button } from '@components/ui/button'
-import { getServices, getEmployees } from '@/api/index'
-
-const services = ref([])
-onMounted(async ()=>{
-    services.value = (await getServices()).data
-})
+import { getServices, getEmployeesByService, getAppointmentsByServiceAndEmployee } from '@/api/index'
 
 const selectedService = ref('')
-
-const barbers = ref([])
-barbers.value = (await getEmployees(selectedService)).data
-
-const timeSlots = ['9:00', '10:00', '11:00', '12:00']
-
-const date = ref(fromDate(new Date(), getLocalTimeZone()))
-const defaultPlaceholder = today(getLocalTimeZone())
-
-
 const selectedBarber = ref('')
 const selectedTime = ref('')
 const openSection = ref('service')
 
-const handleSubmit = (()=> {
-    console.log('successful booking')
+const services = ref([])
+const barbers = ref([])
+const date = ref(fromDate(new Date(), getLocalTimeZone()))
+const defaultPlaceholder = today(getLocalTimeZone())
+
+const timeSlots = ref([])
+const availableAppointments = ref({})
+
+
+onMounted(async ()=>{
+    services.value = (await getServices()).data
 })
+
+watch(selectedService, async (newService) => {
+  if (!newService) return
+  barbers.value = (await getEmployeesByService(selectedService.value)).data
+})
+
+watch(
+  [selectedService, selectedBarber], async ([serviceId, barberId]) => {
+    if (!serviceId || !barberId) return
+    const response = await getAppointmentsByServiceAndEmployee(serviceId, barberId)
+    availableAppointments.value = response.data
+    timeSlots.value = []
+    selectedTime.value = ''
+  }
+)
+watch(date, (selectedDate) => {
+  if (!selectedDate) return
+  const isoDate = selectedDate.toDate(getLocalTimeZone()).toISOString().split('T')[0]
+  timeSlots.value = availableAppointments.value[isoDate] || []
+  selectedTime.value = ''
+})
+
+const isDateUnavailable = (calendarDate) => {
+  const isoDate = calendarDate.toDate(getLocalTimeZone()).toISOString().split('T')[0]
+  const daySlots = availableAppointments.value[isoDate]
+  return !daySlots || daySlots.length === 0
+}
+
 
 const summaryRef = ref(null)
 const isVisible = ()=> selectedBarber.value && selectedService.value && selectedTime.value && date.value
@@ -47,6 +68,10 @@ watch(isVisible, async(visible)=>{
     }
 })
 
+
+const handleSubmit = (()=> {
+    console.log('successful booking')
+})
 </script>
 <template>
 <form @submit.prevent class="space y-6">
@@ -110,7 +135,7 @@ watch(isVisible, async(visible)=>{
                                         <div class="flex items-center gap-2">
                                             <p class="font-semibold">{{ barber.name }}</p>
                                         </div>
-                                        <p class="text-muted-foreground text-sm mt-1">{{ barber.service.price }}</p>
+                                        <p class="text-accent font-semibold text-sm mt-1">${{ barber.services.price }}</p>
                                     </div>
                                 </Label>
                             </div>
@@ -138,12 +163,15 @@ watch(isVisible, async(visible)=>{
                         <div class="grid md:grid-cols-2">
                             <div class="w-fit">
                                 <Label class="mb-3 block font-semibold">Select Your Date</Label>
-                                <Calendar v-model="date" :default-placeholder="defaultPlaceholder" class="rounded-md border border-border shadow-sm" layout="month-and-year" :min-value="today(getLocalTimeZone())" :max-value="new CalendarDate(2035, 1, 1)"/>
+                                <Calendar v-model="date" :default-placeholder="defaultPlaceholder" class="rounded-md border border-border shadow-sm" layout="month-and-year" :min-value="today(getLocalTimeZone())" :max-value="new CalendarDate(2035, 1, 1)" :isDateDisabled="isDateUnavailable"/>
                             </div>
                             <div>
                                 <Label class="font-semibold block mb-3">Choose a time slot</Label>
                                 <Card>
                                     <CardContent class="flex flex-row flex-wrap space-x-2 space-y-2">
+                                        <p v-if="!timeSlots.length" class="text-muted-foreground">
+                                            No available time slots for this day
+                                        </p>
                                         <Button v-model="selectedTime" variant="outline" v-for="time in timeSlots" :key="time" :value="time" class="w-fit px-8 py-4 bg-background" :class="selectedTime === time ? 'border-accent border-[2px] bg-primary/10' : 'bg-background'" @click="selectedTime = time">{{ time }}</Button>
                                     </CardContent>
                                 </Card>
@@ -162,7 +190,7 @@ watch(isVisible, async(visible)=>{
         <CardContent class="space-y-2">
             <div class="flex justify-between">
                 <p class="text-muted-foreground">Service:</p>
-                <p class="font-semibold">{{ services.find(x => x.id ===selectedService).name }}</p>
+                <p class="font-semibold">{{ services.find(x => x.id ===selectedService)?.name }}</p>
             </div>
             <div class="flex justify-between">
                 <p class="text-muted-foreground">Barber:</p>
@@ -178,7 +206,7 @@ watch(isVisible, async(visible)=>{
             </div>
             <div class="flex justify-between">
                 <p class="text-muted-foreground">Total:</p>
-                <p class="font-semibold">${{ services.find(x => x.id ===selectedService).price }}</p>
+                <p class="font-semibold">${{ barbers.find(x => x.id ===selectedBarber).services.price }}</p>
             </div>
         </CardContent>
     </Card>
