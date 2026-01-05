@@ -1,5 +1,5 @@
 <script setup>
-import {ref} from 'vue'
+import {ref, watch, nextTick} from 'vue'
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from '@components/ui/accordion'
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@components/ui/card'
 import {RadioGroup, RadioGroupItem} from '@components/ui/radio-group'
@@ -9,7 +9,6 @@ import {Calendar } from '@components/ui/calendar'
 import { CalendarDate, fromDate, getLocalTimeZone, today } from '@internationalized/date'
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@components/ui/select'
 import { Button } from '@components/ui/button'
-
 
 
 const services = [
@@ -40,9 +39,21 @@ const handleSubmit = (()=> {
     console.log('successful booking')
 })
 
+const summaryRef = ref(null)
+const isVisible = ()=> selectedBarber.value && selectedService.value && selectedTime.value && date.value
+watch(isVisible, async(visible)=>{
+    if(visible){
+        await nextTick()
+        summaryRef.value.$el.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        })
+    }
+})
+
 </script>
 <template>
-<form @submit.prevent="handleSubmit" class="space y-6">
+<form @submit.prevent class="space y-6">
     <Accordion type="single" collapsible class="space-y-4" v-model="openSection">
         <AccordionItem value="service" class="border-border">
             <Card class="bg-background">
@@ -129,22 +140,19 @@ const handleSubmit = (()=> {
                 </AccordionTrigger>
                 <AccordionContent>
                     <CardContent class="pt-4 space-y-6">
-                        <div class="w-fit">
-                            <Label class="mb-3 block font-semibold">Date</Label>
-                            <Calendar v-model="date" :default-placeholder="defaultPlaceholder" class="rounded-md border border-border shadow-sm" layout="month-and-year" :min-value="today(getLocalTimeZone())" :max-value="new CalendarDate(2035, 1, 1)"/>
-                        </div>
-                        <div>
-                            <Label class="font-semibold block mb-3">Time</Label>
-                            <Select v-model="selectedTime">
-                                <SelectTrigger class="w-full">
-                                    <SelectValue placeholder="Choose a time slot"/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem v-for="time in timeSlots" :key="time" :value="time">
-                                        {{ time }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
+                        <div class="grid md:grid-cols-2">
+                            <div class="w-fit">
+                                <Label class="mb-3 block font-semibold">Select Your Date</Label>
+                                <Calendar v-model="date" :default-placeholder="defaultPlaceholder" class="rounded-md border border-border shadow-sm" layout="month-and-year" :min-value="today(getLocalTimeZone())" :max-value="new CalendarDate(2035, 1, 1)"/>
+                            </div>
+                            <div>
+                                <Label class="font-semibold block mb-3">Choose a time slot</Label>
+                                <Card>
+                                    <CardContent class="flex flex-row flex-wrap space-x-2 space-y-2">
+                                        <Button v-model="selectedTime" variant="outline" v-for="time in timeSlots" :key="time" :value="time" class="w-fit px-8 py-4 bg-background" :class="selectedTime === time ? 'border-accent border-[2px] bg-primary/10' : 'bg-background'" @click="selectedTime = time">{{ time }}</Button>
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </div>
                     </CardContent>
                 </AccordionContent>
@@ -152,7 +160,7 @@ const handleSubmit = (()=> {
         </AccordionItem>
     </Accordion>
 
-    <Card v-if="selectedBarber && selectedService && selectedTime && date" class="border-accent/30 bg-accent/10">
+    <Card v-if="selectedBarber && selectedService && selectedTime && date" class="border-accent/30 bg-accent/10" ref="summaryRef">
         <CardHeader>
             <CardTitle>Booking Summary</CardTitle>
         </CardHeader>
@@ -180,7 +188,7 @@ const handleSubmit = (()=> {
         </CardContent>
     </Card>
 
-    <Button type="submit" size="lg" class="w-full text-lg font-bold mt-3" v-if="selectedBarber && selectedService && selectedTime && date">
+    <Button type="submit" @click="handleSubmit" size="lg" class="w-full text-lg font-bold mt-3" v-if="selectedBarber && selectedService && selectedTime && date">
         Confirm booking
     </Button>
 </form>

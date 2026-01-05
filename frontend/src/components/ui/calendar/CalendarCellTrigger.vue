@@ -24,9 +24,9 @@ const forwardedProps = useForwardProps(delegatedProps);
       cn(
         buttonVariants({ variant: 'ghost' }),
         'size-8 p-0 font-normal aria-selected:opacity-100 cursor-default',
-        '[&[data-today]:not([data-selected])]:bg-accent [&[data-today]:not([data-selected])]:text-accent-foreground',
+        '[&[data-today]:not([data-selected])]:bg-primary [&[data-today]:not([data-selected])]:text-primary-foreground',
         // Selected
-        'data-[selected]:bg-primary data-[selected]:text-primary-foreground data-[selected]:opacity-100 data-[selected]:hover:bg-primary data-[selected]:hover:text-primary-foreground data-[selected]:focus:bg-primary data-[selected]:focus:text-primary-foreground',
+        'data-[selected]:bg-accent data-[selected]:text-accent-foreground data-[selected]:opacity-100 data-[selected]:hover:bg-accent data-[selected]:hover:text-accent-foreground data-[selected]:focus:bg-accent data-[selected]:focus:text-accent-foreground',
         // Disabled
         'data-[disabled]:text-muted-foreground data-[disabled]:opacity-50',
         // Unavailable
