@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap');
 @import "tailwindcss";
+@import "tailwindcss-animated";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -112,6 +113,24 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--reka-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--reka-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
 }
 
 @layer base {
