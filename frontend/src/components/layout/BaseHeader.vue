@@ -22,6 +22,8 @@ if (props.variant === 'background') {
   textcolor = ref('text-foreground')
 }
 
+const sheetOpen = ref(false)
+
 const title = import.meta.env.VITE_APP_NAME
 
 const links = [
@@ -45,7 +47,7 @@ const router = useRouter()
 
 const scrollToLink = async (link) => {
   if (!link) return
-
+  sheetOpen.value = false
   if (link.hash) {
     if (router.currentRoute.value.path !== link.to) {
       await router.push(link.to)
@@ -72,7 +74,7 @@ const scrollToLink = async (link) => {
           <span class="text-xl self-center font-bold">{{ title }}</span>
         </RouterLink>
       </div>
-      <Sheet>
+      <Sheet v-model:open="sheetOpen">
         <SheetTrigger asChild>
           <button variant="outline" size="icon" class="lg:hidden">
             <svg 
@@ -94,22 +96,25 @@ const scrollToLink = async (link) => {
             <span class="sr-only">Navigációs menü</span>
           </button>
         </SheetTrigger>
-        <SheetContent side="left">
+        <SheetContent side="left" class="flex flex-col">
           <RouterLink to="/" class="mr-6 hidden lg:flex">
             <span class="sr-only">{{ title }}</span>
           </RouterLink>
-          <div class="grid gap-2 py-6">
-            <RouterLink>
-              <Button
+          <div class="grid gap-2 py-6 mt-8">
+            <RouterLink
                 v-for="link in links"
-                :key="link.label"
-                class="flex w-full items-center py-2 text-lg font-semibold text-left"
+                :key="link.to"
+                :to="link.to"
+                class="flex w-full items-center py-2 text-lg font-semibold text-left indent-1.5"
                 @click="scrollToLink(link)"
               >
                 {{ link.label }}
-              </Button>
             </RouterLink>
           </div>
+          <div class="flex-1"></div>
+          <Button as-child class="px-8 mb-8 w-full" to="/booking">
+            Book now
+          </Button>
         </SheetContent>
       </Sheet>
       <NavigationMenu class="flex hidden lg:block">
