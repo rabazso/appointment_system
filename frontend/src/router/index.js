@@ -10,33 +10,51 @@ import Booking from '@pages/booking.vue'
 const routes = [
   {
     path: '/',
-    name: 'Home',
+    name: 'Main Page',
     component: Index,
+    meta:{
+      title: 'Main Page'
+    }
   },
   {
     path: '/login',
     name: 'Login',
     component: Login,
+    meta:{
+      title: 'Login'
+    }
   },
   {
     path: '/signup',
     name: 'SignUp',
     component: Register,
+    meta:{
+      title: 'Register'
+    }
   },
   {
     path: '/barbers',
     name: 'Barbers',
     component: Barbers,
+    meta:{
+      title: 'Barbers'
+    }
   },
   {
     path: '/contact',
     name: 'Contact',
     component: Contact,
+    meta:{
+      title: 'Contact'
+    }
   },
   {
     path: '/booking',
     name: 'Booking',
-    component: Booking
+    component: Booking,
+    meta:{
+      title: 'Booking'
+    }
   }
 ]
 
