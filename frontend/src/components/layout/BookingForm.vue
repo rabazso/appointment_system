@@ -8,7 +8,7 @@ import { Scissors } from 'lucide-vue-next'
 import {Calendar } from '@components/ui/calendar'
 import { CalendarDate, fromDate, getLocalTimeZone, today } from '@internationalized/date'
 import { Button } from '@components/ui/button'
-import { getServices, getEmployeesByService, getAppointmentsByServiceAndEmployee } from '@/api/index'
+import { getServices, getEmployeesByService, getAppointmentsByServiceAndEmployee, getAppointmentByService } from '@/api/index'
 
 const selectedService = ref('')
 const selectedBarber = ref('')
@@ -17,41 +17,47 @@ const openSection = ref('service')
 
 const services = ref([])
 const barbers = ref([])
-const date = ref(fromDate(new Date(), getLocalTimeZone()))
+const date = ref(today(getLocalTimeZone()))
 const defaultPlaceholder = today(getLocalTimeZone())
 
 const timeSlots = ref([])
-const availableAppointments = ref({})
+const availableDates = ref({})
 
 
 onMounted(async ()=>{
     services.value = (await getServices()).data
 })
 
+const updateTimeSlotsForDate = (selectedDate = date.value) => {
+  if (!selectedDate) return
+  const isoDate = selectedDate.toDate(getLocalTimeZone()).toISOString().split('T')[0]
+  timeSlots.value = availableDates.value[isoDate] || []
+  selectedTime.value = ''
+}
+
 watch(selectedService, async (newService) => {
-  if (!newService) return
-  barbers.value = (await getEmployeesByService(selectedService.value)).data
+    if (!newService) return
+    barbers.value = (await getEmployeesByService(selectedService.value)).data
+    const response = await getAppointmentByService(newService)
+    availableDates.value = response.data
+    updateTimeSlotsForDate()
 })
 
 watch(
   [selectedService, selectedBarber], async ([serviceId, barberId]) => {
-    if (!serviceId || !barberId) return
+    if (!serviceId || !barberId || availableDates) return
     const response = await getAppointmentsByServiceAndEmployee(serviceId, barberId)
-    availableAppointments.value = response.data
-    timeSlots.value = []
-    selectedTime.value = ''
+    availableDates.value = response.data
+    updateTimeSlotsForDate()
   }
 )
 watch(date, (selectedDate) => {
-  if (!selectedDate) return
-  const isoDate = selectedDate.toDate(getLocalTimeZone()).toISOString().split('T')[0]
-  timeSlots.value = availableAppointments.value[isoDate] || []
-  selectedTime.value = ''
+  updateTimeSlotsForDate(selectedDate)
 })
 
 const isDateUnavailable = (calendarDate) => {
   const isoDate = calendarDate.toDate(getLocalTimeZone()).toISOString().split('T')[0]
-  const daySlots = availableAppointments.value[isoDate]
+  const daySlots = availableDates.value[isoDate]
   return !daySlots || daySlots.length === 0
 }
 
