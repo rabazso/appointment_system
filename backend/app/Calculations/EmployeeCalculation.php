@@ -12,13 +12,13 @@ class EmployeeCalculation
     public function Employees(Request $request)
     {
         $serviceId   = $request->get('service_id');
-        $appointment = $request->get('appointment');
+        $appointmentStart = $request->get('appointment_start');
 
-        if ($serviceId && $appointment) {
+        if ($serviceId && $appointmentStart) {
             $service = Service::find($serviceId);
 
-            $slotStart = Carbon::parse($appointment);
-            $slotEnd = Carbon::parse($appointment)->addMinutes($service->duration);
+            $slotStart = Carbon::parse($appointmentStart);
+            $slotEnd = Carbon::parse($appointmentStart)->addMinutes($service->duration);
         }
 
         $employees = Employee::query()
@@ -33,7 +33,7 @@ class EmployeeCalculation
                 )
             )
             ->when(
-                $appointment && $serviceId,
+                $appointmentStart && $serviceId,
                 fn($x) =>
                 $x->whereDoesntHave(
                     'appointments',

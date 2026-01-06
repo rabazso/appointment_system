@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Calculations\AppointmentCalculation;
+use App\Calculations\CreateAppointment;
+
 use App\Http\Requests\AppointmentRequest;
+use App\Http\Requests\AppointmentStoreRequest;
 
 class AppointmentController extends Controller
 {
@@ -15,5 +18,10 @@ class AppointmentController extends Controller
         return response()->json(
             $appointments,
         );
+    }
+
+    public function store(AppointmentStoreRequest $request, CreateAppointment $create)
+    {
+        return $create->Create($request);
     }
 }
