@@ -19,14 +19,11 @@ class AppointmentCalculation
         $employeeId = $request->get('employee_id');
 
         if ($selectedDate->lt(today())) {
-            return response()->json([
-                'error' => 'You cannot select a past date for appointments.'
-            ], 400);
+            return response()->json(['error' => 'You cannot select a past date for appointments.'], 400);
         }
 
         $from = $selectedDate->copy()->startOfDay()->toDateTimeString();
         $to   = $selectedDate->copy()->endOfDay()->toDateTimeString();
-
 
         $employees = Employee::with([
             'workingHours' => fn($query) => $query->where('weekday', $selectedDate->dayOfWeekIso),

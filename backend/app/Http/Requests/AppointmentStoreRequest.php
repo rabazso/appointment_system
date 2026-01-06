@@ -24,8 +24,9 @@ class AppointmentStoreRequest extends FormRequest
         return [
             'service_id' => ['required', 'integer', 'exists:services,id'],
             'employee_id' => ['required', 'integer', 'exists:employees,id'],
-            'customer_id' => ['required', 'integer', 'exists:users,id'],
             'appointment_start' => ['required', 'date_format:Y-m-d H:i'],
+            'customer_id' => ['required', 'integer', 'exists:users,id'],
+            
         ];
     }
 }
