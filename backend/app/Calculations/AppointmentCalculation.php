@@ -9,73 +9,88 @@ use Illuminate\Http\Request;
 
 class AppointmentCalculation
 {
-    const DAYS_AHEAD   = 28;
     const SLOT_MINUTES = 30;
 
     public function Appointments(Request $request)
     {
         $serviceId = $request->get('service_id');
         $serviceDuration = Service::find($serviceId)->duration;
-
+        $selectedDate = Carbon::parse($request->get('selected_date'));
         $employeeId = $request->get('employee_id');
 
-        $availableSlots = collect();
+        if ($selectedDate->lt(today())) {
+            return response()->json([
+                'error' => 'You cannot select a past date for appointments.'
+            ], 400);
+        }
 
-        $from = now()->startOfDay();
+        $from = $selectedDate->copy()->startOfDay()->toDateTimeString();
+        $to   = $selectedDate->copy()->endOfDay()->toDateTimeString();
 
-        $to = now()->startOfDay()->addDays(self::DAYS_AHEAD)->endOfDay();
 
         $employees = Employee::with([
-            'workingHours',
-            'appointments' => fn($x) => $x->where('start_datetime', '>=', $from),
+            'workingHours' => fn($query) => $query->where('weekday', $selectedDate->dayOfWeekIso),
+            'appointments' => fn($query) => $query->whereBetween('start_datetime', [$from, $to])
         ])
             ->whereHas('services', fn($y) => $y->where('services.id', $serviceId))
             ->when($employeeId, fn($x) => $x->where('id', $employeeId))
             ->get();
 
-        for ($date = $from->copy(); $date->lte($to); $date->addDay()) {
+        $allAvailableSlots = [];
 
-            $dailySlots = collect();
+        foreach ($employees as $employee) {
+            $working = $employee->workingHours->first();
 
-            foreach ($employees as $employee) {
+            if (!$working) continue;
 
-                $working = $employee->workingHours->where('weekday', $date->dayOfWeekIso)->first();
+            $start = Carbon::parse($selectedDate->toDateString() . ' ' . $working->start_time);
+            $end = Carbon::parse($selectedDate->toDateString() . ' ' . $working->end_time);
 
-                if (!$working) continue;
+            $allSlots = [];
 
-                $start = Carbon::parse($date->toDateString() . ' ' . $working->start_time);
-                $end   = Carbon::parse($date->toDateString() . ' ' . $working->end_time);
-
-                $slotStart = $start->copy();
-                $slotEnd = $start->copy()->addMinutes($serviceDuration);
-
-                while ($slotEnd->lte($end)) {
-
-                    if ($slotStart->lt(now())) {
-                        $slotStart->addMinutes(self::SLOT_MINUTES);
-                        $slotEnd->addMinutes(self::SLOT_MINUTES);
-                        continue;
-                    }
-
-                    $isFree = $employee->appointments
-                        ->filter(fn($x) => $slotStart < $x->end_datetime && $slotEnd > $x->start_datetime)
-                        ->isEmpty();
-
-                    if ($isFree) {
-
-                        $dailySlots->push($slotStart->format('H:i'));
-                    }
-
-                    $slotStart->addMinutes(self::SLOT_MINUTES);
-                    $slotEnd->addMinutes(self::SLOT_MINUTES);
-                }
+            while ($start->lt($end)) {
+                $allSlots[] = $start->format('H:i');
+                $start->addMinutes(self::SLOT_MINUTES);
             }
 
-            if ($dailySlots->isNotEmpty()) {
-                $availableSlots[$date->toDateString()] = $dailySlots->unique()->sort()->all();
+            $occupiedSlots = $employee->appointments->map(function ($appointment) {
+                $start = Carbon::parse($appointment->start_datetime);
+                $end = Carbon::parse($appointment->end_datetime);
+
+                $slots = [];
+                while ($start->lt($end)) {
+                    $slots[] = $start->format('H:i');
+                    $start->addMinutes(self::SLOT_MINUTES);
+                }
+                return $slots;
+            })->flatten()->toArray();
+
+            $availableSlots = array_values(array_diff($allSlots, $occupiedSlots));
+
+            $requiredSlots = $serviceDuration / self::SLOT_MINUTES;
+
+            for ($i = 0; $i <= count($availableSlots) - $requiredSlots; $i++) {
+                $possibleSlots = array_slice($availableSlots, $i, $requiredSlots);
+                $consecutive = true;
+
+                for ($j = 0; $j < $requiredSlots - 1; $j++) {
+                    $x = Carbon::parse($possibleSlots[$j]);
+                    $y = Carbon::parse($possibleSlots[$j + 1]);
+                    if (!$x->addMinutes(self::SLOT_MINUTES)->eq($y)) {
+                        $consecutive = false;
+                        break;
+                    }
+                }
+                if ($consecutive) {
+                    $allAvailableSlots[] = $availableSlots[$i];
+                }
             }
         }
 
-        return $availableSlots;
+        $allAvailableSlots = array_unique($allAvailableSlots);
+        sort($allAvailableSlots);
+        $allAvailableSlots = [$selectedDate->toDateString() => $allAvailableSlots];
+
+        return $allAvailableSlots;
     }
 }

@@ -23,6 +23,7 @@ class AppointmentRequest extends FormRequest
     {
         return [
             'service_id' => ['required', 'integer', 'exists:services,id'],
+            'selected_date' => ['required', 'date_format:Y-m-d'],
             'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
         ];
     }
