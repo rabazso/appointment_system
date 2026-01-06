@@ -7,16 +7,17 @@ import {
   navigationMenuTriggerStyle
 } from '@components/ui/navigation-menu'
 import { Sheet, SheetContent, SheetTrigger } from '@components/ui/sheet'
-import {Button} from '@components/ui/button'
-import {ref} from 'vue'
+import { Button } from '@components/ui/button'
+import { ref, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
-  variant: {type:String, required: false}
+  variant: { type: String, required: false }
 })
 
 let bgcolor = ref('bg-primary')
 let textcolor = ref('text-primary-foreground')
-if(props.variant === 'background'){
+if (props.variant === 'background') {
   bgcolor = ref('bg-background')
   textcolor = ref('text-foreground')
 }
@@ -24,53 +25,64 @@ if(props.variant === 'background'){
 const title = import.meta.env.VITE_APP_NAME
 
 const links = [
-  {
-    label: 'Services',
-    to: '/#services'
+  { 
+    label: 'Services', 
+    to: '/', 
+    hash: '#services'
   },
-  {
-    label: 'Our Barbers',
-    to: '/#barbers'
+  { 
+    label: 'Our Barbers', 
+    to: '/', 
+    hash: '#barbers'
   },
-  {
-    label: 'Contact',
+  { 
+    label: 'Contact', 
     to: '/contact'
   }
 ]
-const scroll =(id)=> {
-  const element = document.querySelector(id)
-  if(id === '#hero'){
-    scrollTo(top)
-    return
-  }
-  if(element){
-    element.scrollIntoView()
+
+const router = useRouter()
+
+const scrollToLink = async (link) => {
+  if (!link) return
+
+  if (link.hash) {
+    if (router.currentRoute.value.path !== link.to) {
+      await router.push(link.to)
+      await nextTick()
+    }
+    const element = document.querySelector(link.hash)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
+  } else {
+    router.push(link.to)
   }
 }
 </script>
 
 <template>
-  <header id="header" class="sticky top-0" :class="bgcolor, textcolor">
-    <div class="flex justify-between p-4 flex-wrap">
+  <header id="header" class="sticky top-0 z-50" :class="bgcolor, textcolor">
+    <div class="flex justify-between p-4 flex-wrap items-center">
       <div class="w-40">
-        <RouterLink to="/" class="flex items-center space-x-3" @click="scroll('#hero')">
-          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
-            <span className="font-bold text-primary text-lg">✂</span>
+        <RouterLink to="/" class="flex items-center space-x-3" @click.prevent="scrollToLink({ to: '/', hash: '#hero' })">
+          <div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+            <span class="font-bold text-primary text-lg">✂</span>
           </div>
-          <span className="text-xl self-center font-bold">{{ title }}</span>
+          <span class="text-xl self-center font-bold">{{ title }}</span>
         </RouterLink>
       </div>
       <Sheet>
         <SheetTrigger asChild>
           <button variant="outline" size="icon" class="lg:hidden">
-            <svg
-              class="h-6 w-6"
-              xmlns="http://www.w3.org/2000/svg"
+            <svg 
+              class="h-6 w-6" 
+              xmlns="http://www.w3.org/2000/svg" 
               width="24"
               height="24"
               viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
+              fill="none" 
+              stroke="currentColor" 
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -87,13 +99,15 @@ const scroll =(id)=> {
             <span class="sr-only">{{ title }}</span>
           </RouterLink>
           <div class="grid gap-2 py-6">
-            <RouterLink
-              v-for="link of links"
-              :key="link.to"
-              :to="link.to"
-              class="flex w-full items-center py-2 text-lg font-semibold"
-            >
-              {{ link.label }}
+            <RouterLink>
+              <Button
+                v-for="link in links"
+                :key="link.label"
+                class="flex w-full items-center py-2 text-lg font-semibold text-left"
+                @click="scrollToLink(link)"
+              >
+                {{ link.label }}
+              </Button>
             </RouterLink>
           </div>
         </SheetContent>
@@ -106,7 +120,7 @@ const scroll =(id)=> {
                 :active="isActive"
                 :href
                 :class="bgcolor, textcolor, navigationMenuTriggerStyle()"
-                @click="scroll(link.to)"
+                @click.prevent="scrollToLink(link)"
               >
                 {{ link.label }}
               </NavigationMenuLink>
