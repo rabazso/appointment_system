@@ -18,7 +18,11 @@ Route::get('/appointments', [AppointmentController::class, 'index']);
 Route::get('/reviews', [ReviewController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/appointments', [AppointmentController::class, 'store']);
-    Route::post('/reviews', [ReviewController::class, 'store']);
+Route::post('/appointments', [AppointmentController::class, 'store']);
+Route::post('/reviews', [ReviewController::class, 'store']);
+
+    Route::middleware('registered')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+        
+    });
 });

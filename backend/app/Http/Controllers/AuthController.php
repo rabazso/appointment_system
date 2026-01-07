@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
@@ -61,26 +60,31 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         $data = $request->validate([
-        'email' => [
-            'required',
-            'email',
-            Rule::unique('users', 'email')->ignore(optional($user)->id),
-        ],
-        'phone' => [
-            'nullable',
-            'string',
-            Rule::unique('users', 'phone')->ignore(optional($user)->id),
-        ],
+            'name' => 'required|string',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore(optional($user)->id),
+            ],
+            'phone' => [
+                'nullable',
+                'string',
+                Rule::unique('users', 'phone')->ignore(optional($user)->id),
+            ],
         ]);
 
         if (!$user) {
             $user = User::create([
-                'name' => 'Guest',
+                'name' => $data['name'],
                 'email' => $data['email'],
                 'phone' => $data['phone'],
                 'password' => null,
             ]);
         }
+        $user->update([
+            'name' => $data['name'],
+            'phone' => $data['phone'],
+        ]);
 
         $token = $user->createToken('guest-token')->plainTextToken;
 
