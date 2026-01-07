@@ -21,9 +21,12 @@ const props = defineProps({
 
 let bgcolor = ref('bg-primary')
 let textcolor = ref('text-primary-foreground')
+let buttonStyle = ref('bg-background text-foreground hover:bg-background/90')
+
 if (props.variant === 'background') {
   bgcolor = ref('bg-background')
   textcolor = ref('text-foreground')
+  buttonStyle = ref('bg-primary text-primary-foreground hover:bg-primary/90')
 }
 
 const sheetOpen = ref(false)
@@ -103,7 +106,7 @@ function handleAuthSuccess(message) {
               v-for="link in links"
               :key="link.to"
               :to="link.to"
-              class="flex w-full items-center py-2 text-lg font-semibold text-left indent-1.5"
+              :class="['flex w-full items-center py-2 text-lg font-semibold text-left indent-1.5 transition-colors duration-300 hover:text-accent']"
               @click="scrollToLink(link)"
             >
               {{ link.label }}
@@ -134,7 +137,7 @@ function handleAuthSuccess(message) {
 
       <div class="w-40 flex justify-end items-center space-x-3">
         <Button
-          class="hidden md:block px-8 bg-transparent hover:bg-transparent font-medium"
+          :class="['hidden md:block px-8 font-medium transition-colors', buttonStyle]"
           @click="loginOpen = true"
         >
           {{ isAuthenticated ? 'Sign Out' : 'Sign In' }}
