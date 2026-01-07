@@ -13,6 +13,8 @@ import {
   getEmployeesByService, 
   getAppointmentByServiceAndDate, 
   getAppointmentsByServiceAndDateAndEmployee,
+  postGuest,
+  postAppointment
 
 } from '@/api/index'
 
@@ -92,7 +94,27 @@ watch(
   }
 )
 
-const handleSubmit = () => {}
+const handleSubmit = async () => {
+  try {
+    if (!isReadyForUser()) return
+
+    const date = selectedDate.value.toDate(getLocalTimeZone())
+    const [hours, minutes] = selectedTime.value.split(':').map(Number)
+    date.setHours(hours, minutes)
+    const pad = (n) => n.toString().padStart(2, '0')
+    const appointmentStart = `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+
+    const response = await postGuest(userData.value.name, userData.value.email, userData.value.phone)
+    const customerId = response.data.user.id
+
+    await postAppointment(selectedService.value, selectedBarber.value, appointmentStart, customerId)
+
+    alert('Appointment successfully booked!')
+  } catch (err) {
+    console.error(err)
+    alert('Failed to book appointment. Please try again.')
+  }
+}
 </script>
 
 <template>

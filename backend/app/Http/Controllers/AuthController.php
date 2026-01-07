@@ -69,7 +69,6 @@ class AuthController extends Controller
             'phone' => [
                 'nullable',
                 'string',
-                Rule::unique('users', 'phone')->ignore(optional($user)->id),
             ],
         ]);
 
