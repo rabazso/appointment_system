@@ -11,6 +11,7 @@ use App\Http\Controllers\ReviewController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/guest', [AuthController::class, 'guest']);
 
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/employees', [EmployeeController::class, 'index']);

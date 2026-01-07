@@ -47,3 +47,5 @@ export const getAppointmentsByServiceAndDateAndEmployee = (serviceId, selectedDa
 export const getEmployeesByService = (serviceId) => API.get(`/employees?service_id=${serviceId}`);
 export const getEmployeesByServiceAndAppointment = (serviceId, appointment) => API.get(`/employees?service_id=${serviceId}&appointment=${appointment}`);
 export const getReviews = () => API.get('/reviews');
+export const postAppointment = (serviceId, employeeId, appointmentStart, customerId) => API.post(`/appointments?service_id=${serviceId}&employee_id=${employeeId}&appointment_start=${appointmentStart}&customer_id=${customerId}`);
+export const postGuest = (name, email, phone) => API.post(`/guest?name=${name}&email=${email}&phone=${phone}`);
