@@ -14,17 +14,33 @@ export const setAuthToken = (token) => {
     }
 };
 
+export const setUserId = (user_id) => {
+    if (user_id) {
+        localStorage.setItem('user_id', user_id);
+    } else {
+        localStorage.removeItem('user_id');
+    }
+};
+
 export const register = async (data) => {
     const response = await API.post('/register', data);
     const token = response.data.token;
+    const user_id = response.data.user?.id;
+
     if (token) setAuthToken(token);
+    if (user_id) setUserId(user_id);
+
     return response.data;
 };
 
 export const login = async (data) => {
     const response = await API.post('/login', data);
     const token = response.data.token;
+    const user_id = response.data.user?.id;
+
     if (token) setAuthToken(token);
+    if (user_id) setUserId(user_id);
+
     return response.data;
 };
 
@@ -36,6 +52,7 @@ export const logout = async () => {
         }
     });
     setAuthToken(null);
+    setUserId(null);
     
     return response.data;
 };

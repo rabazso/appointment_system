@@ -94,6 +94,14 @@ watch(
   }
 )
 
+function isGuest(){
+  const token = localStorage.getItem('token');
+  if (token){
+    return false;
+  }
+  return true;
+}
+
 const handleSubmit = async () => {
   try {
     if (!isReadyForUser()) return
@@ -104,8 +112,21 @@ const handleSubmit = async () => {
     const pad = (n) => n.toString().padStart(2, '0')
     const appointmentStart = `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 
+    let customerId = null;
+
+    if (isGuest()){
+      try{
     const response = await postGuest(userData.value.name, userData.value.email, userData.value.phone)
-    const customerId = response.data.user.id
+    customerId = response.data.user.id
+
+      }
+      catch{
+
+      }
+    }
+    else{
+      customerId = parseInt(localStorage.getItem('user_id'), 10);
+    }
 
     await postAppointment(selectedService.value, selectedBarber.value, appointmentStart, customerId)
 
@@ -115,6 +136,8 @@ const handleSubmit = async () => {
     alert('Failed to book appointment. Please try again.')
   }
 }
+
+
 </script>
 
 <template>
@@ -230,7 +253,7 @@ const handleSubmit = async () => {
       </div>
     </AccordionItem>
 
-    <AccordionItem value="userdata" :disabled="!selectedTime">
+    <AccordionItem value="userdata" :disabled="!selectedTime" v-if="isGuest()">
         <div ref="userDataRef">
       <Card>
         <AccordionTrigger>
