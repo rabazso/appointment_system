@@ -9,8 +9,8 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('phone')->unique()->nullable();
-            $table->string('password');
+            $table->string('phone')->nullable()->unique();
+            $table->string('password')->nullable();
             $table->timestamps();
 });
 
