@@ -13,19 +13,19 @@ class CreateAppointment
     function Create(Request $request)
     {
         $serviceId = $request->get('service_id');
+        $serviceDuration = Service::find($serviceId)->duration;
         $employeeId = $request->get('employee_id');
-        $appointmentStart = $request->get('appointment_start');
+        $appointmentStart = Carbon::parse($request->get('appointment_start'));
         $customerId = $request->get('customer_id');
 
-        $service = Service::find($serviceId);
-        $slotStart = Carbon::parse($appointmentStart);
-        $slotEnd = Carbon::parse($appointmentStart)->addMinutes($service->duration);
+        $slotStart = $appointmentStart->copy()->toDateTimeString();
+        $slotEnd = $appointmentStart->copy()->addMinutes($serviceDuration)->toDateTimeString();
 
-        if ($slotStart->lt(now())) {
+        if ($appointmentStart->lt(now())) {
             return response()->json(['error' => 'Appointment cannot be created in the past'], 400);
         }
 
-        if ($slotStart->minute % 30 != 0) {
+        if ($appointmentStart->minute % 30 != 0) {
             return response()->json(['error' => 'The appointment must fall within the allowed interval'], 400);
         }
 
@@ -37,8 +37,8 @@ class CreateAppointment
             )
             ->whereDoesntHave(
                 'appointments',
-                fn($y) =>
-                $y->where('start_datetime', '<', $slotEnd)
+                fn($x) =>
+                $x->where('start_datetime', '<', $slotEnd)
                     ->where('end_datetime', '>', $slotStart)
             )->first();
 
