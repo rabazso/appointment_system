@@ -1,6 +1,7 @@
 <script setup>
 import {ref, nextTick} from 'vue'
 import { useRouter } from 'vue-router'
+import {Clock, Mail, Phone, MapPin} from 'lucide-vue-next'
 const title = import.meta.env.VITE_APP_NAME
 const props = defineProps({
   variant: { type: String, required: false }
@@ -33,27 +34,46 @@ const scrollToLink = async (link) => {
 </script>
 <template>
     <footer class="p-8 md:grid md:grid-cols-3 md:gap-8 flex flex-col items-start gap-8" :class="bgcolor, textcolor">
-        <div class="col-span-1">
+        <div class="col-span-1 mx-auto">
             <h2 class="text-2xl font-bold mb-4">Contact</h2>
-            <p class="flex items-start mb-2">
-                <span class="mr-2">📍</span>Budapest 1234 Barber utca 67
-            </p>
-            <p class="flex items-center mb-2">
-                <span class="mr-2">📞</span> 012345678
-            </p>
-            <p class="flex items-center mb-2">
-                <span class="mr-2">✉︎</span> barber@shop.com
-            </p>
-            <div class="mt-4">
-                <p class="flex items-start">
-                    <span class="mr-2">🕒</span>Mon-Fri: 9am-8pm
-                </p>
-                <p class="ml-6">
-                    Sat: 10am-5pm
-                </p>
-                <p class="ml-6">
-                    Sun: closed
-                </p>
+            <div class="flex space-x-2">
+                <div class="items-end">
+                    <MapPin/>
+                </div>
+                <div class="items-start">
+                    <p>Budapest 1234 Barber utca 67</p>
+                </div>
+            </div>
+
+            <div class="mt-4 flex space-x-2">
+                <div class="items-end">
+                    <Phone/>
+                </div>
+                <div class="items-start">
+                    <p> 012345678</p>
+                </div>
+            </div>
+            
+            <div class="mt-4 flex space-x-2">
+                <div class="items-end">
+                    <Mail/>
+                </div>
+                <div class="items-start">
+                    <p>barber@shop.com</p>
+                </div>
+            </div>
+
+            <div class="mt-4 flex space-x-2">
+                <div class="items-end">
+                    <Clock/>
+                </div>
+                <div class="items-start">
+                    <p>
+                        Mon-Fri: 9am-8pm<br>
+                        Sat: 10am-5pm<br>
+                        Sun: closed
+                    </p>
+                </div>
             </div>
         </div>
         <div class="col-span-1 flex flex-col items-center justify-start">
@@ -66,7 +86,7 @@ const scrollToLink = async (link) => {
                 </RouterLink>
             </div>
         </div>
-        <div class="col-span-1 md:text-right">
+        <div class="col-span-1 md:text-right mx-auto">
             <h2 class="text-2xl font-bold mb-4">Quick Links</h2>
             <ul>
                 <li class="mb-2 underline"><RouterLink to="/">Home</RouterLink></li>
