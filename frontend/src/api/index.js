@@ -29,8 +29,14 @@ export const login = async (data) => {
 };
 
 export const logout = async () => {
-    const response = await API.post('/logout');
+    const token = localStorage.getItem('token');
+    const response = await API.post('/logout', {}, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
     setAuthToken(null);
+    
     return response.data;
 };
 
