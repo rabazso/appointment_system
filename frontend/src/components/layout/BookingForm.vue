@@ -245,9 +245,9 @@ const handleSubmit = async () => {
         <AccordionContent>
           <CardContent class="space-y-4">
             <Label class="block font-semibold">Name</Label>
-            <input v-model="userData.name" type="text" placeholder="Your full name" class="w-full border border-border rounded-md p-2"/>
+            <input v-model="userData.name" type="text" placeholder="Your full name" required class="w-full border border-border rounded-md p-2"/>
             <Label class="block font-semibold">Email</Label>
-            <input v-model="userData.email" type="email" placeholder="you@example.com" class="w-full border border-border rounded-md p-2"/>
+            <input v-model="userData.email" type="email" placeholder="you@example.com" required class="w-full border border-border rounded-md p-2"/>
             <Label class="block font-semibold">Phone</Label>
             <input v-model="userData.phone" type="tel" placeholder="Your phone number" class="w-full border border-border rounded-md p-2"/>
           </CardContent>
