@@ -71,6 +71,26 @@ function handleAuthSuccess(message) {
   toastMessage.value = message
   showToast.value = true
 }
+
+let desktopLinkStyle = ref([
+  navigationMenuTriggerStyle(), 
+  'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-accent'
+].join(' '))
+
+if (props.variant === 'background') {
+  desktopLinkStyle = ref([
+    'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium',
+    'px-4 py-2',                 
+    'transition-colors duration-300',
+    
+    'text-black',                
+    'border border-black',       
+    'bg-transparent',            
+    'hover:bg-black',            
+    'hover:text-white',          
+    'focus:bg-black focus:text-white'
+  ].join(' '))
+}
 </script>
 
 <template>
@@ -125,7 +145,7 @@ function handleAuthSuccess(message) {
             <RouterLink v-slot="{ isActive }" :to="link.to" custom>
               <NavigationMenuLink
                 :active="isActive"
-                :class="[bgcolor, textcolor, navigationMenuTriggerStyle()]"
+                :class="desktopLinkStyle" 
                 @click.prevent="scrollToLink(link)"
               >
                 {{ link.label }}
