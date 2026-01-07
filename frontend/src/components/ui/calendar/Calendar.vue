@@ -184,8 +184,8 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
       >
         <template v-if="layout === 'month-and-year'">
           <div class="flex items-center justify-center gap-1">
-            <ReuseMonthTemplate :date="date" />
             <ReuseYearTemplate :date="date" />
+            <ReuseMonthTemplate :date="date" />
           </div>
         </template>
         <template v-else-if="layout === 'month-only'">

@@ -34,7 +34,7 @@ export const logout = async () => {
 
 export const getServices = () => API.get('/services');
 export const getEmployees = () => API.get('/employees');
-export const getAppointmentByServiceAndDate = (serviceId, selectedDate) => API.get(`/appointments?service_id=${serviceId}&selecte_date=${selectedDate}`);
+export const getAppointmentByServiceAndDate = (serviceId, selectedDate) => API.get(`/appointments?service_id=${serviceId}&selected_date=${selectedDate}`);
 export const getAppointmentsByServiceAndDateAndEmployee = (serviceId, selectedDate, employeeId) => API.get(`/appointments?service_id=${serviceId}&selected_date=${selectedDate}&employee_id=${employeeId}`);
 export const getEmployeesByService = (serviceId) => API.get(`/employees?service_id=${serviceId}`);
 export const getEmployeesByServiceAndAppointment = (serviceId, appointment) => API.get(`/employees?service_id=${serviceId}&appointment=${appointment}`);

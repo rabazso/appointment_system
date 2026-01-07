@@ -6,9 +6,9 @@ import {RadioGroup, RadioGroupItem} from '@components/ui/radio-group'
 import {Label} from '@components/ui/label'
 import { Scissors } from 'lucide-vue-next'
 import {Calendar } from '@components/ui/calendar'
-import { CalendarDate, fromDate, getLocalTimeZone, today } from '@internationalized/date'
+import { fromDate, getLocalTimeZone, today } from '@internationalized/date'
 import { Button } from '@components/ui/button'
-import { getServices, getEmployeesByService, getAppointmentsByServiceAndEmployee, getAppointmentByService } from '@/api/index'
+import { getServices, getEmployeesByService, getAppointmentByServiceAndDate, getAppointmentsByServiceAndDateAndEmployee } from '@/api/index'
 
 const selectedService = ref('')
 const selectedBarber = ref('')
@@ -17,50 +17,38 @@ const openSection = ref('service')
 
 const services = ref([])
 const barbers = ref([])
-const date = ref(today(getLocalTimeZone()))
+const date = ref(fromDate(new Date(), getLocalTimeZone()))
 const defaultPlaceholder = today(getLocalTimeZone())
 
 const timeSlots = ref([])
-const availableDates = ref({})
 
 
 onMounted(async ()=>{
     services.value = (await getServices()).data
 })
 
-const updateTimeSlotsForDate = (selectedDate = date.value) => {
-  if (!selectedDate) return
-  const isoDate = selectedDate.toDate(getLocalTimeZone()).toISOString().split('T')[0]
-  timeSlots.value = availableDates.value[isoDate] || []
-  selectedTime.value = ''
-}
-
 watch(selectedService, async (newService) => {
     if (!newService) return
     barbers.value = (await getEmployeesByService(selectedService.value)).data
-    const response = await getAppointmentByService(newService)
-    availableDates.value = response.data
-    updateTimeSlotsForDate()
 })
 
-watch(
-  [selectedService, selectedBarber], async ([serviceId, barberId]) => {
-    if (!serviceId || !barberId || availableDates) return
-    const response = await getAppointmentsByServiceAndEmployee(serviceId, barberId)
-    availableDates.value = response.data
-    updateTimeSlotsForDate()
+const previousBarbers = ref([])
+watch([selectedService, selectedBarber, date], async ([serviceId, barberId, selectedDate]) => {
+    if (!serviceId) return
+    const isoDate = selectedDate.toDate(getLocalTimeZone()).toISOString().split('T')[0]
+    if((serviceId && selectedDate) && !barberId){
+        const response = await getAppointmentByServiceAndDate(serviceId, isoDate)
+        timeSlots.value = response.data[isoDate]
+    }
+    else{
+        previousBarbers.value.push(barberId)
+        const response = await getAppointmentsByServiceAndDateAndEmployee(serviceId, isoDate, barberId)
+        timeSlots.value = response.data[isoDate]
+    }
+    if(previousBarbers.value.length == 1) return
+    else selectedTime.value = ''
   }
 )
-watch(date, (selectedDate) => {
-  updateTimeSlotsForDate(selectedDate)
-})
-
-const isDateUnavailable = (calendarDate) => {
-  const isoDate = calendarDate.toDate(getLocalTimeZone()).toISOString().split('T')[0]
-  const daySlots = availableDates.value[isoDate]
-  return !daySlots || daySlots.length === 0
-}
-
 
 const summaryRef = ref(null)
 const isVisible = ()=> selectedBarber.value && selectedService.value && selectedTime.value && date.value
@@ -169,13 +157,13 @@ const handleSubmit = (()=> {
                         <div class="grid md:grid-cols-2">
                             <div class="w-fit">
                                 <Label class="mb-3 block font-semibold">Select Your Date</Label>
-                                <Calendar v-model="date" :default-placeholder="defaultPlaceholder" class="rounded-md border border-border shadow-sm" layout="month-and-year" :min-value="today(getLocalTimeZone())" :max-value="new CalendarDate(2035, 1, 1)" :isDateDisabled="isDateUnavailable"/>
+                                <Calendar v-model="date" :default-placeholder="defaultPlaceholder" class="rounded-md border border-border shadow-sm" layout="month-and-year" :min-value="today(getLocalTimeZone())" :max-value="today(getLocalTimeZone()).add({weeks:4})"/>
                             </div>
                             <div>
                                 <Label class="font-semibold block mb-3">Choose a time slot</Label>
                                 <Card>
                                     <CardContent class="flex flex-row flex-wrap space-x-2 space-y-2">
-                                        <p v-if="!timeSlots.length" class="text-muted-foreground">
+                                        <p v-if="!timeSlots" class="text-muted-foreground">
                                             No available time slots for this day
                                         </p>
                                         <Button v-model="selectedTime" variant="outline" v-for="time in timeSlots" :key="time" :value="time" class="w-fit px-8 py-4 bg-background" :class="selectedTime === time ? 'border-accent border-[2px] bg-primary/10' : 'bg-background'" @click="selectedTime = time">{{ time }}</Button>
@@ -204,7 +192,7 @@ const handleSubmit = (()=> {
             </div>
             <div class="flex justify-between">
                 <p class="text-muted-foreground">Date:</p>
-                <p class="font-semibold">{{ date.toDate(getLocalTimeZone()).toLocaleDateString('en-US') }}</p>
+                <p class="font-semibold">{{ date.toDate(getLocalTimeZone()).toISOString().split('T')[0] }}</p>
             </div>
             <div class="flex justify-between">
                 <p class="text-muted-foreground">Time:</p>
