@@ -21,11 +21,11 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'phone' =>  $data['phone'],
+            'phone' =>  $data['phone'] ?? null,
             'password' => Hash::make($data['password']),
         ]);
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $token = $user->createToken('user-token')->plainTextToken;
 
         return response()->json(['user' => $user, 'token' => $token, 'message' => 'Registered']);
     }
@@ -43,7 +43,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials']);
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $token = $user->createToken('user-token')->plainTextToken;
 
         return response()->json(['user' => $user, 'token' => $token, 'message' => 'Logged in']);
     }
@@ -77,17 +77,15 @@ class AuthController extends Controller
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'phone' => $data['phone'],
+                'phone' => $data['phone'] ?? null,
                 'password' => null,
             ]);
         }
         $user->update([
             'name' => $data['name'],
-            'phone' => $data['phone'],
+            'phone' => $data['phone'] ?? null,
         ]);
 
-        $token = $user->createToken('guest-token')->plainTextToken;
-
-        return response()->json(['user' => $user, 'token' => $token, 'message' => 'Guest reservation token']);
+        return response()->json(['user' => $user, 'Make appoinment']);
     }
 }

@@ -16,13 +16,10 @@ Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/employees', [EmployeeController::class, 'index']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
 Route::get('/reviews', [ReviewController::class, 'index']);
+Route::post('/appointments', [AppointmentController::class, 'store']);
+
 
 Route::middleware('auth:sanctum')->group(function () {
-Route::post('/appointments', [AppointmentController::class, 'store']);
 Route::post('/reviews', [ReviewController::class, 'store']);
-
-    Route::middleware('registered')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
-        
-    });
+Route::post('/logout', [AuthController::class, 'logout']);
 });
