@@ -1,0 +1,86 @@
+<template>
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md text-center">
+      <h2 class="text-2xl font-bold mb-4">Continue Booking</h2>
+
+      <p class="text-gray-600 mb-6">
+        Would you like to continue as a guest or sign in?
+      </p>
+
+      <div class="flex flex-col gap-3">
+
+        <Button @click="handleGuestBooking">
+          Continue as Guest
+        </Button>
+
+        <Button @click="handleLogin">
+          Sign In
+        </Button>
+      </div>
+
+      <button
+        class="mt-4 text-sm text-gray-500 hover:underline"
+        @click="$emit('close')"
+      >
+        Cancel
+      </button>
+    </div>
+
+    <div v-if="isLoginOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div class="bg-white rounded-xl p-6 w-full max-w-md text-center">
+        <SignInCard
+          v-if="mode === 'login'"
+          @close="closeModal"
+          @success="handleSuccess"
+          @switch="switchMode"
+        />
+        <SignUpCard
+          v-else
+          @close="closeModal"
+          @success="handleSuccess"
+          @switch="switchMode"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { Button } from '@components/ui/button'
+import { useRouter } from 'vue-router'
+import SignInCard from '../auth/SignInCard.vue'
+import SignUpCard from '../auth/SignUpCard.vue'
+
+const emit = defineEmits(['close', 'guest', 'login', 'success'])
+
+const isLoginOpen = ref(false)
+const mode = ref('login')
+const router = useRouter()
+
+function handleGuestBooking() {
+  emit('guest')
+  emit('close')
+  router.push({ name: 'booking' })
+}
+
+
+function handleLogin() {
+  isLoginOpen.value = true
+}
+
+function closeModal() {
+  isLoginOpen.value = false
+}
+
+
+function switchMode() {
+  mode.value = mode.value === 'login' ? 'register' : 'login'
+}
+
+function handleSuccess(message) {
+  emit('success', message)
+  closeModal()
+  router.push({ name: 'booking' })
+}
+</script>

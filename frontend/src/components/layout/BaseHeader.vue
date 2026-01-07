@@ -14,6 +14,7 @@ import {
 
 import AuthModal from '@/components/auth/AuthModal.vue'
 import Toast from '@/components/ui/Toast.vue'
+import { logout } from '@/api/index'
 
 const props = defineProps({
   variant: { type: String, required: false }
@@ -70,6 +71,7 @@ function handleAuthSuccess(message) {
   loginOpen.value = false
   toastMessage.value = message
   showToast.value = true
+  token.value = localStorage.getItem('token')
 }
 
 let desktopLinkStyle = ref([
@@ -90,6 +92,21 @@ if (props.variant === 'background') {
     'hover:text-white',          
     'focus:bg-black focus:text-white'
   ].join(' '))
+}
+
+async function signOut() {
+    
+
+  try {
+    const response = await logout();
+    
+    token.value = null;
+    showToast.value = true;
+    toastMessage.value = 'You have successfully signed out.';
+  } catch (error) {
+    // Log the error properly
+    console.error(error.response?.data?.message || 'Logout failed');
+  }
 }
 </script>
 
@@ -158,7 +175,7 @@ if (props.variant === 'background') {
       <div class="w-40 flex justify-end items-center space-x-3">
         <Button
           :class="['hidden md:block px-8 font-medium transition-colors', buttonStyle]"
-          @click="loginOpen = true"
+          @click="isAuthenticated ? signOut() : loginOpen = true"
         >
           {{ isAuthenticated ? 'Sign Out' : 'Sign In' }}
         </Button>
