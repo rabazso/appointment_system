@@ -42,7 +42,7 @@ function openLoginModal() {
   loginOpen.value = true
 }
 
-function handleAuthSuccess({ message }) {
+function handleAuthSuccess( message ) {
 
   loginOpen.value = false
   toastMessage.value = message
