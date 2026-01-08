@@ -17,7 +17,7 @@ const services = ref([])
                 <h2 class="text-4xl md:text-5xl font-bold mb-4">Our Services</h2>
                 <p class="text-lg text-card-foreground/70 max-w-2xl mx-auto">Premium grooming solutions tailored to every man's style and needs</p>
             </div>
-            <div class="grid md:grid-cols-3 justify-items-center">
+            <div class="grid md:grid-cols-3 justify-items-center space-y-4">
                 <Card v-for="service in services" :key="service.id" class="bg-card w-[70%] text-center border-2 border-accent/20 hover:border-accent/60 transition-colors duration-400 cursor-default px-8 py-20">
                     <CardHeader>
                         <CardTitle class="text-2xl text-card-foreground font-bold mb-4">{{ service.name }}</CardTitle>

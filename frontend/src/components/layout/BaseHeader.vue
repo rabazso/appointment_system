@@ -28,9 +28,13 @@ const isAuthenticated = computed(() => auth.isLoggedIn)
 
 let bgcolor = ref(props.variant === 'background' ? 'bg-background' : 'bg-primary')
 let textcolor = ref(props.variant === 'background' ? 'text-foreground' : 'text-primary-foreground')
-let buttonStyle = ref(props.variant === 'background'
-  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-  : 'bg-background text-foreground hover:bg-background/90')
+if (props.variant === 'background') {
+  bgcolor = ref('bg-background')
+  textcolor = ref('text-foreground')
+}
+// let buttonStyle = ref(props.variant === 'background'
+//   ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+//   : 'bg-background text-foreground hover:bg-background/90')
 
 const title = import.meta.env.VITE_APP_NAME || 'MyApp'
 const links = [
@@ -39,23 +43,21 @@ const links = [
   { label: 'Contact', to: '/contact' }
 ]
 
-function scrollToLink(link) {
+const scrollToLink = async (link) => {
   if (!link) return
   sheetOpen.value = false
   if (link.hash) {
     if (router.currentRoute.value.path !== link.to) {
-      router.push(link.to).then(() => nextTick(() => scrollToHash(link.hash)))
-    } else {
-      scrollToHash(link.hash)
+      await router.push(link.to)
+      await nextTick()
+    }
+    const element = document.querySelector(link.hash)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth'})
     }
   } else {
     router.push(link.to)
   }
-}
-
-function scrollToHash(hash) {
-  const el = document.querySelector(hash)
-  if (el) el.scrollIntoView({ behavior: 'smooth' })
 }
 
 async function signOut() {
@@ -124,8 +126,8 @@ function handleAuthSuccess(message) {
           <NavigationMenuItem v-for="link in links" :key="link.to">
             <RouterLink v-slot="{ isActive }" :to="link.to" custom>
               <NavigationMenuLink
-                :active="isActive"
-                :class="['inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-normal px-4 py-2 transition-colors duration-300 text-primary-foreground cursor-pointer hover:bg-primary/90']"
+                :active="isActive" 
+                class="bgcolor textcolor navigationMenuTriggerStyle() cursor-pointer"
                 @click.prevent="scrollToLink(link)"
               >
                 {{ link.label }}
@@ -136,7 +138,7 @@ function handleAuthSuccess(message) {
       </NavigationMenu>
 
       <div class="w-40 flex justify-end items-center space-x-3">
-        <Button data-testid="headerbtn" :class="['hidden md:block px-8 font-medium transition-colors', buttonStyle]" @click="isAuthenticated ? signOut() : loginOpen = true">
+        <Button data-testid="headerbtn" :class="['hidden md:block px-8 font-medium transition-colors']" @click="isAuthenticated ? signOut() : loginOpen = true">
           {{ isAuthenticated ? 'Sign Out' : 'Sign In' }}
         </Button>
       </div>
