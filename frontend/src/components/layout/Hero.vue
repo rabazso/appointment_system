@@ -26,7 +26,7 @@ watch(isLoggedIn, (loggedIn) => {
 
 function handleBookingClick() {
   if (isLoggedIn.value) {
-    router.push('/booking')
+    router.push({ name: 'Booking' })
   } else {
     showAuthChoice.value = true
   }
@@ -34,20 +34,21 @@ function handleBookingClick() {
 
 function continueAsGuest() {
   showAuthChoice.value = false
-  router.push('/booking')
+  router.push({ name: 'Booking' })
 }
 
-function handleAuthSuccess({ token, user_id, message }) {
-  auth.setToken(token)
-  auth.setUser(user_id)
-
+function openLoginModal() {
   showAuthChoice.value = false
-  loginOpen.value = false
+  loginOpen.value = true
+}
 
+function handleAuthSuccess({ message }) {
+
+  loginOpen.value = false
   toastMessage.value = message
   showToast.value = true
 
-  router.push('/booking')
+  router.push({ name: 'Booking' })
 }
 </script>
 
@@ -57,7 +58,6 @@ function handleAuthSuccess({ token, user_id, message }) {
       <h1 class="text-5xl md:text-7xl font-extrabold mb-6">
         Book Your Fresh Cut Today
       </h1>
-
       <p class="text-lg md:text-xl text-primary-foreground/80 mb-8">
         Our expert barbers deliver precise cuts and personalized grooming.
       </p>
@@ -66,7 +66,6 @@ function handleAuthSuccess({ token, user_id, message }) {
         <Button class="px-7 py-7 text-lg" @click="handleBookingClick">
           Book Now
         </Button>
-
         <Button variant="outline" class="px-7 py-7 text-lg" to="/learn-more">
           Learn More
         </Button>
@@ -76,7 +75,7 @@ function handleAuthSuccess({ token, user_id, message }) {
     <AuthChoiceModal
       v-if="showAuthChoice"
       @guest="continueAsGuest"
-      @login="loginOpen = true"
+      @login="openLoginModal"
       @close="showAuthChoice = false"
     />
 

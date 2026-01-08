@@ -1,3 +1,19 @@
+<script setup>
+import { Button } from '@components/ui/button'
+
+const emit = defineEmits(['close', 'guest', 'login'])
+
+function handleGuestBooking() {
+  emit('guest')
+  emit('close')
+}
+
+function handleLogin() {
+  emit('login')
+  emit('close')
+}
+</script>
+
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
     <div class="bg-white rounded-xl p-6 w-full max-w-md text-center">
@@ -8,7 +24,7 @@
 
       <div class="flex flex-col gap-3">
         <Button @click="handleGuestBooking">Continue as Guest</Button>
-        <Button @click="$emit('login')">Sign In</Button>
+        <Button @click="handleLogin">Sign In</Button>
       </div>
 
       <button
@@ -20,17 +36,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { Button } from '@components/ui/button'
-import { useRouter } from 'vue-router'
-
-const emit = defineEmits(['close', 'guest', 'login'])
-const router = useRouter()
-
-function handleGuestBooking() {
-  emit('guest')
-  emit('close')
-  router.push({ name: 'Booking' })
-}
-</script>
