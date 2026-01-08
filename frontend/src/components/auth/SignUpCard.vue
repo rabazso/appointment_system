@@ -30,6 +30,10 @@ async function submit() {
     errorMessage.value = 'Name must not contain numbers'
     return
   }
+  if(containsSpecialCharacter(fullName)){
+    errorMessage.value = 'Name must not contain special characters'
+    return
+  }
 
   const password = data.value.password
   const passwordErrors = []
@@ -74,6 +78,9 @@ async function submit() {
 function containsDigit(string) {
   return /\d/.test(string)
 }
+function containsSpecialCharacter(string) {
+  return /[^a-zA-Z0-9\s]/.test(string);
+}
 
 </script>
 
@@ -90,32 +97,32 @@ function containsDigit(string) {
     </CardHeader>
 
     <CardContent>
-      <div v-if="errorMessage" class="mb-4 py-2 px-3 rounded text-white bg-red-500">
+      <div data-testid="errormsg-signup" v-if="errorMessage" class="mb-4 py-2 px-3 rounded text-white bg-red-500">
         {{ errorMessage }}
       </div>
 
       <form @submit.prevent="submit" class="space-y-4">
         <div>
           <Label>First Name</Label>
-          <Input v-model="data.firstName" type="text" required/>
+          <Input data-testid="firstname-input" v-model="data.firstName" type="text" required/>
         </div>
         <div>
           <Label>Last Name</Label>
-          <Input v-model="data.lastName" type="text" required/>
+          <Input data-testid="lastname-input" v-model="data.lastName" type="text" required/>
         </div>
         <div>
           <Label>Email</Label>
-          <Input v-model="data.email" type="email" required/>
+          <Input data-testid="email-input" v-model="data.email" required/>
         </div>
         <div>
           <Label>Password</Label>
-          <Input v-model="data.password" type="password" required/>
+          <Input data-testid="password-input" v-model="data.password" type="password" required/>
         </div>
         <div>
           <Label>Confirm Password</Label>
-          <Input v-model="data.password_confirmation" type="password" required/>
+          <Input data-testid="confpass-input" v-model="data.password_confirmation" type="password" required/>
         </div>
-        <Button class="w-full" :disabled="loading">
+        <Button data-testid="signup-submit" class="w-full" :disabled="loading">
           {{ loading ? 'Signing up…' : 'Sign Up' }}
         </Button>
       </form>

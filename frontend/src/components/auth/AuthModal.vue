@@ -16,7 +16,7 @@ function switchMode() {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+  <div data-testid="auth-modal" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
     <div class="relative w-full max-w-md">
       <SignInCard
         v-if="mode === 'login'"

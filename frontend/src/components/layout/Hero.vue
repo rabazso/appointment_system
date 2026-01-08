@@ -63,11 +63,8 @@ function handleAuthSuccess( message ) {
       </p>
 
       <div class="flex flex-col sm:flex-row gap-4">
-        <Button class="px-7 py-7 text-lg" @click="handleBookingClick">
+        <Button data-testid="book-now-btn" class="px-7 py-7 text-lg" @click="handleBookingClick">
           Book Now
-        </Button>
-        <Button variant="outline" class="px-7 py-7 text-lg" to="/learn-more">
-          Learn More
         </Button>
       </div>
     </div>

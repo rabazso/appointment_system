@@ -43,25 +43,25 @@ async function submit() {
       <CardTitle>Sign In</CardTitle>
       <CardDescription>Enter your credentials below</CardDescription>
       <CardAction>
-        <Button variant="link" @click="$emit('switch')">Sign Up</Button>
+        <Button data-testid="signupbtn" variant="link" @click="$emit('switch')">Sign Up</Button>
       </CardAction>
     </CardHeader>
 
     <CardContent>
-      <div v-if="errorMessage" class="mb-4 py-2 px-3 rounded text-white bg-red-500">
+      <div data-testid="errormsg-login" v-if="errorMessage" class="mb-4 py-2 px-3 rounded text-white bg-red-500">
         {{ errorMessage }}
       </div>
 
       <form @submit.prevent="submit" class="space-y-4">
         <div>
           <Label>Email</Label>
-          <Input v-model="data.email" type="email" />
+          <Input data-testid="email-input" v-model="data.email" />
         </div>
         <div>
           <Label>Password</Label>
-          <Input v-model="data.password" type="password" />
+          <Input data-testid="password-input" v-model="data.password" type="password" />
         </div>
-        <Button class="w-full" :disabled="loading">
+        <Button data-testid="login-submit" class="w-full" :disabled="loading">
           {{ loading ? 'Signing in…' : 'Sign In' }}
         </Button>
       </form>

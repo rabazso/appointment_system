@@ -14,7 +14,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
+  <div data-testid="toast"
     class="fixed top-4 right-4 z-[100]
            bg-green-600 text-white
            px-4 py-3 rounded-lg shadow-lg

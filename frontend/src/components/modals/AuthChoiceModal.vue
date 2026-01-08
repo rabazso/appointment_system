@@ -23,14 +23,11 @@ function handleLogin() {
       </p>
 
       <div class="flex flex-col gap-3">
-        <Button @click="handleGuestBooking">Continue as Guest</Button>
-        <Button @click="handleLogin">Sign In</Button>
+        <Button data-testid="guest-btn" @click="handleGuestBooking">Continue as Guest</Button>
+        <Button data-testid="login-btn" @click="handleLogin">Sign In</Button>
       </div>
 
-      <button
-        class="mt-4 text-sm text-gray-500 hover:underline"
-        @click="$emit('close')"
-      >
+      <button data-testid="cancel-auth-choice" class="mt-4 text-sm text-gray-500 hover:underline" @click="$emit('close')">
         Cancel
       </button>
     </div>

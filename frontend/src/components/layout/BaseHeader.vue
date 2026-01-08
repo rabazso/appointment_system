@@ -136,7 +136,7 @@ function handleAuthSuccess(message) {
       </NavigationMenu>
 
       <div class="w-40 flex justify-end items-center space-x-3">
-        <Button :class="['hidden md:block px-8 font-medium transition-colors', buttonStyle]" @click="isAuthenticated ? signOut() : loginOpen = true">
+        <Button data-testid="headerbtn" :class="['hidden md:block px-8 font-medium transition-colors', buttonStyle]" @click="isAuthenticated ? signOut() : loginOpen = true">
           {{ isAuthenticated ? 'Sign Out' : 'Sign In' }}
         </Button>
       </div>
