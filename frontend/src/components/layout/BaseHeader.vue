@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
@@ -14,34 +13,26 @@ import {
 
 import AuthModal from '@/components/auth/AuthModal.vue'
 import Toast from '@/components/ui/Toast.vue'
-import { logout } from '@/api/index'
+import { useAuthStore } from '@stores/AuthStore.js'
 
-const props = defineProps({
-  variant: { type: String, required: false }
-})
-
-let bgcolor = ref('bg-primary')
-let textcolor = ref('text-primary-foreground')
-let buttonStyle = ref('bg-background text-foreground hover:bg-background/90')
-
-if (props.variant === 'background') {
-  bgcolor = ref('bg-background')
-  textcolor = ref('text-foreground')
-  buttonStyle = ref('bg-primary text-primary-foreground hover:bg-primary/90')
-}
+const props = defineProps({ variant: String, required: false })
+const router = useRouter()
+const auth = useAuthStore()
 
 const sheetOpen = ref(false)
 const loginOpen = ref(false)
 const toastMessage = ref('')
 const showToast = ref(false)
 
-const token = ref(localStorage.getItem('token'))
-const isAuthenticated = computed(() => token.value != null)
+const isAuthenticated = computed(() => auth.isLoggedIn)
 
-const router = useRouter()
+let bgcolor = ref(props.variant === 'background' ? 'bg-background' : 'bg-primary')
+let textcolor = ref(props.variant === 'background' ? 'text-foreground' : 'text-primary-foreground')
+let buttonStyle = ref(props.variant === 'background'
+  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+  : 'bg-background text-foreground hover:bg-background/90')
 
 const title = import.meta.env.VITE_APP_NAME || 'MyApp'
-
 const links = [
   { label: 'Services', to: '/', hash: '#services' },
   { label: 'Our Barbers', to: '/', hash: '#barbers' },
@@ -67,46 +58,22 @@ function scrollToHash(hash) {
   if (el) el.scrollIntoView({ behavior: 'smooth' })
 }
 
-function handleAuthSuccess(message) {
+async function signOut() {
+  try {
+    await auth.logout()
+    toastMessage.value = 'You have successfully signed out.'
+    showToast.value = true
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+function handleAuthSuccess({ token, user_id, message }) {
+  auth.setToken(token)
+  auth.setUser(user_id)
   loginOpen.value = false
   toastMessage.value = message
   showToast.value = true
-  token.value = localStorage.getItem('token')
-}
-
-let desktopLinkStyle = ref([
-  navigationMenuTriggerStyle(), 
-  'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-accent'
-].join(' '))
-
-if (props.variant === 'background') {
-  desktopLinkStyle = ref([
-    'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium',
-    'px-4 py-2',                 
-    'transition-colors duration-300',
-    
-    'text-black',                
-    'border border-black',       
-    'bg-transparent',            
-    'hover:bg-black',            
-    'hover:text-white',          
-    'focus:bg-black focus:text-white'
-  ].join(' '))
-}
-
-async function signOut() {
-    
-
-  try {
-    const response = await logout();
-    
-    token.value = null;
-    showToast.value = true;
-    toastMessage.value = 'You have successfully signed out.';
-  } catch (error) {
-    // Log the error properly
-    console.error(error.response?.data?.message || 'Logout failed');
-  }
 }
 </script>
 
@@ -121,7 +88,6 @@ async function signOut() {
           <span class="text-xl self-center font-bold">{{ title }}</span>
         </RouterLink>
       </div>
-
       <Sheet v-model:open="sheetOpen">
         <SheetTrigger asChild>
           <button variant="outline" size="icon" class="lg:hidden">
@@ -131,7 +97,6 @@ async function signOut() {
               <line x1="4" y1="12" x2="20" y2="12" />
               <line x1="4" y1="18" x2="20" y2="18" />
             </svg>
-            <span class="sr-only">Navigation Menu</span>
           </button>
         </SheetTrigger>
         <SheetContent side="left" class="flex flex-col">
@@ -162,7 +127,7 @@ async function signOut() {
             <RouterLink v-slot="{ isActive }" :to="link.to" custom>
               <NavigationMenuLink
                 :active="isActive"
-                :class="desktopLinkStyle" 
+                :class="['inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium px-4 py-2 transition-colors duration-300 text-primary hover:bg-primary/90']"
                 @click.prevent="scrollToLink(link)"
               >
                 {{ link.label }}
@@ -173,25 +138,14 @@ async function signOut() {
       </NavigationMenu>
 
       <div class="w-40 flex justify-end items-center space-x-3">
-        <Button
-          :class="['hidden md:block px-8 font-medium transition-colors', buttonStyle]"
-          @click="isAuthenticated ? signOut() : loginOpen = true"
-        >
+        <Button :class="['hidden md:block px-8 font-medium transition-colors', buttonStyle]" @click="isAuthenticated ? signOut() : loginOpen = true">
           {{ isAuthenticated ? 'Sign Out' : 'Sign In' }}
         </Button>
       </div>
     </div>
   </header>
 
-  <AuthModal
-    v-if="loginOpen"
-    @close="loginOpen = false"
-    @success="handleAuthSuccess"
-  />
+  <AuthModal v-if="loginOpen" @close="loginOpen = false" @success="handleAuthSuccess"/>
 
-  <Toast
-    v-if="showToast"
-    :message="toastMessage"
-    @close="showToast = false"
-  />
+  <Toast v-if="showToast" :message="toastMessage" @close="showToast = false"/>
 </template>

@@ -1,11 +1,13 @@
 <script setup>
 import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { login } from '@/api/index'
+import { useAuthStore } from '@stores/AuthStore.js'
 
+const auth = useAuthStore()
 const emit = defineEmits(['close', 'success', 'switch'])
 
 const data = ref({
@@ -20,7 +22,10 @@ async function submit() {
   loading.value = true
   try {
     const response = await login(data.value)
-    emit('success', 'Successfully signed in')
+    auth.setToken(response.token)
+    auth.setUser(response.user.id)
+
+    emit('success', { message: 'Successfully signed in', token: response.token, user_id: response.user.id })
     emit('close')
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'Login failed'
@@ -33,7 +38,6 @@ async function submit() {
 <template>
   <Card class="w-full p-6 rounded-xl shadow-lg">
     <button class="absolute top-2 right-2 text-muted-foreground hover:text-foreground" @click="$emit('close')">✕</button>
-
     <CardHeader>
       <CardTitle>Sign In</CardTitle>
       <CardDescription>Enter your credentials below</CardDescription>

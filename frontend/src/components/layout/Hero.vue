@@ -1,20 +1,28 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button } from '@components/ui/button'
 import AuthChoiceModal from '@/components/modals/AuthChoiceModal.vue'
 import AuthModal from '@/components/auth/AuthModal.vue'
-import { logout } from '@/api/index'
+import Toast from '@/components/ui/Toast.vue'
+import { useAuthStore } from '@stores/AuthStore.js'
 
 const router = useRouter()
-
-const token = ref(localStorage.getItem('token'))
-const isLoggedIn = computed(() => token.value != null)
+const auth = useAuthStore()
 
 const showAuthChoice = ref(false)
 const loginOpen = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
+
+const isLoggedIn = computed(() => auth.isLoggedIn)
+
+watch(isLoggedIn, (loggedIn) => {
+  if (!loggedIn) {
+    showAuthChoice.value = false
+    loginOpen.value = false
+  }
+})
 
 function handleBookingClick() {
   if (isLoggedIn.value) {
@@ -29,26 +37,17 @@ function continueAsGuest() {
   router.push('/booking')
 }
 
+function handleAuthSuccess({ token, user_id, message }) {
+  auth.setToken(token)
+  auth.setUser(user_id)
 
-function handleAuthSuccess(message) {
-  token.value = localStorage.getItem('token')
-  loginOpen.value = false
   showAuthChoice.value = false
+  loginOpen.value = false
+
   toastMessage.value = message
   showToast.value = true
-}
 
-async function handleLogout() {
-  try {
-    await logout()
-  } catch (error) {
-    console.error(error.response?.data?.message || 'Logout failed')
-  } finally {
-    token.value = null
-    localStorage.removeItem('token')
-    toastMessage.value = 'You have successfully signed out.'
-    showToast.value = true
-  }
+  router.push('/booking')
 }
 </script>
 
@@ -71,14 +70,13 @@ async function handleLogout() {
         <Button variant="outline" class="px-7 py-7 text-lg" to="/learn-more">
           Learn More
         </Button>
-
-      
       </div>
     </div>
 
     <AuthChoiceModal
       v-if="showAuthChoice"
       @guest="continueAsGuest"
+      @login="loginOpen = true"
       @close="showAuthChoice = false"
     />
 
@@ -87,7 +85,7 @@ async function handleLogout() {
       @close="loginOpen = false"
       @success="handleAuthSuccess"
     />
-    
+
     <Toast
       v-if="showToast"
       :message="toastMessage"
