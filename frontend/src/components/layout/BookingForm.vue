@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, nextTick, onMounted } from 'vue'
+import { ref, watch, nextTick, onMounted, computed} from 'vue'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@components/ui/accordion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@components/ui/radio-group'
@@ -18,6 +18,8 @@ import {
 
 } from '@/api/index'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@stores/AuthStore.js'
+
 
 const router = useRouter()
 
@@ -97,13 +99,8 @@ watch(
   }
 )
 
-function isGuest(){
-  const token = localStorage.getItem('token');
-  if (token){
-    return false;
-  }
-  return true;
-}
+const store = useAuthStore();
+const isAuthenticated = computed(() => store.isLoggedIn)
 
 const handleSubmit = async () => {
   try {
@@ -117,11 +114,10 @@ const handleSubmit = async () => {
 
     let customerId = null;
 
-    if (isGuest()){
+    if (!isAuthenticated.value){
       try{
-    const response = await postGuest(userData.value.name, userData.value.email, userData.value.phone)
-    customerId = response.data.user.id
-
+        const response = await postGuest(userData.value.name, userData.value.email, userData.value.phone)
+        customerId = response.data.user.id
       }
       catch{
 
@@ -257,7 +253,7 @@ const handleSubmit = async () => {
       </div>
     </AccordionItem>
 
-    <AccordionItem value="userdata" :disabled="!selectedTime" v-if="isGuest()">
+    <AccordionItem value="userdata" :disabled="!selectedTime" v-if="!isAuthenticated">
         <div ref="userDataRef">
       <Card>
         <AccordionTrigger>
