@@ -42,10 +42,15 @@ class AppointmentCalculation
 
             $start = Carbon::parse($selectedDate->toDateString() . ' ' . $working->start_time);
             $end = Carbon::parse($selectedDate->toDateString() . ' ' . $working->end_time);
+            $now = Carbon::now();
 
             $allSlots = [];
 
             while ($start->lt($end)) {
+                if ($selectedDate->isToday() && $start->lte($now)) {
+                    $start->addMinutes(self::SLOT_MINUTES);
+                    continue;
+                }
                 $allSlots[] = $start->format('H:i');
                 $start->addMinutes(self::SLOT_MINUTES);
             }
