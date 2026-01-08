@@ -2,13 +2,59 @@
 import {Card, CardHeader, CardContent, CardTitle, CardDescription} from '@components/ui/card'
 import {Button} from '@components/ui/button'
     import { getServices } from '@/api/index'
-import {ref, onMounted } from 'vue';
+import {ref, onMounted, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@stores/AuthStore.js'
+import AuthChoiceModal from '@/components/modals/AuthChoiceModal.vue'
+import AuthModal from '@/components/auth/AuthModal.vue'
+import Toast from '@/components/ui/Toast.vue'
 
 const services = ref([])
-    onMounted(async ()=>{
-        services.value = (await getServices()).data
-    })
+const router = useRouter()
+const auth = useAuthStore()
 
+const showAuthChoice = ref(false)
+const loginOpen = ref(false)
+const showToast = ref(false)
+const toastMessage = ref('')
+
+const isLoggedIn = computed(() => auth.isLoggedIn)
+
+onMounted(async ()=>{
+    services.value = (await getServices()).data
+})
+
+watch(isLoggedIn, (loggedIn) => {
+  if (!loggedIn) {
+    showAuthChoice.value = false
+    loginOpen.value = false
+  }
+})
+
+function handleBookingClick() {
+  if (isLoggedIn.value) {
+    router.push({ name: 'Booking' })
+  } else {
+    showAuthChoice.value = true
+  }
+}
+
+function continueAsGuest() {
+  showAuthChoice.value = false
+  router.push({ name: 'Booking' })
+}
+
+function openLoginModal() {
+  showAuthChoice.value = false
+  loginOpen.value = true
+}
+
+function handleAuthSuccess(message) {
+  loginOpen.value = false
+  toastMessage.value = message
+  showToast.value = true
+  router.push({ name: 'Booking' })
+}
 </script>
 <template>
     <section id="services" class="py-15 bg-primary text-primary-foreground scroll-mt-15">
@@ -28,10 +74,28 @@ const services = ref([])
                 </Card>
             </div>
             <div class="text-center mt-20">
-                <Button class="text-lg md:text-xl font-bold p-8" to="/booking">
+                <Button class="text-lg md:text-xl font-bold p-8" @click="handleBookingClick">
                     Book your appointment
                 </Button>
             </div>
         </div>
+        <AuthChoiceModal
+            v-if="showAuthChoice"
+            @guest="continueAsGuest"
+            @login="openLoginModal"
+            @close="showAuthChoice = false"
+        />
+
+        <AuthModal
+            v-if="loginOpen"
+            @close="loginOpen = false"
+            @success="handleAuthSuccess"
+        />
+
+        <Toast
+            v-if="showToast"
+            :message="toastMessage"
+            @close="showToast = false"
+        />
     </section>
 </template>
