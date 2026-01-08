@@ -5,11 +5,14 @@ import { Card, CardHeader, CardTitle, CardAction, CardDescription, CardContent, 
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { register } from '@/api/index'
+import { useAuthStore } from '@stores/AuthStore'
 
+const store = useAuthStore();
 const emit = defineEmits(['close', 'success', 'switch'])
 
 const data = ref({
-  name: '',
+  firstName: '',
+  lastName : '',
   email: '',
   password: '',
   password_confirmation: ''
@@ -18,19 +21,46 @@ const data = ref({
 const errorMessage = ref('')
 const loading = ref(false)
 
+
 async function submit() {
+
+  const fullName = `${data.value.firstName} ${data.value.lastName}`.trim()
+
+  if (containsDigit(fullName)){
+    errorMessage.value = 'Name must not contain numbers'
+    return
+  }
+
+  if (data.value.password != data.value.password_confirmation){
+    errorMessage.value = 'The given passwords must match'
+    return
+  }
+
   errorMessage.value = ''
   loading.value = true
+
   try {
-    const response = await register(data.value)
-    emit('success', 'Account created successfully')
+    const response = await register({
+    name: fullName,
+    email: data.value.email,
+    password: data.value.password,})
+
+    store.setToken(response.token)
+    store.setUser(response.user.id)
+
+    emit('success', 'Succesfully signed up')
     emit('close')
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Registration failed'
+    errorMessage.value = error.response?.data?.message || 'Something went wrong'
   } finally {
     loading.value = false
   }
 }
+
+function containsDigit(string) {
+  return /\d/.test(string)
+}
+
 </script>
 
 <template>
@@ -52,20 +82,24 @@ async function submit() {
 
       <form @submit.prevent="submit" class="space-y-4">
         <div>
-          <Label>Name</Label>
-          <Input v-model="data.name" type="text" />
+          <Label>First Name</Label>
+          <Input v-model="data.firstName" type="text" required/>
+        </div>
+        <div>
+          <Label>Last Name</Label>
+          <Input v-model="data.lastName" type="text" required/>
         </div>
         <div>
           <Label>Email</Label>
-          <Input v-model="data.email" type="email" />
+          <Input v-model="data.email" type="email" required/>
         </div>
         <div>
           <Label>Password</Label>
-          <Input v-model="data.password" type="password" />
+          <Input v-model="data.password" type="password" required/>
         </div>
         <div>
           <Label>Confirm Password</Label>
-          <Input v-model="data.password_confirmation" type="password" />
+          <Input v-model="data.password_confirmation" type="password" required/>
         </div>
         <Button class="w-full" :disabled="loading">
           {{ loading ? 'Signing up…' : 'Sign Up' }}

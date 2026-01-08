@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { login } from '@/api/index'
 import { useAuthStore } from '@stores/AuthStore.js'
 
-const auth = useAuthStore()
+const store = useAuthStore()
 const emit = defineEmits(['close', 'success', 'switch'])
 
 const data = ref({
@@ -22,13 +22,14 @@ async function submit() {
   loading.value = true
   try {
     const response = await login(data.value)
-    auth.setToken(response.token)
-    auth.setUser(response.user.id)
 
-    emit('success', { message: 'Successfully signed in', token: response.token, user_id: response.user.id })
+    store.setToken(response.token)
+    store.setUser(response.user.id)
+
+    emit('success', 'Successfully signed in')
     emit('close')
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Login failed'
+    errorMessage.value = error.response?.data?.message || 'Something went wrong'
   } finally {
     loading.value = false
   }

@@ -68,9 +68,7 @@ async function signOut() {
   }
 }
 
-function handleAuthSuccess({ token, user_id, message }) {
-  auth.setToken(token)
-  auth.setUser(user_id)
+function handleAuthSuccess(message) {
   loginOpen.value = false
   toastMessage.value = message
   showToast.value = true
