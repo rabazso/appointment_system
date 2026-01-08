@@ -1,10 +1,24 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { getEmployees } from '@/api/index'
+import { useAuthStore } from '@/stores/AuthStore'
 
+import AuthChoiceModal from '@/components/modals/AuthChoiceModal.vue'
+import AuthModal from '@/components/auth/AuthModal.vue'
+import Toast from '@/components/ui/Toast.vue'
+
+const router = useRouter()
+const authStore = useAuthStore()
 
 const barbers = ref([])
+const showAuthChoice = ref(false)
+const loginOpen = ref(false)
+const showToast = ref(false)
+const toastMessage = ref('')
+
+const isLoggedIn = computed(() => authStore.isLoggedIn)
 
 
 onMounted(async () => {
@@ -16,18 +30,43 @@ onMounted(async () => {
   }
 })
 
-
 const imageLocation = (barber) => {
   if (barber.image) {
     return '/images/' + barber.image
   }
   return '/images/barber_placeholder.png'
 }
+
+
+function handleBookingClick() {
+  if (isLoggedIn.value) {
+    router.push({ name: 'Booking' })
+  } else {
+    showAuthChoice.value = true
+  }
+}
+
+function continueAsGuest() {
+  showAuthChoice.value = false
+  router.push({ name: 'Booking' })
+}
+
+function handleLoginChoice() {
+  showAuthChoice.value = false
+  loginOpen.value = true
+}
+
+function handleAuthSuccess(message) {
+  loginOpen.value = false
+  toastMessage.value = message
+  showToast.value = true
+  
+  router.push({ name: 'Booking' })
+}
 </script>
 
 <template>
-    <section id="barbers" class="bg-white">
-        <div v-if="barbers.length === 0" class="text-center py-16">
+    <section id="barbers" class="bg-white relative"> <div v-if="barbers.length === 0" class="text-center py-16">
             <p>Loading barbers...</p>
         </div>
 
@@ -38,22 +77,40 @@ const imageLocation = (barber) => {
                 </div>
                 <div class="flex flex-col text-left space-y-4">
                     <h2 class="text-4xl font-bold">{{ barber.name }}</h2>
-                    
                     <p class="text-accent font-bold uppercase tracking-tight text-sm">
-                        {{ barber.shortdesc || barber.specialization || 'Professional Barber' }}
+                        Professional Barber
                     </p>
-                    
                     <p class="max-w-md opacity-90 leading-relaxed">
-                        {{ barber.longdesc || barber.bio || 'No description available.' }}
+                        {{ barber.bio || 'No description available for this barber.' }}
                     </p>
                     
                     <div class="pt-4">
-                        <Button as-child class="px-7 py-7 text-lg" to="/booking">
+                        <Button class="px-7 py-7 text-lg" @click="handleBookingClick">
                             Book your appointment
                         </Button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <AuthChoiceModal
+            v-if="showAuthChoice"
+            @guest="continueAsGuest"
+            @login="handleLoginChoice"
+            @close="showAuthChoice = false"
+        />
+
+        <AuthModal
+            v-if="loginOpen"
+            @close="loginOpen = false"
+            @success="handleAuthSuccess"
+        />
+
+        <Toast
+            v-if="showToast"
+            :message="toastMessage"
+            @close="showToast = false"
+        />
+
     </section>
 </template>
