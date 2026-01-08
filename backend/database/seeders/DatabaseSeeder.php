@@ -42,7 +42,6 @@ class DatabaseSeeder extends Seeder
         $employeesName = [
             'Blowout Ben',
             'Crispy Chris',
-            'Haircut Harry',
             'Bouncy Bella',
             'Loud Lucy'
         ];
@@ -82,6 +81,31 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        $user = User::create([
+            'name' => 'Haircut Harry',
+            'email' => $faker->unique()->safeEmail,
+            'password' => Hash::make('password'),
+        ]);
+        $employee = Employee::create([
+                'user_id' => $user->id,
+                'bio' => $employeesBio['Haircut Harry'],
+                'photo_url' => $faker->imageUrl(200, 200, 'people'),
+            ]);
+        for ($day = 1; $day <= 5; $day++) {
+                WorkingHour::create([
+                    'employee_id' => $employee->id,
+                    'weekday' => $day,
+                    'start_time' => '12:00:00',
+                    'end_time' => '20:00:00',
+                ]);
+            }
+        $employee->services()->attach($services[0], [
+                    'price' => $faker->numberBetween(50, 100),
+                ]);
+        $employee->services()->attach($services[1], [
+            'price' => $faker->numberBetween(50, 100),
+        ]);
 
         for ($i = 0; $i < 10; $i++) {
             User::create([
