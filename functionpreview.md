@@ -17,31 +17,5 @@
 
 ## 4. Foglalások (Appointments)
 - **Időpontfoglalás**
-- **Státusz kezelés**
-
 ---
 
-## 5. Fizetések (Payments)
-- **Foglaláshoz kapcsolódó fizetés**
-- **Összeg és fizetési mód kezelése**
-- **Tranzakció nyilvántartása**
-
----
-
-## 6. Értékelések / Vélemények (Reviews)
-- **Értékelés**
-- **Komment**
-
----
-
-## (7. Extra funkciók)
-- **Admin felület**
-  - Felhasználók, alkalmazottak, szolgáltatások és foglalások áttekintése
-- **Riportok / statisztikák**
-  - Legjobb értékelésű alkalmazott
-  - Legnépszerűbb szolgáltatások
-  - Bevétel időszakokra bontva
-- **Értesítések**
-  - Foglalás megerősítése / törlése – email/sms
-- **Webshop**
-  - Termékek forgalmazása
