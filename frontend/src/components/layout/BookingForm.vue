@@ -6,12 +6,11 @@ import { RadioGroup, RadioGroupItem } from '@components/ui/radio-group'
 import { Label } from '@components/ui/label'
 import { Scissors } from 'lucide-vue-next'
 import { Calendar } from '@components/ui/calendar'
-import { fromDate, getLocalTimeZone, today } from '@internationalized/date'
+import { getLocalTimeZone, today } from '@internationalized/date'
 import { Button } from '@components/ui/button'
 import { 
   getServices, 
   getEmployeesByService, 
-  getAppointmentByServiceAndDate, 
   getAppointmentsByServiceAndDateAndEmployee,
   postGuest,
   postAppointment
@@ -97,11 +96,11 @@ watch(
 const store = useAuthStore();
 const isAuthenticated = computed(() => store.isLoggedIn)
 
+const pad = (n) => n.toString().padStart(2,'0')
+
 const handleSubmit = async () => {
   try {
     if (!isReadyForUser()) return
-
-    const pad = (n) => n.toString().padStart(2,'0')
 
 
 const appointmentStart = `${selectedDate.value.year}-${pad(selectedDate.value.month)}-${pad(selectedDate.value.day)} ${selectedTime.value}`
@@ -280,7 +279,7 @@ const appointmentStart = `${selectedDate.value.year}-${pad(selectedDate.value.mo
     <CardContent class="space-y-2">
       <div class="flex justify-between"><p class="text-muted-foreground">Service:</p><p class="font-semibold">{{ services.find(s => s.id === selectedService)?.name }}</p></div>
       <div class="flex justify-between"><p class="text-muted-foreground">Barber:</p><p class="font-semibold">{{ barbers.find(b => b.id === selectedBarber)?.name }}</p></div>
-      <div class="flex justify-between"><p class="text-muted-foreground">Date:</p><p class="font-semibold">{{ selectedDate.toDate(getLocalTimeZone()).toISOString().split('T')[0] }}</p></div>
+      <div class="flex justify-between"><p class="text-muted-foreground">Date:</p><p class="font-semibold">{{ pad(selectedDate.year) }}-{{ pad(selectedDate.month) }}-{{ pad(selectedDate.day) }}</p></div>
       <div class="flex justify-between"><p class="text-muted-foreground">Time:</p><p class="font-semibold">{{ selectedTime }}</p></div>
       <div class="flex justify-between"><p class="text-muted-foreground">Total:</p><p class="font-semibold">${{ barbers.find(b => b.id === selectedBarber)?.services.price }}</p></div>
     </CardContent>
