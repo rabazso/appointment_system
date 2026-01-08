@@ -73,13 +73,8 @@ watch(selectedDate, async () => {
 })
 
 async function loadTimeSlots() {
-  const isoDate = selectedDate.value.toDate(getLocalTimeZone()).toISOString().split('T')[0]
-  let res
-  if (selectedBarber.value) {
-    res = await getAppointmentsByServiceAndDateAndEmployee(selectedService.value, isoDate, selectedBarber.value)
-  } else {
-    res = await getAppointmentByServiceAndDate(selectedService.value, isoDate)
-  }
+  const isoDate = `${selectedDate.value.year}-${String(selectedDate.value.month).padStart(2,'0')}-${String(selectedDate.value.day).padStart(2,'0')}`
+  const res = await getAppointmentsByServiceAndDateAndEmployee(selectedService.value, isoDate, selectedBarber.value)
   timeSlots.value = res.data?.[isoDate] || []
 }
 
@@ -106,11 +101,10 @@ const handleSubmit = async () => {
   try {
     if (!isReadyForUser()) return
 
-    const date = selectedDate.value.toDate(getLocalTimeZone())
-    const [hours, minutes] = selectedTime.value.split(':').map(Number)
-    date.setHours(hours, minutes)
-    const pad = (n) => n.toString().padStart(2, '0')
-    const appointmentStart = `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+    const pad = (n) => n.toString().padStart(2,'0')
+
+
+const appointmentStart = `${selectedDate.value.year}-${pad(selectedDate.value.month)}-${pad(selectedDate.value.day)} ${selectedTime.value}`
 
     let customerId = null;
 
