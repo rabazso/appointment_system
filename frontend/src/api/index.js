@@ -1,58 +1,56 @@
 import axios from 'axios';
+import { useAuthStore } from '@stores/AuthStore.js'
 
 const API = axios.create({
     baseURL: 'http://backend.vm1.test/api',
+    
 });
 
-export const setAuthToken = (token) => {
-    if (token) {
-        localStorage.setItem('token', token);  
-        API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-        localStorage.removeItem('token');  
-        delete API.defaults.headers.common['Authorization'];
-    }
-};
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-export const setUserId = (user_id) => {
-    if (user_id) {
-        localStorage.setItem('user_id', user_id);
-    } else {
-        localStorage.removeItem('user_id');
-    }
-};
 
 export const register = async (data) => {
+
     const response = await API.post('/register', data);
     const token = response.data.token;
-    const user_id = response.data.user?.id;
+    const user_id = response.data.user.id;
 
-    if (token) setAuthToken(token);
-    if (user_id) setUserId(user_id);
+    const store = useAuthStore();
+    
+    if (token) store.setToken(token);
+    if (user_id) store.setUser(user_id);
 
     return response.data;
 };
 
 export const login = async (data) => {
+
     const response = await API.post('/login', data);
     const token = response.data.token;
-    const user_id = response.data.user?.id;
+    const user_id = response.data.user.id;
 
-    if (token) setAuthToken(token);
-    if (user_id) setUserId(user_id);
+    const store = useAuthStore();
+
+    if (token) store.setToken(token);
+    if (user_id) store.setUser(user_id);
 
     return response.data;
 };
 
+
 export const logout = async () => {
-    const token = localStorage.getItem('token');
-    const response = await API.post('/logout', {}, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    });
-    setAuthToken(null);
-    setUserId(null);
+    const response = await API.post('/logout');
+
+    const store = useAuthStore();
+
+    store.setToken(null);
+    store.setUser(null);
     
     return response.data;
 };

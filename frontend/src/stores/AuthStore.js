@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { setAuthToken, setUserId, logout as apiLogout } from '@/api';
+import { logout as apiLogout } from '@/api';
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || null);
@@ -10,12 +10,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   function setToken(newToken) {
     token.value = newToken;
-    setAuthToken(newToken);
+    if (newToken) localStorage.setItem('token', newToken);
+    else localStorage.removeItem('token');
   }
 
   function setUser(newUserId) {
     user_id.value = newUserId;
-    setUserId(newUserId);
+    if (newUserId) localStorage.setItem('user_id', newUserId);
+    else localStorage.removeItem('user_id');
   }
 
   async function logout() {
@@ -24,10 +26,8 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err) {
       console.error(err);
     } finally {
-      token.value = null;
-      user_id.value = null;
-      setAuthToken(null);
-      setUserId(null);
+      setToken(null);
+      setUser(null);
     }
   }
 
