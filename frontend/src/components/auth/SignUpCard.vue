@@ -31,6 +31,20 @@ async function submit() {
     return
   }
 
+  const password = data.value.password
+  const passwordErrors = []
+
+  if (password.length < 8) passwordErrors.push('at least 8 characters')
+  if (!/[A-Z]/.test(password)) passwordErrors.push('an uppercase letter')
+  if (!/[a-z]/.test(password)) passwordErrors.push('a lowercase letter')
+  if (!/[0-9]/.test(password)) passwordErrors.push('a number')
+  if (!/[@$!%*?&.]/.test(password)) passwordErrors.push('a special character')
+
+  if (passwordErrors.length > 0) {
+    errorMessage.value = 'Password must contain ' + passwordErrors.join(', ')
+    return
+  }
+
   if (data.value.password != data.value.password_confirmation){
     errorMessage.value = 'The given passwords must match'
     return
