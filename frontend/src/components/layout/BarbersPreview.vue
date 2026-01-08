@@ -6,6 +6,9 @@ import {ref, onMounted } from 'vue';
     const forwardPage = (barber) => {
         return '/barbers/' + barber.id
     }
+    function getImageSrc(name) {
+      return `../../../public/images/${name}.png`;
+    }
 const barbers = ref([])
     onMounted(async ()=>{
         barbers.value = (await getEmployees()).data
@@ -23,7 +26,7 @@ const barbers = ref([])
             <div class="grid md:grid-cols-3 gap-8">
                 <Card v-for="barber in barbers" :key="barber?.id" class="hover:scale-105 transition-transform duration-300">
                     <CardHeader>
-                        <img src="../../../public/images/barber_placeholder.png" class="w-full h-full rounded-lg">
+                        <img :src="getImageSrc(barber.name)" class="w-full h-full rounded-lg">
                     </CardHeader>
                     <CardContent>
                         <CardTitle class="text-xl font-bold text-primary mb-1">{{ barber.name }}</CardTitle>
