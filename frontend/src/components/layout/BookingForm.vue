@@ -17,6 +17,9 @@ import {
   postAppointment
 
 } from '@/api/index'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const selectedService = ref('')
 const selectedBarber = ref('')
@@ -131,6 +134,7 @@ const handleSubmit = async () => {
     await postAppointment(selectedService.value, selectedBarber.value, appointmentStart, customerId)
 
     alert('Appointment successfully booked!')
+    router.push('/')
   } catch (err) {
     console.error(err)
     alert('Failed to book appointment. Please try again.')
