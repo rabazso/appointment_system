@@ -59,7 +59,6 @@ class DatabaseSeeder extends Seeder
             $user = User::create([
                 'name' => $name,
                 'email' => $faker->unique()->safeEmail,
-                'phone' => $faker->unique()->phoneNumber,
                 'password' => Hash::make('password'),
             ]);
 
@@ -88,7 +87,6 @@ class DatabaseSeeder extends Seeder
             User::create([
                 'name' => $faker->name,
                 'email' => $faker->unique()->safeEmail,
-                'phone' => $faker->unique()->phoneNumber,
                 'password' => Hash::make('password'),
             ]);
         }

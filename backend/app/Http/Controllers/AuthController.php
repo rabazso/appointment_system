@@ -14,14 +14,12 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'nullable|string|unique:users,phone',
             'password' => 'required|string',
         ]);
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'phone' =>  $data['phone'] ?? null,
             'password' => Hash::make($data['password']),
         ]);
 
@@ -66,23 +64,17 @@ class AuthController extends Controller
                 'email',
                 Rule::unique('users', 'email')->ignore(optional($user)->id),
             ],
-            'phone' => [
-                'nullable',
-                'string',
-            ],
         ]);
 
         if (!$user) {
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'phone' => $data['phone'] ?? null,
                 'password' => null,
             ]);
         }
         $user->update([
             'name' => $data['name'],
-            'phone' => $data['phone'] ?? null,
         ]);
 
         return response()->json(['user' => $user, 'Make appoinment']);

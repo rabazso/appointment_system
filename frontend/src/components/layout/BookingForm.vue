@@ -27,7 +27,7 @@ const selectedService = ref('')
 const selectedBarber = ref('')
 const selectedDate = ref('')
 const selectedTime = ref('')
-const userData = ref({ name: '', email: '', phone: '' })
+const userData = ref({ name: '', email: ''})
 
 const openSection = ref('service')
 
@@ -110,7 +110,7 @@ const appointmentStart = `${selectedDate.value.year}-${pad(selectedDate.value.mo
 
     if (!isAuthenticated.value){
       try{
-        const response = await postGuest(userData.value.name, userData.value.email, userData.value.phone)
+        const response = await postGuest(userData.value.name, userData.value.email)
         customerId = response.data.user.id
       }
       catch{
@@ -265,8 +265,6 @@ const appointmentStart = `${selectedDate.value.year}-${pad(selectedDate.value.mo
             <input v-model="userData.name" type="text" placeholder="Your full name" required class="w-full border border-border rounded-md p-2"/>
             <Label class="block font-semibold">Email</Label>
             <input v-model="userData.email" type="email" placeholder="you@example.com" required class="w-full border border-border rounded-md p-2"/>
-            <Label class="block font-semibold">Phone</Label>
-            <input v-model="userData.phone" type="tel" placeholder="Your phone number" class="w-full border border-border rounded-md p-2"/>
           </CardContent>
         </AccordionContent>
       </Card>
