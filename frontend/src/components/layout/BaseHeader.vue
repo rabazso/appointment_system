@@ -40,6 +40,7 @@ const title = import.meta.env.VITE_APP_NAME || 'MyApp'
 const links = [
   { label: 'Services', to: '/', hash: '#services' },
   { label: 'Our Barbers', to: '/', hash: '#barbers' },
+  { label: 'Reviews', to: '/', hash: '#reviews' },
   { label: 'Contact', to: '/contact' }
 ]
 

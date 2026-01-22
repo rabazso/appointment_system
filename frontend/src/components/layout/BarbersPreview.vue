@@ -12,7 +12,6 @@ import {ref, onMounted } from 'vue';
 const barbers = ref([])
     onMounted(async ()=>{
         barbers.value = (await getEmployees()).data
-        console.log(barbers);
     })
     
 </script>
