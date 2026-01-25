@@ -2,11 +2,13 @@
 
 namespace App\Calculations;
 
+use App\Mail\BookingConfirmation;
 use App\Models\Service;
 use App\Models\Employee;
 use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class CreateAppointment
 {
@@ -54,6 +56,7 @@ class CreateAppointment
             'end_datetime' => $slotEnd,
         ]);
 
+        Mail::to('test@example.com')->send(new BookingConfirmation());
         return response()->json(['message' => 'Appointment created successfully'], 201);
     }
 }
