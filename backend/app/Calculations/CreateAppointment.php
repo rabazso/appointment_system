@@ -9,6 +9,7 @@ use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class CreateAppointment
 {
@@ -24,11 +25,11 @@ class CreateAppointment
         $slotEnd = $appointmentStart->copy()->addMinutes($serviceDuration)->toDateTimeString();
 
         if ($appointmentStart->lt(now())) {
-            return response()->json(['error' => 'Appointment cannot be created in the past'], 400);
+            throw ValidationException::withMessages(["appointment_start" => "Appointment cannot be created in the past"]);
         }
 
         if ($appointmentStart->minute % 30 != 0) {
-            return response()->json(['error' => 'The appointment must fall within the allowed interval'], 400);
+            throw ValidationException::withMessages(['appointment_start' => 'The appointment must fall within the allowed interval']);
         }
 
         $employee = Employee::where('id', $employeeId)
@@ -45,18 +46,16 @@ class CreateAppointment
             )->first();
 
         if (!$employee) {
-            return response()->json(['error' => 'Employee is not available during this time for this service'], 400);
+            throw ValidationException::withMessages(['error' => 'Employee is not available during this time for this service']);
         }
 
-        Appointment::create([
+        return Appointment::create([
             'customer_id' => $customerId,
             'employee_id' => $employeeId,
             'service_id' => $serviceId,
             'start_datetime' => $slotStart,
             'end_datetime' => $slotEnd,
         ]);
-
-        Mail::to('test@example.com')->send(new BookingConfirmation());
-        return response()->json(['message' => 'Appointment created successfully'], 201);
+        
     }
 }

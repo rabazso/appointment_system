@@ -2,6 +2,8 @@
 
 namespace App\Mail;
 
+use App\Http\Requests\AppointmentStoreRequest;
+use App\Models\Appointment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -16,7 +18,7 @@ class BookingConfirmation extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct(public Appointment $appointment)
     {
         //
     }
@@ -37,7 +39,10 @@ class BookingConfirmation extends Mailable
     public function content(): Content
     {
         return new Content(
-            text: 'mail.confirmation',
+            view: 'mail.confirmation',
+             with: [
+                'appointment' => $this->appointment,
+            ],
         );
     }
 
