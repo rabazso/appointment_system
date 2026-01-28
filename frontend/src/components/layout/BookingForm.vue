@@ -1,24 +1,22 @@
 <script setup>
-import { ref, watch, nextTick, onMounted, computed} from 'vue'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@components/ui/accordion'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@components/ui/card'
-import { RadioGroup, RadioGroupItem } from '@components/ui/radio-group'
-import { Label } from '@components/ui/label'
+import { ref, watch, nextTick, onMounted, computed } from 'vue'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 import { Scissors } from 'lucide-vue-next'
-import { Calendar } from '@components/ui/calendar'
+import { Calendar } from '@/components/ui/calendar'
 import { getLocalTimeZone, today } from '@internationalized/date'
-import { Button } from '@components/ui/button'
+import { Button } from '@/components/ui/button'
 import { 
   getServices, 
   getEmployeesByService, 
   getAppointmentsByServiceAndDateAndEmployee,
   postGuest,
   postAppointment
-
 } from '@/api/index'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@stores/AuthStore.js'
-
+import { useAuthStore } from '@/stores/AuthStore.js'
 
 const router = useRouter()
 
@@ -39,28 +37,25 @@ const dateTimeRef = ref(null)
 const userDataRef = ref(null)
 
 onMounted(async () => {
-  services.value = (await getServices()).data
+  const res = await getServices()
+  services.value = res.data
 })
 
 watch(selectedService, async (serviceId) => {
   if (!serviceId) return
-
-  barbers.value = (await getEmployeesByService(serviceId)).data
-
+  const res = await getEmployeesByService(serviceId)
+  barbers.value = res.data
   openSection.value = 'barber'
-
   await nextTick()
   barberRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 })
 
 watch(selectedBarber, async (barberId) => {
   if (!barberId) return
-
   selectedTime.value = ''
-    selectedDate.value = today(getLocalTimeZone())
+  selectedDate.value = today(getLocalTimeZone())
   await loadTimeSlots()
   openSection.value = 'datetime'
-
   await nextTick()
   dateTimeRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 })
@@ -72,6 +67,7 @@ watch(selectedDate, async () => {
 })
 
 async function loadTimeSlots() {
+  if (!selectedDate.value) return
   const isoDate = `${selectedDate.value.year}-${String(selectedDate.value.month).padStart(2,'0')}-${String(selectedDate.value.day).padStart(2,'0')}`
   const res = await getAppointmentsByServiceAndDateAndEmployee(selectedService.value, isoDate, selectedBarber.value)
   timeSlots.value = res.data?.[isoDate] || []
@@ -83,61 +79,72 @@ watch(
   () => isReadyForUser(),
   async (ready) => {
     if (ready) {
-      openSection.value = 'userdata'
-      await nextTick()
-      userDataRef.value?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      })
+      if (!isAuthenticated.value) {
+        openSection.value = 'userdata'
+        await nextTick()
+        userDataRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
     }
   }
 )
 
-const store = useAuthStore();
+const store = useAuthStore()
 const isAuthenticated = computed(() => store.isLoggedIn)
-
 const pad = (n) => n.toString().padStart(2,'0')
 
 const handleSubmit = async () => {
   try {
     if (!isReadyForUser()) return
 
+    const dateStr = `${selectedDate.value.year}-${pad(selectedDate.value.month)}-${pad(selectedDate.value.day)}`
+    const appointmentStart = `${dateStr} ${selectedTime.value}`
 
-const appointmentStart = `${selectedDate.value.year}-${pad(selectedDate.value.month)}-${pad(selectedDate.value.day)} ${selectedTime.value}`
-
-    let customerId = null;
+    let customerId = null
 
     if (!isAuthenticated.value){
-      try{
+      try {
         const response = await postGuest(userData.value.name, userData.value.email)
         customerId = response.data.user.id
+      } catch (e) {
+        console.error(e)
       }
-      catch{
-
-      }
-    }
-    else{
-      customerId = parseInt(localStorage.getItem('user_id'), 10);
+    } else {
+      const storedId = localStorage.getItem('user_id')
+      if (storedId) customerId = parseInt(storedId, 10)
     }
 
     await postAppointment(selectedService.value, selectedBarber.value, appointmentStart, customerId)
 
-    alert('Appointment successfully booked!')
-    router.push('/')
+    // --- MÓDOSÍTÁS: Adatok összegyűjtése és átirányítás a summary oldalra ---
+    const serviceObj = services.value.find(s => s.id === selectedService.value)
+    const barberObj = barbers.value.find(b => b.id === selectedBarber.value)
+
+    const bookingData = {
+      serviceName: serviceObj?.name,
+      barberName: barberObj?.name,
+      date: dateStr,
+      time: selectedTime.value,
+      price: barberObj?.services?.price
+    }
+
+    // A 'summary' nevű route-ra küldjük (ellenőrizd a router/index.js-t, hogy van-e name: 'summary')
+    // Ha nincs neve a route-nak, használd a path: '/summary'-t
+    router.push({ 
+      path: '/summary', 
+      state: { booking: bookingData } 
+    })
+
   } catch (err) {
     console.error(err)
     alert('Failed to book appointment. Please try again.')
   }
 }
-
-
 </script>
 
 <template>
 <form @submit.prevent class="space-y-6">
 
   <Accordion type="single" collapsible v-model="openSection" class="space-y-4">
-
     <AccordionItem value="service">
       <Card>
         <AccordionTrigger>
@@ -194,7 +201,7 @@ const appointmentStart = `${selectedDate.value.year}-${pad(selectedDate.value.mo
                   <RadioGroupItem :value="barber.id" />
                   <div class="flex-1">
                     <p class="font-semibold">{{ barber.name }}</p>
-                    <p class="text-sm text-accent mt-1">${{ barber.services.price }}</p>
+                    <p class="text-sm text-accent mt-1">${{ barber.services?.price }}</p>
                   </div>
                 </Label>
               </div>
@@ -233,10 +240,14 @@ const appointmentStart = `${selectedDate.value.year}-${pad(selectedDate.value.mo
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   <Button v-for="time in timeSlots" :key="time"
                           variant="outline"
+                          type="button" 
                           :class="selectedTime === time ? 'border-accent border-2 bg-primary/10' : 'bg-background'"
                           @click="selectedTime = time">
                     {{ time }}
                   </Button>
+                  <p v-if="timeSlots.length === 0 && selectedDate" class="text-sm text-muted-foreground col-span-full mt-2">
+                     No slots available.
+                  </p>
                 </div>
               </div>
             </div>
@@ -261,15 +272,14 @@ const appointmentStart = `${selectedDate.value.year}-${pad(selectedDate.value.mo
         <AccordionContent>
           <CardContent class="space-y-4">
             <Label class="block font-semibold">Name</Label>
-            <input v-model="userData.name" type="text" placeholder="Your full name" required class="w-full border border-border rounded-md p-2"/>
+            <input v-model="userData.name" type="text" placeholder="Your full name" required class="w-full border border-border rounded-md p-2 bg-background text-foreground"/>
             <Label class="block font-semibold">Email</Label>
-            <input v-model="userData.email" type="email" placeholder="you@example.com" required class="w-full border border-border rounded-md p-2"/>
+            <input v-model="userData.email" type="email" placeholder="you@example.com" required class="w-full border border-border rounded-md p-2 bg-background text-foreground"/>
           </CardContent>
         </AccordionContent>
       </Card>
       </div>
     </AccordionItem>
-
   </Accordion>
 
   <Card v-if="isReadyForUser()" class="border-accent/30 bg-accent/10" >
@@ -277,11 +287,28 @@ const appointmentStart = `${selectedDate.value.year}-${pad(selectedDate.value.mo
       <CardTitle>Booking Summary</CardTitle>
     </CardHeader>
     <CardContent class="space-y-2">
-      <div class="flex justify-between"><p class="text-muted-foreground">Service:</p><p class="font-semibold">{{ services.find(s => s.id === selectedService)?.name }}</p></div>
-      <div class="flex justify-between"><p class="text-muted-foreground">Barber:</p><p class="font-semibold">{{ barbers.find(b => b.id === selectedBarber)?.name }}</p></div>
-      <div class="flex justify-between"><p class="text-muted-foreground">Date:</p><p class="font-semibold">{{ pad(selectedDate.year) }}-{{ pad(selectedDate.month) }}-{{ pad(selectedDate.day) }}</p></div>
-      <div class="flex justify-between"><p class="text-muted-foreground">Time:</p><p class="font-semibold">{{ selectedTime }}</p></div>
-      <div class="flex justify-between"><p class="text-muted-foreground">Total:</p><p class="font-semibold">${{ barbers.find(b => b.id === selectedBarber)?.services.price }}</p></div>
+      <div class="flex justify-between">
+        <p class="text-muted-foreground">Service:</p>
+        <p class="font-semibold">{{ services.find(s => s.id === selectedService)?.name }}</p>
+      </div>
+      <div class="flex justify-between">
+        <p class="text-muted-foreground">Barber:</p>
+        <p class="font-semibold">{{ barbers.find(b => b.id === selectedBarber)?.name }}</p>
+      </div>
+      <div class="flex justify-between">
+        <p class="text-muted-foreground">Date:</p>
+        <p class="font-semibold" v-if="selectedDate">
+          {{ pad(selectedDate.year) }}-{{ pad(selectedDate.month) }}-{{ pad(selectedDate.day) }}
+        </p>
+      </div>
+      <div class="flex justify-between">
+        <p class="text-muted-foreground">Time:</p>
+        <p class="font-semibold">{{ selectedTime }}</p>
+      </div>
+      <div class="flex justify-between">
+        <p class="text-muted-foreground">Total:</p>
+        <p class="font-semibold">${{ barbers.find(b => b.id === selectedBarber)?.services?.price }}</p>
+      </div>
     </CardContent>
   </Card>
 
