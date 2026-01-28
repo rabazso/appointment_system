@@ -4,6 +4,8 @@ import Index from '@pages/index.vue'
 import Barbers from '@pages/barbers.vue'
 import Contact from '@pages/contact.vue'
 import Booking from '@pages/booking.vue'
+import Summary from '@pages/summary.vue'
+import YourAppointments from '@pages/yourAppointments.vue'
 
 const routes = [
   {
@@ -36,6 +38,22 @@ const routes = [
     component: Booking,
     meta:{
       title: 'Booking'
+    }
+  },
+  {
+    path: '/summary',
+    name: 'Summary',
+    component: Summary,
+    meta:{
+      title: 'Summary'
+    }
+  },
+  {
+    path: '/yourAppointments',
+    name: 'YourAppointments',
+    component: YourAppointments,
+    meta:{
+      title: 'YourAppointments'
     }
   }
 ]
