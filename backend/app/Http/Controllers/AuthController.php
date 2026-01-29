@@ -85,6 +85,6 @@ class AuthController extends Controller
             'name' => $data['name'],
         ]);
 
-        return response()->json(['user' => $user, 'Make appoinment']);
+        return response()->json(['user' => $user, "message" => 'Make appoinment']);
     }
 }
