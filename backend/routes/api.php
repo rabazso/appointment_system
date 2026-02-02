@@ -16,7 +16,9 @@ Route::post('/guest', [AuthController::class, 'guest']);
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/employees', [EmployeeController::class, 'index']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
-Route::post('/appointments', [AppointmentController::class, 'store']);
+Route::middleware('auth:api')->group(function () {
+    Route::post('/appointments', [AppointmentController::class, 'store']);
+});
 
 Route::get('/reviews', [ReviewController::class, 'index']);
 

@@ -10,8 +10,9 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\URL;
 
-class BookingConfirmation extends Mailable
+class Booking extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -38,6 +39,8 @@ class BookingConfirmation extends Mailable
      */
     public function content(): Content
     {
+        $confirmUrl = URL::signedRoute('booking.confirm', ['appointment' => $this->appointment->id]);
+        $cancelUrl = URL::signedRoute('booking.cancel', ['appointment' => $this->appointment->id]);
         return new Content(
             view: 'mail.confirmation',
              with: [
