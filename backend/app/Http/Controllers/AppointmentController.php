@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Calculations\AppointmentCalculation;
 use App\Calculations\CreateAppointment;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Requests\AppointmentRequest;
 use App\Http\Requests\AppointmentStoreRequest;
 use App\Mail\Booking;
+use App\Models\Appointment;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 class AppointmentController extends Controller
 {
@@ -25,10 +26,18 @@ class AppointmentController extends Controller
     public function store(AppointmentStoreRequest $request, CreateAppointment $create)
     {
         $appointment = $create->Create($request);
-        $user = auth()->user();
-        $token = JWTAuth::fromUser(auth()->user(), ['appointment_id' => $appointment->id]);
-        $confirmationLink = url("/appointments/confirm/{$token}");
+        $confirmationLink = URL::temporarySignedRoute("appointments.confirm", now()->addMinutes(60), ["appointment" => $appointment->id]);
         Mail::to($appointment->customer->email)->send(new Booking($appointment, $confirmationLink));
-        return response()->json(["message"=> "Successfully booked", "appointment" => $appointment,], 201);
+        return response()->json(["message"=> "Booking created, confirmation email sent", "appointment" => $appointment,], 201);
+    }
+
+    public function confirm(Appointment $appointment){
+        if($appointment->confirmed_at){
+            return response()->json(["message" => "Booking already confirmed"], 400);
+        }
+        $appointment->update([
+            "confirmed_at" => now()
+        ]);
+        return response()->json(["message" => "Booking confirmed", "appointment" => $appointment]);
     }
 }

@@ -16,13 +16,12 @@ Route::post('/guest', [AuthController::class, 'guest']);
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/employees', [EmployeeController::class, 'index']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
-Route::middleware('auth:api')->group(function () {
-    Route::post('/appointments', [AppointmentController::class, 'store']);
-});
+
+Route::get('/appointments/confirm/{appointment}', [AppointmentController::class, 'confirm'])->name("appointments.confirm")->middleware("signed");
 
 Route::get('/reviews', [ReviewController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
-Route::post('/logout', [AuthController::class, 'logout']);
-Route::apiResource("reviews", ReviewController::class)->only(["store", "destroy"]);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::apiResource("reviews", ReviewController::class)->only(["store", "destroy"]);
 });

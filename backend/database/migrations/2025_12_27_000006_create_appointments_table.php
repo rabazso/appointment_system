@@ -12,6 +12,8 @@ return new class extends Migration {
             $table->foreignId('service_id')->constrained();
             $table->dateTime('start_datetime');
             $table->dateTime('end_datetime');
+            $table->timestamp('confirmed_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 });
 

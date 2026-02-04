@@ -19,7 +19,7 @@ class Booking extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(public Appointment $appointment)
+    public function __construct(public Appointment $appointment, public string $confirmationLink)
     {
         //
     }
@@ -39,12 +39,11 @@ class Booking extends Mailable
      */
     public function content(): Content
     {
-        $confirmUrl = URL::signedRoute('booking.confirm', ['appointment' => $this->appointment->id]);
-        $cancelUrl = URL::signedRoute('booking.cancel', ['appointment' => $this->appointment->id]);
         return new Content(
             view: 'mail.confirmation',
              with: [
                 'appointment' => $this->appointment,
+                "confirmationLink" => $this->confirmationLink,
             ],
         );
     }
