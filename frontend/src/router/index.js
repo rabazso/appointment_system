@@ -6,6 +6,7 @@ import Contact from '@pages/contact.vue'
 import Booking from '@pages/booking.vue'
 import Summary from '@pages/summary.vue'
 import YourAppointments from '@pages/yourAppointments.vue'
+import BarberAdminPage from '@pages/barberAdminPage.vue'
 
 const routes = [
   {
@@ -54,6 +55,14 @@ const routes = [
     component: YourAppointments,
     meta:{
       title: 'YourAppointments'
+    }
+  },
+  {
+    path: '/barberAdminPage',
+    name: 'BarberAdminPage',
+    component: BarberAdminPage,
+    meta:{
+      title: 'BarberAdminPage'
     }
   }
 ]
