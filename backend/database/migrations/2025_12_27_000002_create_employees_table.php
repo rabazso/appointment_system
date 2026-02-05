@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->foreignIdFor(User::class);
             $table->text('bio')->nullable();
             $table->string('photo_url')->nullable();
+            $table->timestamps();
 });
 
     }

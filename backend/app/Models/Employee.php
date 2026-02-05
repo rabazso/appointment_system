@@ -4,7 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
-    protected $table = 'employee';
+    protected $table = 'employees';
 
     protected $fillable = [
         'user_id','bio','photo_url','instagram_url','active'

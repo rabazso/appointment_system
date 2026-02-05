@@ -166,7 +166,7 @@ const handleSubmit = async () => {
                       <Scissors class="size-4" />
                       <p class="font-semibold">{{ service.name }}</p>
                     </div>
-                    <p class="text-sm text-muted-foreground">{{ service.duration }} mins</p>
+                    <p class="text-sm text-muted-foreground">{{ service.default_duration }} mins</p>
                   </div>
                 </Label>
               </div>

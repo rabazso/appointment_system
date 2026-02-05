@@ -7,10 +7,16 @@ class Service extends Model
     protected $fillable = [
         'name','description','default_duration','default_price','active'
     ];
+    protected $appends = ['duration'];
 
     public function employees()
     {
         return $this->belongsToMany(Employee::class, 'employee_services')
             ->withPivot('price', 'duration');
+    }
+
+    public function getDurationAttribute()
+    {
+        return $this->default_duration;
     }
 }

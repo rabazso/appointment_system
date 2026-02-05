@@ -19,22 +19,26 @@ class DatabaseSeeder extends Seeder
         $services = [
             Service::create([
                 'name' => 'Regular haircut',
-                'duration' => 30,
+                'default_duration' => 30,
+                'default_price' => $faker->numberBetween(50, 100),
                 'description' => 'A quick, precise haircut for a clean, polished look. Perfect for busy schedules.'
             ]),
             Service::create([
                 'name' => 'Perfect haircut',
-                'duration' => 60,
+                'default_duration' => 60,
+                'default_price' => $faker->numberBetween(50, 100),
                 'description' => 'Basically the same as regular, but you give the barber more time, so he could be more precise.'
             ]),
             Service::create([
                 'name' => 'Beard trim',
-                'duration' => 30,
+                'default_duration' => 30,
+                'default_price' => $faker->numberBetween(50, 100),
                 'description' => 'Expert trimming and shaping to maintain a sharp, well-groomed beard.'
             ]),
             Service::create([
                 'name' => 'Fullbox',
-                'duration' => 60,
+                'default_duration' => 60,
+                'default_price' => $faker->numberBetween(50, 100),
                 'description' => 'A bundle option for a regular haircut and a beard trim.'
             ]),
         ];
@@ -78,6 +82,7 @@ class DatabaseSeeder extends Seeder
             foreach ($services as $service) {
                 $employee->services()->attach($service->id, [
                     'price' => $faker->numberBetween(50, 100),
+                    "duration" => 30,
                 ]);
             }
         }
@@ -102,9 +107,11 @@ class DatabaseSeeder extends Seeder
             }
         $employee->services()->attach($services[0], [
                     'price' => $faker->numberBetween(50, 100),
+                    "duration" => 60,
                 ]);
         $employee->services()->attach($services[1], [
             'price' => $faker->numberBetween(50, 100),
+            "duration" => 30,
         ]);
 
         for ($i = 0; $i < 10; $i++) {

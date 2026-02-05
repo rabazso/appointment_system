@@ -7,7 +7,7 @@ return new class extends Migration {
     public function up() {
         Schema::create('employee_time_off', function (Blueprint $table) {
     $table->id();
-    $table->foreignId('employee_id')->constrained('employee')->cascadeOnDelete();
+    $table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
     $table->date('date_from');
     $table->date('date_to');
     $table->enum('type', ['vacation', 'sickness', 'emergency']);

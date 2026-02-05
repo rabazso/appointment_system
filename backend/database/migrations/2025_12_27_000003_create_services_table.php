@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->integer('default_duration');
             $table->integer('default_price');
             $table->boolean('active')->default(true);
+            $table->timestamps();
 });
 
     }

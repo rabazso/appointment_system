@@ -14,9 +14,22 @@ class AppointmentCalculation
     public function Appointments(Request $request)
     {
         $serviceId = $request->get('service_id');
-        $serviceDuration = Service::find($serviceId)->duration;
+        $service = Service::findOrFail($serviceId);
+        $serviceDuration = (int) $service->default_duration;
         $selectedDate = Carbon::parse($request->get('selected_date'));
         $employeeId = $request->get('employee_id');
+
+        if ($employeeId) {
+            $employeeService = Employee::find($employeeId)
+                ?->services()
+                ->where('services.id', $serviceId)
+                ->first();
+            $serviceDuration = (int) ($employeeService?->pivot?->duration ?? $serviceDuration);
+        }
+
+        if ($serviceDuration <= 0) {
+            return response()->json(['error' => 'Service duration is not configured.'], 400);
+        }
 
         if ($selectedDate->lt(today())) {
             return response()->json(['error' => 'You cannot select a past date for appointments.'], 400);
@@ -69,9 +82,12 @@ class AppointmentCalculation
 
             $availableSlots = array_values(array_diff($allSlots, $occupiedSlots));
 
-            $requiredSlots = $serviceDuration / self::SLOT_MINUTES;
+            $requiredSlots = (int) ceil($serviceDuration / self::SLOT_MINUTES);
+            if ($requiredSlots <= 0) {
+                continue;
+            }
 
-            for ($i = 0; $i <= count($availableSlots) - $requiredSlots; $i++) {
+            for ($i = 0; $i + $requiredSlots <= count($availableSlots); $i++) {
                 $possibleSlots = array_slice($availableSlots, $i, $requiredSlots);
                 $consecutive = true;
 

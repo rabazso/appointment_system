@@ -7,7 +7,7 @@ return new class extends Migration {
     public function up() {
         Schema::create('employee_gallery', function (Blueprint $table) {
     $table->id();
-    $table->foreignId('employee_id')->constrained('employee')->cascadeOnDelete();
+    $table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
     $table->string('image_url', 500);
     $table->timestamps();
 });
