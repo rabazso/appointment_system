@@ -10,6 +10,8 @@ return new class extends Migration {
             $table->foreignId('customer_id')->constrained('users');
             $table->foreignId('employee_id')->constrained();
             $table->foreignId('service_id')->constrained();
+            $table->integer('price');
+             $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled', 'no_show']);
             $table->dateTime('start_datetime');
             $table->dateTime('end_datetime');
             $table->timestamp('confirmed_at')->nullable();

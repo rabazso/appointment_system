@@ -9,7 +9,9 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('password')->nullable();
+            $table->string('password');
+            $table->enum('role', ['user', 'employee', 'admin'])->default('user');
+            $table->boolean('verified')->default(false);
             $table->timestamps();
 });
 

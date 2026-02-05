@@ -8,8 +8,10 @@ return new class extends Migration {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('duration');
             $table->text('description')->nullable();
+            $table->integer('default_duration');
+            $table->integer('default_price');
+            $table->boolean('active')->default(true);
 });
 
     }
