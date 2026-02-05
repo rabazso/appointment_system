@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -13,12 +13,24 @@ import {
 import { Check } from 'lucide-vue-next'
 
 const router = useRouter()
+const route = useRoute()
 const booking = ref(null)
 
 onMounted(() => {
   const stateData = history.state.booking
 
   if (!stateData) {
+    const { serviceName, barberName, date, time, price } = route.query
+    if (serviceName || barberName || date || time || price) {
+      booking.value = {
+        serviceName: serviceName ?? '',
+        barberName: barberName ?? '',
+        date: date ?? '',
+        time: time ?? '',
+        price: price ? Number(price) : null
+      }
+      return
+    }
     router.push('/')
     return
   }

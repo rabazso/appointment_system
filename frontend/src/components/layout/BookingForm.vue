@@ -115,7 +115,6 @@ const handleSubmit = async () => {
 
     await postAppointment(selectedService.value, selectedBarber.value, appointmentStart, customerId)
 
-    // --- MÓDOSÍTÁS: Adatok összegyűjtése és átirányítás a summary oldalra ---
     const serviceObj = services.value.find(s => s.id === selectedService.value)
     const barberObj = barbers.value.find(b => b.id === selectedBarber.value)
 
@@ -127,10 +126,8 @@ const handleSubmit = async () => {
       price: barberObj?.services?.price
     }
 
-    // A 'summary' nevű route-ra küldjük (ellenőrizd a router/index.js-t, hogy van-e name: 'summary')
-    // Ha nincs neve a route-nak, használd a path: '/summary'-t
     router.push({ 
-      path: '/summary', 
+      path: '/confirmation-pending', 
       state: { booking: bookingData } 
     })
 

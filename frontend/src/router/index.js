@@ -5,6 +5,8 @@ import Barbers from '@pages/barbers.vue'
 import Contact from '@pages/contact.vue'
 import Booking from '@pages/booking.vue'
 import Summary from '@pages/summary.vue'
+import Confirm from '@pages/confirm.vue'
+import ConfirmationPending from '@pages/confirmationPending.vue'
 import YourAppointments from '@pages/yourAppointments.vue'
 import BarberAdminPage from '@pages/barberAdminPage.vue'
 
@@ -47,6 +49,22 @@ const routes = [
     component: Summary,
     meta:{
       title: 'Summary'
+    }
+  },
+  {
+    path: '/confirm/:appointmentId',
+    name: 'Confirm',
+    component: Confirm,
+    meta:{
+      title: 'Confirm'
+    }
+  },
+  {
+    path: '/confirmation-pending',
+    name: 'ConfirmationPending',
+    component: ConfirmationPending,
+    meta:{
+      title: 'Confirmation Pending'
     }
   },
   {
