@@ -4,8 +4,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Appointment extends Model
 {
-    protected $fillable = ['customer_id', 'employee_id', 'service_id', 'start_datetime', 'end_datetime'];
-    protected $casts = ['start_datetime' => 'datetime', 'end_datetime'   => 'datetime',];
+    protected $fillable = [
+        'customer_id','guest_name','guest_email',
+        'employee_id','service_id','price',
+        'status','start_datetime','end_datetime','cancelled_at'
+    ];
 
     public function customer()
     {

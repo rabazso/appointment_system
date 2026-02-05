@@ -12,8 +12,9 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasApiTokens;
     use Notifiable;
 
-    protected $fillable = ['name', 'email', 'password'];
-
+    protected $fillable = [
+            'name','email','password','phone','role','verified'
+        ];
     protected $hidden = ['password'];
 
     public function employee()
@@ -24,5 +25,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function appointments()
     {
         return $this->hasMany(Appointment::class, 'customer_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 }

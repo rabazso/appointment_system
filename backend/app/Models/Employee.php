@@ -4,7 +4,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
-    protected $fillable = ['user_id', 'bio', 'photo_url'];
+    protected $table = 'employee';
+
+    protected $fillable = [
+        'user_id','bio','photo_url','instagram_url','active'
+    ];
 
     public function user()
     {
@@ -14,7 +18,12 @@ class Employee extends Model
     public function services()
     {
         return $this->belongsToMany(Service::class, 'employee_services')
-            ->withPivot(['price']);
+            ->withPivot('price', 'duration');
+    }
+
+    public function gallery()
+    {
+        return $this->hasMany(EmployeeGallery::class);
     }
 
     public function workingHours()
@@ -22,10 +31,13 @@ class Employee extends Model
         return $this->hasMany(WorkingHour::class);
     }
 
+    public function timeOff()
+    {
+        return $this->hasMany(EmployeeTimeOff::class);
+    }
+
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
     }
-
-    public $timestamps = false;
 }
