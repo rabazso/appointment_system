@@ -65,3 +65,4 @@ export const getReviews = () => API.get('/reviews');
 export const postAppointment = (serviceId, employeeId, appointmentStart, customerId) => API.post(`/appointments?service_id=${serviceId}&employee_id=${employeeId}&appointment_start=${appointmentStart}&customer_id=${customerId}`);
 export const postGuest = (name, email) => API.post(`/guest?name=${name}&email=${email}`);
 export const confirmAppointment = (appointmentId, expires, signature) => API.get(`/appointments/confirm/${appointmentId}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
+export const getUserAppointments = () => API.get('/user/appointments');

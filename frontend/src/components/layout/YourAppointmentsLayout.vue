@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getUserAppointments } from '@/api'
 import {
   Card,
   CardContent,
@@ -9,10 +10,10 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
-
 const router = useRouter()
 const appointments = ref([])
 const loading = ref(true)
+const error = ref(null)
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -32,74 +33,38 @@ const getStatusText = (status) => {
   }
 }
 
-
-const cancelAppointment = (id) => {
+const cancelAppointment = async (id) => {
   const confirmed = confirm("Are you sure you want to cancel this appointment?")
   if (!confirmed) return
 
-  const appointment = appointments.value.find(apt => apt.id === id)
-  if (appointment) {
-    appointment.status = 'cancelled'
+  try {
+    const appointment = appointments.value.find(apt => apt.id === id)
+    if (appointment) {
+      appointment.status = 'cancelled'
+    }
+  } catch (err) {
+    console.error("Failed to cancel appointment:", err)
   }
 }
 
 onMounted(async () => {
-  setTimeout(() => {
-    appointments.value = [
-      {
-        id: 1,
-        service: { name: 'Regular Haircut' },
-        barber: { name: 'Crispy Chris' },
-        date: '2025-02-15',
-        time: '14:30',
-        price: 30,
-        status: 'upcoming' 
-      },
-      {
-        id: 2,
-        service: { name: 'Regular Haircut' },
-        barber: { name: 'Haircut Harry' },
-        date: '2025-01-10',
-        time: '10:00',
-        price: 30,
-        status: 'completed'
-      },
-      {
-        id: 3,
-        service: { name: 'Fullbox' },
-        barber: { name: 'Loud Lucy' },
-        date: '2025-03-01',
-        time: '16:00',
-        price: 60,
-        status: 'upcoming'
-      },
-      {
-        id: 4,
-        service: { name: 'Regular Haircut' },
-        barber: { name: 'Bouncy Bella' },
-        date: '2025-03-01',
-        time: '16:00',
-        price: 30,
-        status: 'upcoming'
-      },
-      {
-        id: 5,
-        service: { name: 'Perfect Haircut' },
-        barber: { name: 'Blowout Ben' },
-        date: '2025-03-01',
-        time: '16:00',
-        price: 45,
-        status: 'upcoming'
-      }
-    ]
+  try {
+    loading.value = true
+    const response = await getUserAppointments()
+    appointments.value = response.data
+  } catch (err) {
+    console.error("Error fetching appointments:", err)
+    error.value = "Failed to load appointments. Please try again later."
+  } finally {
     loading.value = false
-  }, 800)
+  }
 })
 
 const handleNewBooking = () => {
   router.push('/booking')
 }
 </script>
+
 <template>
     <div class="min-h-100vh bg-background p-4 md:p-8">
     <div class="max-w-6xl mx-auto space-y-8">
@@ -113,14 +78,15 @@ const handleNewBooking = () => {
         </Button>
       </div>
 
+      <div v-if="error" class="p-4 bg-red-500/10 text-red-600 rounded-xl border border-red-500/20 text-center">
+        {{ error }}
+      </div>
+
       <div v-if="loading" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <div class="h-64 rounded-xl bg-muted/50 animate-pulse border-2 border-dashed border-muted" v-for="i in 3" :key="i"></div>
       </div>
 
       <div v-else-if="appointments.length === 0" class="flex flex-col items-center justify-center py-16 border-2 border-dashed rounded-xl bg-accent/5">
-        <div class="p-4 rounded-full bg-muted mb-4">
-           <Scissors class="w-8 h-8 text-muted-foreground" />
-        </div>
         <h3 class="font-semibold text-xl mb-2">No appointments yet</h3>
         <Button @click="handleNewBooking">
           Book Now
@@ -128,12 +94,10 @@ const handleNewBooking = () => {
       </div>
 
       <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        
         <Card v-for="apt in appointments" :key="apt.id" class="border-accent/30 bg-accent/10 shadow-sm transition-all hover:border-accent/50 flex flex-col">
-          
           <CardHeader class="pb-3 pt-5">
             <div class="flex justify-between items-start gap-2">
-              <CardTitle class="text-xl font-bold leading-tight">{{ apt.service.name }}</CardTitle>
+              <CardTitle class="text-xl font-bold leading-tight">{{ apt.service?.name || 'Service' }}</CardTitle>
               <span :class="`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider border ${getStatusColor(apt.status)}`">
                 {{ getStatusText(apt.status) }}
               </span>
@@ -141,45 +105,39 @@ const handleNewBooking = () => {
           </CardHeader>
 
           <CardContent class="space-y-3 pb-6 flex-1 flex flex-col">
-            
-            <div class="flex justify-between items-center border-b border-accent/20 pb-2 last:border-0 last:pb-0">
+            <div class="flex justify-between items-center border-b border-accent/20 pb-2">
               <p class="text-muted-foreground text-sm">Barber</p>
-              <p class="font-semibold text-foreground text-sm">{{ apt.barber.name }}</p>
+              <p class="font-semibold text-foreground text-sm">{{ apt.employee?.name || apt.barber?.name }}</p>
             </div>
 
-            <div class="flex justify-between items-center border-b border-accent/20 pb-2 last:border-0 last:pb-0">
+            <div class="flex justify-between items-center border-b border-accent/20 pb-2">
               <p class="text-muted-foreground text-sm">Date</p>
-              <p class="font-semibold text-foreground text-sm">{{ apt.date }}</p>
+              <p class="font-semibold text-foreground text-sm">{{ apt.appointment_start ? new Date(apt.appointment_start).toLocaleDateString() : apt.date }}</p>
             </div>
 
-            <div class="flex justify-between items-center border-b border-accent/20 pb-2 last:border-0 last:pb-0">
+            <div class="flex justify-between items-center border-b border-accent/20 pb-2">
               <p class="text-muted-foreground text-sm">Time</p>
-              <p class="font-semibold text-foreground text-sm">{{ apt.time }}</p>
+              <p class="font-semibold text-foreground text-sm">{{ apt.appointment_start ? new Date(apt.appointment_start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : apt.time }}</p>
             </div>
 
              <div class="flex justify-between items-center pt-2">
               <p class="text-muted-foreground text-sm font-medium">Price</p>
-              <p class="font-bold text-lg text-primary">${{ apt.price }}</p>
+              <p class="font-bold text-lg text-primary">${{ apt.service?.price || apt.price }}</p>
             </div>
 
-            <div class="flex-1"></div>
-
-            <div v-if="apt.status === 'upcoming'" class="pt-4 mt-2 border-t border-accent/20">
+            <div v-if="apt.status === 'upcoming'" class="pt-4 mt-auto">
               <Button 
                 variant="destructive" 
-                class="w-full gap-2 opacity-90 hover:opacity-100 transition-opacity" 
+                class="w-full" 
                 size="sm"
                 @click="cancelAppointment(apt.id)"
               >
                 Cancel Appointment
               </Button>
             </div>
-
           </CardContent>
         </Card>
-
       </div>
-
     </div>
     </div>
 </template>
