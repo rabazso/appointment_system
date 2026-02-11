@@ -10,6 +10,10 @@ class Appointment extends Model
         'status','start_datetime','end_datetime','cancelled_at'
     ];
 
+    protected $casts = [
+        'start_datetime' => 'datetime',
+    ];
+
     public function customer()
     {
         return $this->belongsTo(User::class, 'customer_id');

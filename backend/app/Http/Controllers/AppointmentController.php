@@ -8,6 +8,7 @@ use App\Calculations\CreateAppointment;
 use App\Http\Requests\AppointmentRequest;
 use App\Http\Requests\AppointmentStoreRequest;
 use App\Mail\Booking;
+use App\Mail\BookingSummary;
 use App\Models\Appointment;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
@@ -59,6 +60,7 @@ class AppointmentController extends Controller
         $appointment->load(['service', 'employee.user', 'employee.services']);
         $summary = $this->buildSummary($appointment);
         $query = http_build_query($summary, '', '&', PHP_QUERY_RFC3986);
+        Mail::to($appointment->customer->email)->send(new BookingSummary($appointment));
         return redirect()->away($frontendBase . "/summary" . ($query ? "?{$query}" : ''));
     }
 
