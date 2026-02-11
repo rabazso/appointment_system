@@ -11,9 +11,6 @@ defineProps({ reviews: Array })
       <CardContent class="grid gap-2">
         <Button class="w-full justify-start" variant="outline">Add new appointment</Button>
       </CardContent>
-      <CardContent class="grid gap-2">
-        <Button class="w-full justify-start" variant="outline">Request vacation</Button>
-      </CardContent>
     </Card>
     <Card>
       <CardHeader>
