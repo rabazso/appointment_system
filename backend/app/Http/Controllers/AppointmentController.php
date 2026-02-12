@@ -42,6 +42,39 @@ class AppointmentController extends Controller
         return response()->json(["message"=> "Booking created, confirmation email sent", "appointment" => $appointment,], 201);
     }
 
+    public function userAppointments(Request $request)
+    {
+        $appointments = Appointment::query()
+            ->where('customer_id', $request->user()->id)
+            ->with([
+                'service:id,name',
+                'employee.user:id,name',
+            ])
+            ->orderByDesc('start_datetime')
+            ->get()
+            ->map(function (Appointment $appointment) {
+                return [
+                    'id' => $appointment->id,
+                    'status' => $appointment->status,
+                    'display_status' => $this->displayStatus($appointment),
+                    'start_datetime' => $appointment->start_datetime?->toIso8601String(),
+                    'end_datetime' => $appointment->end_datetime?->toIso8601String(),
+                    'price' => $appointment->price,
+                    'service' => [
+                        'id' => $appointment->service?->id,
+                        'name' => $appointment->service?->name,
+                    ],
+                    'employee' => [
+                        'id' => $appointment->employee?->id,
+                        'name' => $appointment->employee?->user?->name,
+                    ],
+                ];
+            })
+            ->values();
+
+        return response()->json($appointments);
+    }
+
     public function confirm(Request $request, Appointment $appointment){
         $frontendBase = rtrim((string) config('app.frontend_url'), '/');
         if ($frontendBase !== '' && !preg_match('#^https?://#', $frontendBase)) {
@@ -55,6 +88,7 @@ class AppointmentController extends Controller
             return response()->json(["message" => "Booking already confirmed"], 410);
         }
         $appointment->forceFill([
+            "status" => "confirmed",
             "confirmed_at" => now(),
         ])->save();
         $appointment->load(['service', 'employee.user', 'employee.services']);
@@ -62,6 +96,33 @@ class AppointmentController extends Controller
         $query = http_build_query($summary, '', '&', PHP_QUERY_RFC3986);
         Mail::to($appointment->customer->email)->send(new BookingSummary($appointment));
         return redirect()->away($frontendBase . "/summary" . ($query ? "?{$query}" : ''));
+    }
+
+    public function cancelUserAppointment(Request $request, Appointment $appointment)
+    {
+        if ($appointment->customer_id !== $request->user()->id) {
+            return response()->json(['message' => 'You are not allowed to cancel this appointment'], 403);
+        }
+
+        if ($appointment->status === 'cancelled') {
+            return response()->json(['message' => 'Appointment already cancelled'], 409);
+        }
+
+        if (!in_array($appointment->status, ['pending', 'confirmed'], true)) {
+            return response()->json(['message' => 'Only pending or confirmed appointments can be cancelled'], 422);
+        }
+
+        $appointment->forceFill([
+            'status' => 'cancelled',
+        ])->save();
+
+        return response()->json([
+            'message' => 'Appointment cancelled',
+            'appointment' => [
+                'id' => $appointment->id,
+                'status' => $appointment->status,
+            ],
+        ]);
     }
 
     private function buildSummary(Appointment $appointment): array
@@ -84,5 +145,14 @@ class AppointmentController extends Controller
             'time' => optional($appointment->start_datetime)->format('H:i'),
             'price' => $price,
         ];
+    }
+
+    private function displayStatus(Appointment $appointment): string
+    {
+        return match ($appointment->status) {
+            'cancelled', 'no_show' => 'cancelled',
+            'completed' => 'completed',
+            default => $appointment->start_datetime?->isPast() ? 'completed' : 'upcoming',
+        };
     }
 }

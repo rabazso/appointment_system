@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getUserAppointments } from '@/api'
+import { cancelUserAppointment, getUserAppointments } from '@/api'
 import {
   Card,
   CardContent,
@@ -17,20 +17,30 @@ const error = ref(null)
 
 const getStatusColor = (status) => {
   switch (status) {
-    case 'upcoming': return 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+    case 'pending': return 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+    case 'confirmed': return 'bg-blue-500/10 text-blue-600 border-blue-500/20'
     case 'completed': return 'bg-green-500/10 text-green-600 border-green-500/20'
+    case 'no_show': return 'bg-gray-500/10 text-gray-600 border-gray-500/20'
     case 'cancelled': return 'bg-red-500/10 text-red-600 border-red-500/20'
     default: return 'bg-gray-500/10 text-gray-600 border-gray-500/20'
   }
 }
 
 const getStatusText = (status) => {
-  switch (status) {
-    case 'upcoming': return 'Upcoming'
-    case 'completed': return 'Completed'
-    case 'cancelled': return 'Cancelled'
-    default: return status
-  }
+  if (!status) return 'unknown'
+  return status.replace('_', ' ')
+}
+
+const getStartDate = (apt) => apt.start_datetime || apt.appointment_start
+
+const formatDate = (apt) => {
+  const start = getStartDate(apt)
+  return start ? new Date(start).toLocaleDateString() : apt.date
+}
+
+const formatTime = (apt) => {
+  const start = getStartDate(apt)
+  return start ? new Date(start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : apt.time
 }
 
 const cancelAppointment = async (id) => {
@@ -38,12 +48,14 @@ const cancelAppointment = async (id) => {
   if (!confirmed) return
 
   try {
+    await cancelUserAppointment(id)
     const appointment = appointments.value.find(apt => apt.id === id)
     if (appointment) {
       appointment.status = 'cancelled'
     }
   } catch (err) {
     console.error("Failed to cancel appointment:", err)
+    error.value = err.response?.data?.message || "Failed to cancel appointment. Please try again later."
   }
 }
 
@@ -112,12 +124,12 @@ const handleNewBooking = () => {
 
             <div class="flex justify-between items-center border-b border-accent/20 pb-2">
               <p class="text-muted-foreground text-sm">Date</p>
-              <p class="font-semibold text-foreground text-sm">{{ apt.appointment_start ? new Date(apt.appointment_start).toLocaleDateString() : apt.date }}</p>
+              <p class="font-semibold text-foreground text-sm">{{ formatDate(apt) }}</p>
             </div>
 
             <div class="flex justify-between items-center border-b border-accent/20 pb-2">
               <p class="text-muted-foreground text-sm">Time</p>
-              <p class="font-semibold text-foreground text-sm">{{ apt.appointment_start ? new Date(apt.appointment_start).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : apt.time }}</p>
+              <p class="font-semibold text-foreground text-sm">{{ formatTime(apt) }}</p>
             </div>
 
              <div class="flex justify-between items-center pt-2">
@@ -125,7 +137,7 @@ const handleNewBooking = () => {
               <p class="font-bold text-lg text-primary">${{ apt.service?.price || apt.price }}</p>
             </div>
 
-            <div v-if="apt.status === 'upcoming'" class="pt-4 mt-auto">
+            <div v-if="apt.status === 'pending' || apt.status === 'confirmed'" class="pt-4 mt-auto">
               <Button 
                 variant="destructive" 
                 class="w-full" 

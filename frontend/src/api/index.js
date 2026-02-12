@@ -66,3 +66,4 @@ export const postAppointment = (serviceId, employeeId, appointmentStart, custome
 export const postGuest = (name, email) => API.post(`/guest?name=${name}&email=${email}`);
 export const confirmAppointment = (appointmentId, expires, signature) => API.get(`/appointments/confirm/${appointmentId}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
 export const getUserAppointments = () => API.get('/user/appointments');
+export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointments/${appointmentId}/cancel`);

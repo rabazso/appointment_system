@@ -12,6 +12,8 @@ class Appointment extends Model
 
     protected $casts = [
         'start_datetime' => 'datetime',
+        'end_datetime' => 'datetime',
+        'confirmed_at' => 'datetime',
     ];
 
     public function customer()
