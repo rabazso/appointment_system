@@ -12,6 +12,9 @@ use App\Http\Controllers\ServiceController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/guest', [AuthController::class, 'guest']);
+Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->middleware(['signed:relative', 'throttle:6,1'])
+    ->name('verification.verify');
 
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/employees', [EmployeeController::class, 'index']);
@@ -24,5 +27,9 @@ Route::get('/reviews', [ReviewController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::apiResource("reviews", ReviewController::class)->only(["store", "destroy"]);
+    Route::post('/email/verification-notification', [AuthController::class, 'resendVerification'])
+        ->middleware('throttle:6,1');
+    Route::middleware('verified')->group(function () {
+        Route::apiResource("reviews", ReviewController::class)->only(["store", "destroy"]);
+    });
 });

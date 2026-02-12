@@ -13,8 +13,20 @@ class User extends Authenticatable implements MustVerifyEmail
     use Notifiable;
 
     protected $fillable = [
-            'name','email','password','phone','role','verified'
-        ];
+        'name',
+        'email',
+        'password',
+        'phone',
+        'role',
+        'verified',
+        'email_verified_at',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'verified' => 'boolean',
+    ];
+
     protected $hidden = ['password'];
 
     public function employee()
