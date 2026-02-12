@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Employee;
 use App\Models\Service;
 use App\Models\WorkingHour;
+use Carbon\Carbon;
 use Faker\Factory as Faker;
 
 class DatabaseSeeder extends Seeder
@@ -63,6 +64,7 @@ class DatabaseSeeder extends Seeder
                 'name' => $name,
                 'email' => $faker->unique()->safeEmail,
                 'password' => Hash::make('password'),
+                "email_verified_at" => Carbon::now(),
             ]);
 
             $employee = Employee::create([
@@ -91,6 +93,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Haircut Harry',
             'email' => $faker->unique()->safeEmail,
             'password' => Hash::make('password'),
+            "email_verified_at" => Carbon::now(),
         ]);
         $employee = Employee::create([
                 'user_id' => $user->id,
@@ -119,6 +122,7 @@ class DatabaseSeeder extends Seeder
                 'name' => $faker->name,
                 'email' => $faker->unique()->safeEmail,
                 'password' => Hash::make('password'),
+                "email_verified_at" => Carbon::now(),
             ]);
         }
     }
