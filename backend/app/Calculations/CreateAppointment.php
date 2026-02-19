@@ -57,6 +57,7 @@ class CreateAppointment
         $slotEnd = $appointmentStart->copy()->addMinutes($serviceDuration)->toDateTimeString();
 
         $hasConflict = $employee->appointments()
+            ->whereIn('status', ['pending', 'confirmed'])
             ->where('start_datetime', '<', $slotEnd)
             ->where('end_datetime', '>', $slotStart)
             ->exists();

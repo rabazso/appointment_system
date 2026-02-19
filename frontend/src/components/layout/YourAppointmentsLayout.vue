@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { cancelUserAppointment, getUserAppointments } from '@/api'
 import {
@@ -14,6 +14,9 @@ const router = useRouter()
 const appointments = ref([])
 const loading = ref(true)
 const error = ref(null)
+const cancelModalOpen = ref(false)
+const cancelling = ref(false)
+const pendingCancelId = ref(null)
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -43,19 +46,44 @@ const formatTime = (apt) => {
   return start ? new Date(start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : apt.time
 }
 
-const cancelAppointment = async (id) => {
-  const confirmed = confirm("Are you sure you want to cancel this appointment?")
-  if (!confirmed) return
+const sortedAppointments = computed(() => {
+  return [...appointments.value].sort((a, b) => {
+    const aTime = getStartDate(a) ? new Date(getStartDate(a)).getTime() : 0
+    const bTime = getStartDate(b) ? new Date(getStartDate(b)).getTime() : 0
+    return aTime - bTime
+  })
+})
+
+const appointmentToCancel = computed(() =>
+  appointments.value.find((apt) => apt.id === pendingCancelId.value) || null
+)
+
+const openCancelModal = (id) => {
+  pendingCancelId.value = id
+  cancelModalOpen.value = true
+}
+
+const closeCancelModal = () => {
+  cancelModalOpen.value = false
+  pendingCancelId.value = null
+}
+
+const confirmCancelAppointment = async () => {
+  if (!pendingCancelId.value) return
+  cancelling.value = true
 
   try {
-    await cancelUserAppointment(id)
-    const appointment = appointments.value.find(apt => apt.id === id)
+    await cancelUserAppointment(pendingCancelId.value)
+    const appointment = appointments.value.find(apt => apt.id === pendingCancelId.value)
     if (appointment) {
       appointment.status = 'cancelled'
     }
+    closeCancelModal()
   } catch (err) {
     console.error("Failed to cancel appointment:", err)
     error.value = err.response?.data?.message || "Failed to cancel appointment. Please try again later."
+  } finally {
+    cancelling.value = false
   }
 }
 
@@ -106,7 +134,7 @@ const handleNewBooking = () => {
       </div>
 
       <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card v-for="apt in appointments" :key="apt.id" class="border-accent/30 bg-accent/10 shadow-sm transition-all hover:border-accent/50 flex flex-col">
+        <Card v-for="apt in sortedAppointments" :key="apt.id" class="border-accent/30 bg-accent/10 shadow-sm transition-all hover:border-accent/50 flex flex-col">
           <CardHeader class="pb-3 pt-5">
             <div class="flex justify-between items-start gap-2">
               <CardTitle class="text-xl font-bold leading-tight">{{ apt.service?.name || 'Service' }}</CardTitle>
@@ -142,13 +170,49 @@ const handleNewBooking = () => {
                 variant="destructive" 
                 class="w-full" 
                 size="sm"
-                @click="cancelAppointment(apt.id)"
+                @click="openCancelModal(apt.id)"
               >
                 Cancel Appointment
               </Button>
             </div>
           </CardContent>
         </Card>
+      </div>
+    </div>
+
+    <div
+      v-if="cancelModalOpen"
+      class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+      @click.self="closeCancelModal"
+    >
+      <div class="w-full max-w-md rounded-xl border bg-background shadow-2xl">
+        <div class="border-b px-6 py-4">
+          <h2 class="text-lg font-semibold">Cancel appointment?</h2>
+          <p class="mt-1 text-sm text-muted-foreground">
+            This action cannot be undone.
+          </p>
+        </div>
+
+        <div class="px-6 py-4 text-sm">
+          <p class="font-medium">{{ appointmentToCancel?.service?.name || 'Service' }}</p>
+          <p class="mt-1 text-muted-foreground">
+            {{ formatDate(appointmentToCancel || {}) }} at {{ formatTime(appointmentToCancel || {}) }}
+          </p>
+        </div>
+
+        <div class="flex justify-end gap-2 border-t px-6 py-4">
+          <Button
+            variant="outline"
+            class="bg-accent text-black hover:bg-accent/90 border-accent"
+            :disabled="cancelling"
+            @click="closeCancelModal"
+          >
+            Keep Appointment
+          </Button>
+          <Button variant="destructive" :disabled="cancelling" @click="confirmCancelAppointment">
+            {{ cancelling ? 'Cancelling...' : 'Yes, Cancel' }}
+          </Button>
+        </div>
       </div>
     </div>
     </div>

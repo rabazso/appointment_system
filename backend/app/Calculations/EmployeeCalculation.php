@@ -38,7 +38,8 @@ class EmployeeCalculation
                 $x->whereDoesntHave(
                     'appointments',
                     fn($y) =>
-                    $y->where('start_datetime', '<', $slotEnd)
+                    $y->whereIn('status', ['pending', 'confirmed'])
+                        ->where('start_datetime', '<', $slotEnd)
                         ->where('end_datetime', '>', $slotStart)
                 )
             )

@@ -40,7 +40,9 @@ class AppointmentCalculation
 
         $employees = Employee::with([
             'workingHours' => fn($query) => $query->where('weekday', $selectedDate->dayOfWeekIso),
-            'appointments' => fn($query) => $query->whereBetween('start_datetime', [$from, $to])
+            'appointments' => fn($query) => $query
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->whereBetween('start_datetime', [$from, $to])
         ])
             ->whereHas('services', fn($y) => $y->where('services.id', $serviceId))
             ->when($employeeId, fn($x) => $x->where('id', $employeeId))

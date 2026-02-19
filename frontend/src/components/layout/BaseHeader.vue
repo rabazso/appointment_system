@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -23,6 +23,8 @@ const sheetOpen = ref(false)
 const loginOpen = ref(false)
 const toastMessage = ref('')
 const showToast = ref(false)
+const accountMenuOpen = ref(false)
+const accountMenuRef = ref(null)
 
 const isAuthenticated = computed(() => auth.isLoggedIn)
 
@@ -63,6 +65,7 @@ const scrollToLink = async (link) => {
 
 async function signOut() {
   try {
+    accountMenuOpen.value = false
     await auth.logout()
     toastMessage.value = 'You have successfully signed out.'
     showToast.value = true
@@ -76,6 +79,29 @@ function handleAuthSuccess(message) {
   toastMessage.value = message
   showToast.value = true
 }
+
+function toggleAccountMenu() {
+  accountMenuOpen.value = !accountMenuOpen.value
+}
+
+function goToYourAppointments() {
+  accountMenuOpen.value = false
+  router.push('/yourAppointments')
+}
+
+function handleClickOutside(event) {
+  if (accountMenuRef.value && !accountMenuRef.value.contains(event.target)) {
+    accountMenuOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <template>
@@ -138,7 +164,36 @@ function handleAuthSuccess(message) {
         </NavigationMenuList>
       </NavigationMenu>
 
-      <div class="w-40 flex justify-end items-center space-x-3">
+      <div class="w-auto md:min-w-40 flex justify-end items-center gap-3">
+        <div v-if="isAuthenticated" ref="accountMenuRef" class="relative hidden md:block">
+          <Button type="button" class="px-4 font-medium transition-colors" @click.stop="toggleAccountMenu">
+            <svg
+              class="h-4 w-4 transition-transform duration-200"
+              :class="{ 'rotate-180': accountMenuOpen }"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </Button>
+          <div
+            v-if="accountMenuOpen"
+            class="absolute right-0 mt-2 w-52 rounded-md border bg-background p-1 text-foreground shadow-lg z-50"
+          >
+            <button
+              type="button"
+              class="w-full rounded-sm px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+              @click="goToYourAppointments"
+            >
+              Your Appointments
+            </button>
+          </div>
+        </div>
         <Button data-testid="headerbtn" :class="['hidden md:block px-8 font-medium transition-colors']" @click="isAuthenticated ? signOut() : loginOpen = true">
           {{ isAuthenticated ? 'Sign Out' : 'Sign In' }}
         </Button>
