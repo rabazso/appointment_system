@@ -2,26 +2,20 @@
 import { Button } from '@components/ui/button';
 import {Star} from "lucide-vue-next"
 import {Card, CardContent, CardTitle, CardDescription, CardHeader} from '@components/ui/card'
-const reviews = [
-    {
-        id: 1,
-        name: "Name",
-        rating: 4,
-        message: null,
-    },
-    {
-        id: 2,
-        name: "Name2",
-        rating: 5,
-        message: "awsome cuts",
-    },
-    {
-        id: 3,
-        name: "Name3",
-        rating: 2,
-        message: "message",
-    },
-]
+import {ref, onMounted} from 'vue'
+import { getReviews } from '@/api/index';
+
+const reviews = ref([])
+const users = ref([])
+
+onMounted(async ()=>{
+    const response = await getReviews()
+    reviews.value = response.data?.data
+})
+
+onMounted(async ()=>{
+    const response = await getUser
+})
 </script>
 <template>
 <section id="reviews" class="py-15 bg-background scroll-mt-15">
@@ -33,9 +27,9 @@ const reviews = [
         <div class="grid md:grid-cols-3 gap-8">
             <Card v-for="review in reviews" :key="review?.id" class="border-2 border-border py-8 px-5 rounded-lg">
                 <CardContent class="space-y-1.5 flex flex-col">
-                    <CardTitle class="text-lg font-semibold text-primary mb-1">{{ review.name }}</CardTitle>
+                    <CardTitle class="text-lg font-semibold text-primary mb-1">{{ review. }}</CardTitle>
                     <CardDescription class="flex items-center gap-1 flex-nowrap"><Star v-for="star in review.rating" :key="star" class="w-4 h-4 text-primary fill-accent"></Star></CardDescription>
-                    <CardDescription class="text-accent font-semibold text-xl min-h-6">{{ review.message || '' }}</CardDescription>
+                    <CardDescription class="text-accent font-semibold text-xl min-h-6">{{ review.comment || '' }}</CardDescription>
                 </CardContent>
             </Card>
         </div>

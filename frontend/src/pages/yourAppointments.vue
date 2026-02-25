@@ -20,7 +20,11 @@ const getStatusColor = (status) => {
 </script>
 
 <template>
-<BaseHeader></BaseHeader>
-<YourAppointmentsLayout></YourAppointmentsLayout>  
-<Footer></Footer>
+<div class="flex flex-col min-h-screen">
+  <BaseHeader></BaseHeader>
+  <main class="flex-grow">
+    <YourAppointmentsLayout></YourAppointmentsLayout>
+  </main>
+  <Footer></Footer>
+</div>
 </template>

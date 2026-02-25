@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Employee;
+use App\Models\Review;
 use App\Models\Service;
 use App\Models\WorkingHour;
 use Carbon\Carbon;
@@ -125,5 +126,10 @@ class DatabaseSeeder extends Seeder
                 "email_verified_at" => Carbon::now(),
             ]);
         }
+
+        $this->call([
+            AppointmentSeeder::class,
+            ReviewSeeder::class,
+        ]);
     }
 }
