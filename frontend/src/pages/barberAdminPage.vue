@@ -1,22 +1,48 @@
 <script setup>
-import { ref } from 'vue'
-import { Button } from '@/components/ui/button'
+import { onMounted, ref } from 'vue'
 import AppointmentScheduler from '@/components/admin/AppointmentSchedule.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import BarberHeader from '@/components/layout/BarberHeader.vue'
+import { cancelBarberAppointment, getBarberAppointments, getBarberReviews } from '@/api'
 
 const currentTab = ref('appointments')
+const loading = ref(true)
+const errorMessage = ref('')
 
-const appointments = ref([
-    { id: 1, client: 'Eros Pista', service: 'Regular haircut', time: '10:00', status: 'pending' },
-    { id: 2, client: 'Vicc Elek', service: 'Perfect haircut', time: '11:30', status: 'confirmed' },
-    { id: 3, client: 'Edes Anna', service: 'Fullbox', time: '13:00', status: 'completed' },
-])
+const appointments = ref([])
+const reviews = ref([])
 
-const reviews = ref([
-    { id: 1, client: 'Kiss Odon', rating: 5, text: 'Nice work!' },
-    { id: 2, client: 'Kovacs Janos', rating: 4, text: 'I had to wait a bit' },
-])
+const loadData = async () => {
+    loading.value = true
+    errorMessage.value = ''
+    try {
+        const [appointmentsResponse, reviewsResponse] = await Promise.all([
+            getBarberAppointments(),
+            getBarberReviews()
+        ])
+        appointments.value = appointmentsResponse.data || []
+        reviews.value = reviewsResponse.data || []
+    } catch (error) {
+        errorMessage.value = error.response?.data?.message || 'Failed to load admin data.'
+    } finally {
+        loading.value = false
+    }
+}
+
+const onCancelAppointment = async (appointmentId) => {
+    try {
+        await cancelBarberAppointment(appointmentId)
+        appointments.value = appointments.value.map((appointment) =>
+            appointment.id === appointmentId
+                ? { ...appointment, status: 'cancelled' }
+                : appointment
+        )
+    } catch (error) {
+        errorMessage.value = error.response?.data?.message || 'Failed to cancel appointment.'
+    }
+}
+
+onMounted(loadData)
 </script>
 
 <template>
@@ -28,13 +54,21 @@ const reviews = ref([
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Appointments</h1>
-                        <p class="text-gray-500 dark:text-gray-400">Hello X Y, itt vannak a mai foglalásaid.</p>
+                        <p class="text-gray-500 dark:text-gray-400">Your upcoming and past bookings.</p>
                     </div>
                 </div>
 
+                <p v-if="errorMessage" class="rounded-md bg-red-100 px-4 py-2 text-sm text-red-700">
+                    {{ errorMessage }}
+                </p>
+
+                <p v-if="loading" class="text-sm text-gray-500 dark:text-gray-400">
+                    Loading admin data...
+                </p>
+
                 <div class="grid gap-4 md:grid-cols-7 lg:grid-cols-7">
                     <div class="col-span-4 md:col-span-4 lg:col-span-5">
-                        <AppointmentScheduler :appointments="appointments" />
+                        <AppointmentScheduler :appointments="appointments" @cancel-appointment="onCancelAppointment" />
                     </div>
                     <div class="col-span-4 md:col-span-3 lg:col-span-2">
                         <AdminSidebar :reviews="reviews" />

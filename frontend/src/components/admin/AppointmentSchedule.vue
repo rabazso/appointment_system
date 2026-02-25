@@ -2,11 +2,13 @@
 import { ref } from 'vue'
 import { Card, CardContent } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
+import { Button } from '@/components/ui/button'
 import { X } from 'lucide-vue-next'
 
 const props = defineProps({
   appointments: { type: Array, required: true }
 })
+const emit = defineEmits(['cancel-appointment'])
 
 const activeTab = ref('appointments')
 const selectedDate = ref(new Date())

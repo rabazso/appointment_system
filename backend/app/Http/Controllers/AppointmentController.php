@@ -10,6 +10,7 @@ use App\Http\Requests\AppointmentStoreRequest;
 use App\Mail\Booking;
 use App\Mail\BookingSummary;
 use App\Models\Appointment;
+use App\Models\Review;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
@@ -123,6 +124,89 @@ class AppointmentController extends Controller
                 'status' => $appointment->status,
             ],
         ]);
+    }
+
+    public function barberAppointments(Request $request)
+    {
+        $employee = $request->user()->employee;
+        if (!$employee) {
+            return response()->json(['message' => 'Barber profile not found'], 404);
+        }
+
+        $appointments = Appointment::query()
+            ->where('employee_id', $employee->id)
+            ->with([
+                'service:id,name',
+                'customer:id,name',
+            ])
+            ->orderBy('start_datetime')
+            ->get()
+            ->map(function (Appointment $appointment) {
+                return [
+                    'id' => $appointment->id,
+                    'status' => $appointment->status,
+                    'client' => $appointment->customer?->name ?? $appointment->guest_name ?? 'Guest',
+                    'service' => $appointment->service?->name,
+                    'time' => optional($appointment->start_datetime)->format('H:i'),
+                    'start_datetime' => $appointment->start_datetime?->toIso8601String(),
+                    'end_datetime' => $appointment->end_datetime?->toIso8601String(),
+                ];
+            })
+            ->values();
+
+        return response()->json($appointments);
+    }
+
+    public function cancelBarberAppointment(Request $request, Appointment $appointment)
+    {
+        $employee = $request->user()->employee;
+        if (!$employee || $appointment->employee_id !== $employee->id) {
+            return response()->json(['message' => 'You are not allowed to cancel this appointment'], 403);
+        }
+
+        if ($appointment->status === 'cancelled') {
+            return response()->json(['message' => 'Appointment already cancelled'], 409);
+        }
+
+        if (!in_array($appointment->status, ['pending', 'confirmed'], true)) {
+            return response()->json(['message' => 'Only pending or confirmed appointments can be cancelled'], 422);
+        }
+
+        $appointment->forceFill([
+            'status' => 'cancelled',
+        ])->save();
+
+        return response()->json([
+            'message' => 'Appointment cancelled',
+            'appointment' => [
+                'id' => $appointment->id,
+                'status' => $appointment->status,
+            ],
+        ]);
+    }
+
+    public function barberReviews(Request $request)
+    {
+        $employee = $request->user()->employee;
+        if (!$employee) {
+            return response()->json(['message' => 'Barber profile not found'], 404);
+        }
+
+        $reviews = Review::query()
+            ->whereHas('appointment', fn ($q) => $q->where('employee_id', $employee->id))
+            ->with(['user:id,name'])
+            ->latest()
+            ->limit(3)
+            ->get()
+            ->map(fn (Review $review) => [
+                'id' => $review->id,
+                'client' => $review->user?->name ?? 'Guest',
+                'rating' => $review->rating,
+                'text' => $review->comment,
+            ])
+            ->values();
+
+        return response()->json($reviews);
     }
 
     private function buildSummary(Appointment $appointment): array

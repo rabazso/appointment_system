@@ -20,11 +20,13 @@ export const register = async (data) => {
     const response = await API.post('/register', data);
     const token = response.data.token;
     const user_id = response.data.user.id;
+    const role = response.data.user.role;
 
     const store = useAuthStore();
     
     if (token) store.setToken(token);
     if (user_id) store.setUser(user_id);
+    if (role) store.setRole(role);
 
     return response.data;
 };
@@ -34,11 +36,13 @@ export const login = async (data) => {
     const response = await API.post('/login', data);
     const token = response.data.token;
     const user_id = response.data.user.id;
+    const role = response.data.user.role;
 
     const store = useAuthStore();
 
     if (token) store.setToken(token);
     if (user_id) store.setUser(user_id);
+    if (role) store.setRole(role);
 
     return response.data;
 };
@@ -51,9 +55,15 @@ export const logout = async () => {
 
     store.setToken(null);
     store.setUser(null);
+    store.setRole(null);
     
     return response.data;
 };
+
+export const getCurrentUser = () => API.get('/user');
+export const getBarberAppointments = () => API.get('/barber/appointments');
+export const cancelBarberAppointment = (appointmentId) => API.post(`/barber/appointments/${appointmentId}/cancel`);
+export const getBarberReviews = () => API.get('/barber/reviews');
 
 export const getServices = () => API.get('/services');
 export const getEmployees = () => API.get('/employees');

@@ -14,6 +14,7 @@ import {
 import AuthModal from '@/components/auth/AuthModal.vue'
 import Toast from '@/components/ui/Toast.vue'
 import { useAuthStore } from '@stores/AuthStore.js'
+import { getCurrentUser } from '@/api'
 
 const props = defineProps({ variant: String, required: false })
 const router = useRouter()
@@ -27,6 +28,12 @@ const accountMenuOpen = ref(false)
 const accountMenuRef = ref(null)
 
 const isAuthenticated = computed(() => auth.isLoggedIn)
+const isBarberId = computed(() => {
+  const id = Number(auth.user_id)
+  return Number.isInteger(id) && id >= 1 && id <= 5
+})
+const isBarberUser = computed(() => ['employee', 'barber', 'admin'].includes(auth.role) || isBarberId.value)
+const accountPageLabel = computed(() => (isBarberUser.value ? 'Your Admin Page' : 'Your Appointments'))
 
 let bgcolor = ref(props.variant === 'background' ? 'bg-background' : 'bg-primary')
 let textcolor = ref(props.variant === 'background' ? 'text-foreground' : 'text-primary-foreground')
@@ -86,7 +93,24 @@ function toggleAccountMenu() {
 
 function goToYourAppointments() {
   accountMenuOpen.value = false
+  if (isBarberUser.value) {
+    const adminRoute = router.resolve('/barberAdminPage')
+    window.open(adminRoute.href, '_blank', 'noopener,noreferrer')
+    return
+  }
   router.push('/yourAppointments')
+}
+
+async function hydrateRoleIfMissing() {
+  if (!isAuthenticated.value || auth.role) return
+  try {
+    const response = await getCurrentUser()
+    if (response?.data?.role) {
+      auth.setRole(response.data.role)
+    }
+  } catch (error) {
+    console.error('Failed to hydrate user role', error)
+  }
 }
 
 function handleClickOutside(event) {
@@ -97,6 +121,7 @@ function handleClickOutside(event) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  hydrateRoleIfMissing()
 })
 
 onBeforeUnmount(() => {
@@ -190,7 +215,7 @@ onBeforeUnmount(() => {
               class="w-full rounded-sm px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
               @click="goToYourAppointments"
             >
-              Your Appointments
+              {{ accountPageLabel }}
             </button>
           </div>
         </div>

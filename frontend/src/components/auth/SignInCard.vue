@@ -25,6 +25,7 @@ async function submit() {
 
     store.setToken(response.token)
     store.setUser(response.user.id)
+    store.setRole(response.user.role)
 
     emit('success', 'Successfully signed in')
     emit('close')

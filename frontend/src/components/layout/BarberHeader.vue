@@ -1,15 +1,23 @@
 <script setup>
-import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem } from '@/components/ui/navigation-menu'
+import { useAuthStore } from '@stores/AuthStore.js'
 
 const emit = defineEmits(['navigate'])
+const router = useRouter()
+const auth = useAuthStore()
 
 const adminLinks = [
   { label: 'Appointments', id: 'appointments' },
   { label: 'Profile', id: 'profile' },
   { label: 'Time Off', id: 'time-off' }
 ]
+
+const signOut = async () => {
+  await auth.logout()
+  router.push('/')
+}
 </script>
 
 <template>
@@ -30,7 +38,7 @@ const adminLinks = [
         </NavigationMenuList>
       </NavigationMenu>
 
-      <Button variant="outline">Sign Out</Button>
+      <Button variant="outline" @click="signOut">Sign Out</Button>
     </div>
   </header>
 </template>

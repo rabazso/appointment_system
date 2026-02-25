@@ -26,7 +26,13 @@ Route::get('/appointments/confirm/{appointment}', [AppointmentController::class,
 Route::get('/reviews', [ReviewController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/barber/appointments', [AppointmentController::class, 'barberAppointments']);
+    Route::post('/barber/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelBarberAppointment']);
+    Route::get('/barber/reviews', [AppointmentController::class, 'barberReviews']);
     Route::get('/user/appointments', [AppointmentController::class, 'userAppointments']);
     Route::post('/user/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelUserAppointment']);
     Route::post('/email/verification-notification', [AuthController::class, 'resendVerification'])

@@ -80,7 +80,8 @@ const routes = [
     name: 'BarberAdminPage',
     component: BarberAdminPage,
     meta:{
-      title: 'BarberAdminPage'
+      title: 'BarberAdminPage',
+      requiresBarber: true
     }
   }
 ]
@@ -90,4 +91,21 @@ export const router = createRouter({
   routes
 })
 
-router.beforeEach(setTitle)
+router.beforeEach((to, from, next) => {
+  if (to.meta?.requiresBarber) {
+    const token = localStorage.getItem('token')
+    const role = localStorage.getItem('role')
+    const userId = Number(localStorage.getItem('user_id'))
+
+    const isBarberRole = ['employee', 'barber', 'admin'].includes(role)
+    const isBarberId = Number.isInteger(userId) && userId >= 1 && userId <= 5
+    const canAccessBarberAdmin = Boolean(token) && (isBarberRole || isBarberId)
+
+    if (!canAccessBarberAdmin) {
+      next('/')
+      return
+    }
+  }
+
+  setTitle(to, from, next)
+})
