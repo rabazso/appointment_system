@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Employee;
+use App\Models\EmployeeGallery;
 use App\Models\Review;
 use App\Models\Service;
 use App\Models\WorkingHour;
@@ -17,6 +18,10 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $faker = Faker::create();
+        $backendBase = rtrim((string) config('app.url'), '/');
+        if ($backendBase !== '' && !preg_match('#^https?://#', $backendBase)) {
+            $backendBase = 'http://' . $backendBase;
+        }
 
         $services = [
             Service::create([
@@ -45,33 +50,54 @@ class DatabaseSeeder extends Seeder
             ]),
         ];
 
-        $employeesName = [
-            'Blowout Ben',
-            'Crispy Chris',
-            'Bouncy Bella',
-            'Loud Lucy'
+        $employees = [
+            [
+                'name' => 'Blowout Ben',
+                'email' => 'blowout.ben@barbershop.test',
+                'bio' => 'My blowouts give your hair shine, volume, and a flawless finish every time.',
+            ],
+            [
+                'name' => 'Crispy Chris',
+                'email' => 'crispy.chris@barbershop.test',
+                'bio' => 'Sharp and precise, Chris makes sure every cut is crisp and clean.',
+            ],
+            [
+                'name' => 'Bouncy Bella',
+                'email' => 'bouncy.bella@barbershop.test',
+                'bio' => 'Full of energy and style, Bella specializes in lively, bouncy haircuts.',
+            ],
+            [
+                'name' => 'Loud Lucy',
+                'email' => 'loud.lucy@barbershop.test',
+                'bio' => 'Always upbeat and chatty, Lucy makes your haircut a fun and memorable experience.',
+            ],
+            [
+                'name' => 'Haircut Harry',
+                'email' => 'haircut.harry@barbershop.test',
+                'bio' => 'Harry knows all the latest trends and ensures your haircut always looks fresh.',
+            ],
         ];
 
-        $employeesBio = [
-            'Blowout Ben' => 'My blowouts give your hair shine, volume, and a flawless finish every time.',
-            'Crispy Chris' => 'Sharp and precise, Chris makes sure every cut is crisp and clean.',
-            'Haircut Harry' => 'Harry knows all the latest trends and ensures your haircut always looks fresh.',
-            'Bouncy Bella' => 'Full of energy and style, Bella specializes in lively, bouncy haircuts.',
-            'Loud Lucy' => 'Always upbeat and chatty, Lucy makes your haircut a fun and memorable experience.'
-        ];
-        
-        foreach ($employeesName as $name) {
+        foreach ($employees as $employeeData) {
             $user = User::create([
-                'name' => $name,
-                'email' => $faker->unique()->safeEmail,
+                'name' => $employeeData['name'],
+                'email' => $employeeData['email'],
                 'password' => Hash::make('password'),
+                'role' => 'employee',
                 "email_verified_at" => Carbon::now(),
             ]);
 
             $employee = Employee::create([
                 'user_id' => $user->id,
-                'bio' => $employeesBio[$name],
-                'photo_url' => $faker->imageUrl(200, 200, 'people'),
+                'bio' => $employeeData['bio'],
+                'photo_url' => null,
+            ]);
+            $employee->forceFill([
+                'photo_url' => $backendBase . '/storage/images/' . $employee->id . '/' . $employeeData['name'] . '.png',
+            ])->save();
+            EmployeeGallery::firstOrCreate([
+                'employee_id' => $employee->id,
+                'image_url' => $employee->photo_url,
             ]);
 
             for ($day = 1; $day <= 5; $day++) {
@@ -89,34 +115,6 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
-
-        $user = User::create([
-            'name' => 'Haircut Harry',
-            'email' => $faker->unique()->safeEmail,
-            'password' => Hash::make('password'),
-            "email_verified_at" => Carbon::now(),
-        ]);
-        $employee = Employee::create([
-                'user_id' => $user->id,
-                'bio' => $employeesBio['Haircut Harry'],
-                'photo_url' => $faker->imageUrl(200, 200, 'people'),
-            ]);
-        for ($day = 1; $day <= 5; $day++) {
-                WorkingHour::create([
-                    'employee_id' => $employee->id,
-                    'weekday' => $day,
-                    'start_time' => '12:00:00',
-                    'end_time' => '20:00:00',
-                ]);
-            }
-        $employee->services()->attach($services[0], [
-                    'price' => $faker->numberBetween(50, 100),
-                    "duration" => 60,
-                ]);
-        $employee->services()->attach($services[1], [
-            'price' => $faker->numberBetween(50, 100),
-            "duration" => 30,
-        ]);
 
         for ($i = 0; $i < 10; $i++) {
             User::create([

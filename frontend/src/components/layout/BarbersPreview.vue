@@ -1,19 +1,35 @@
 <script setup>
-    import {Button} from '@components/ui/button'
-    import {Card, CardHeader, CardContent, CardTitle, CardDescription} from '@components/ui/card'
-    import { getEmployees } from '@/api/index'
-import {ref, onMounted } from 'vue';
+import { Button } from '@components/ui/button'
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@components/ui/card'
+import { getEmployees } from '@/api/index'
+import { ref, onMounted } from 'vue'
     const forwardPage = (barber) => {
         return '/barbers/' + barber.id
     }
-    function getImageSrc(name) {
-      return `../../../public/images/${name}.png`;
-    }
+
+function getImageSrc(barber) {
+  const backendOrigin = 'http://backend.vm1.test'
+  const byId = {
+    1: 'Blowout Ben.png',
+    2: 'Crispy Chris.png',
+    3: 'Bouncy Bella.png',
+    4: 'Loud Lucy.png',
+    5: 'Haircut Harry.png'
+  }
+
+  const fileName = byId[barber?.id]
+  if (!fileName) return '/images/barber_placeholder.png'
+  return `${backendOrigin}/storage/images/${barber.id}/${encodeURIComponent(fileName)}`
+}
+
+function onImageError(event) {
+  event.target.src = '/images/barber_placeholder.png'
+}
+
 const barbers = ref([])
-    onMounted(async ()=>{
-        barbers.value = (await getEmployees()).data
-    })
-    
+onMounted(async () => {
+  barbers.value = (await getEmployees()).data
+})
 </script>
 <template>
     <section id="barbers" class="py-15 bg-background scroll-mt-15">
@@ -25,7 +41,7 @@ const barbers = ref([])
             <div class="grid md:grid-cols-3 gap-8">
                 <Card v-for="barber in barbers" :key="barber?.id" class="hover:scale-105 transition-transform duration-300">
                     <CardHeader>
-                        <img :src="getImageSrc(barber.name)" class="w-full h-full rounded-lg">
+                        <img :src="getImageSrc(barber)" class="w-full h-full rounded-lg" @error="onImageError">
                     </CardHeader>
                     <CardContent>
                         <CardTitle class="text-xl font-bold text-primary mb-1">{{ barber.name }}</CardTitle>

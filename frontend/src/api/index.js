@@ -64,6 +64,14 @@ export const getCurrentUser = () => API.get('/user');
 export const getBarberAppointments = () => API.get('/barber/appointments');
 export const cancelBarberAppointment = (appointmentId) => API.post(`/barber/appointments/${appointmentId}/cancel`);
 export const getBarberReviews = () => API.get('/barber/reviews');
+export const getBarberProfile = () => API.get('/barber/profile');
+export const updateBarberProfile = (payload) => API.post('/barber/profile', payload, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+});
+export const uploadBarberGalleryImage = (payload) => API.post('/barber/profile/gallery', payload, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+});
+export const deleteBarberGalleryImage = (galleryId) => API.delete(`/barber/profile/gallery/${galleryId}`);
 
 export const getServices = () => API.get('/services');
 export const getEmployees = () => API.get('/employees');

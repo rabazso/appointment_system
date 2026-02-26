@@ -38,6 +38,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/barber/appointments', [AppointmentController::class, 'barberAppointments']);
     Route::post('/barber/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelBarberAppointment']);
     Route::get('/barber/reviews', [AppointmentController::class, 'barberReviews']);
+    Route::get('/barber/profile', [EmployeeController::class, 'barberProfile']);
+    Route::post('/barber/profile', [EmployeeController::class, 'updateBarberProfile']);
+    Route::post('/barber/profile/gallery', [EmployeeController::class, 'uploadBarberGalleryImage']);
+    Route::delete('/barber/profile/gallery/{gallery}', [EmployeeController::class, 'deleteBarberGalleryImage']);
     Route::get('/user/appointments', [AppointmentController::class, 'userAppointments']);
     Route::post('/user/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelUserAppointment']);
     Route::post('/email/verification-notification', [AuthController::class, 'resendVerification'])

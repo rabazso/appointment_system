@@ -1,2 +1,19 @@
 *
 !.gitignore
+!images/
+images/*
+!images/1/
+!images/2/
+!images/3/
+!images/4/
+!images/5/
+images/1/*
+images/2/*
+images/3/*
+images/4/*
+images/5/*
+!images/1/Blowout Ben.png
+!images/2/Crispy Chris.png
+!images/3/Bouncy Bella.png
+!images/4/Loud Lucy.png
+!images/5/Haircut Harry.png
