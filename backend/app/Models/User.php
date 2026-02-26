@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,6 +12,7 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
     use Notifiable;
+    use CanResetPassword;
 
     protected $fillable = [
         'name',

@@ -9,6 +9,8 @@ import Confirm from '@pages/confirm.vue'
 import ConfirmationPending from '@pages/confirmationPending.vue'
 import YourAppointments from '@pages/yourAppointments.vue'
 import BarberAdminPage from '@pages/barberAdminPage.vue'
+import ForgotPassword from '@pages/forgotPassword.vue'
+import ResetPassword from '@pages/resetPassword.vue'
 
 const routes = [
   {
@@ -82,6 +84,22 @@ const routes = [
     meta:{
       title: 'BarberAdminPage',
       requiresBarber: true
+    }
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: ForgotPassword,
+    meta: {
+      title: 'Forgot Password'
+    }
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: ResetPassword,
+    meta: {
+      title: 'Reset Password'
     }
   }
 ]

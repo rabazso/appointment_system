@@ -62,6 +62,9 @@ async function submit() {
           <Label>Password</Label>
           <Input data-testid="password-input" v-model="data.password" type="password" />
         </div>
+        <div class="text-right">
+          <RouterLink to="/forgot-password" class="text-sm underline hover:opacity-80">Forgot password?</RouterLink>
+        </div>
         <Button data-testid="login-submit" class="w-full" :disabled="loading">
           {{ loading ? 'Signing in…' : 'Sign In' }}
         </Button>

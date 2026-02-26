@@ -77,3 +77,5 @@ export const postGuest = (name, email) => API.post(`/guest?name=${name}&email=${
 export const confirmAppointment = (appointmentId, expires, signature) => API.get(`/appointments/confirm/${appointmentId}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
 export const getUserAppointments = () => API.get('/user/appointments');
 export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointments/${appointmentId}/cancel`);
+export const forgotPassword = (email) => API.post('/forgot-password', { email });
+export const resetPassword = (payload) => API.post('/reset-password', payload);

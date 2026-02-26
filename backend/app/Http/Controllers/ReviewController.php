@@ -15,7 +15,7 @@ class ReviewController extends Controller
      */
     public function index()
     {
-        return Review::latest()->paginate(3);
+        return ReviewResource::collection(Review::with('user')->latest()->paginate(3));
     }
 
     /**
