@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -56,17 +56,29 @@ const links = [
 const scrollToLink = async (link) => {
   if (!link) return
   sheetOpen.value = false
+
   if (link.hash) {
+    const current = router.currentRoute.value
+    if (current.path === link.to && current.hash === link.hash) {
+      const element = document.querySelector(link.hash)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+      return
+    }
+    await router.push({ path: link.to, hash: link.hash })
+    return
+  } else {
     if (router.currentRoute.value.path !== link.to) {
       await router.push(link.to)
-      await nextTick()
+      return
     }
-    const element = document.querySelector(link.hash)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth'})
-    }
-  } else {
-    router.push(link.to)
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    })
   }
 }
 
@@ -161,7 +173,7 @@ onBeforeUnmount(() => {
               :key="link.to"
               :to="link.to"
               :class="['flex w-full items-center py-2 text-lg font-semibold text-left indent-1.5 transition-colors duration-300 hover:text-accent']"
-              @click="scrollToLink(link)"
+              @click.prevent="scrollToLink(link)"
             >
               {{ link.label }}
             </RouterLink>
