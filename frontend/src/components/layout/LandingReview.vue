@@ -1,16 +1,97 @@
 <script setup>
 import { Button } from '@components/ui/button';
 import {Star} from "lucide-vue-next"
-import {Card, CardContent, CardTitle, CardDescription, CardHeader} from '@components/ui/card'
-import {ref, onMounted} from 'vue'
-import { getReviews } from '@/api/index';
+import {Card, CardContent, CardTitle, CardDescription} from '@components/ui/card'
+import {ref, onMounted, computed, watch} from 'vue'
+import { getReviews, getUserAppointments, postReview } from '@/api/index';
+import LeaveReviewModal from '@/components/modals/LeaveReviewModal.vue'
+import AuthModal from '@/components/auth/AuthModal.vue'
+import { useAuthStore } from '@stores/AuthStore.js'
 
 const reviews = ref([])
-const users = ref([])
+const showLeaveReviewModal = ref(false)
+const loginOpen = ref(false)
+const reviewAppointments = ref([])
+const reviewSubmitting = ref(false)
+const reviewError = ref('')
+const auth = useAuthStore()
+const isLoggedIn = computed(() => auth.isLoggedIn)
 
 onMounted(async ()=>{
+    await loadReviews()
+})
+
+function extractReviews(response) {
+    const reviewList = response?.data?.data || []
+    return reviewList
+        .slice()
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 3)
+}
+
+async function loadReviews() {
     const response = await getReviews()
-    reviews.value = response.data?.data
+    reviews.value = extractReviews(response)
+}
+
+async function loadReviewAppointments() {
+    try {
+        const response = await getUserAppointments()
+        reviewAppointments.value = (response.data || [])
+            .filter((appointment) => appointment.display_status === 'completed')
+            .sort((a, b) => new Date(b.start_datetime) - new Date(a.start_datetime))
+    } catch (error) {
+        reviewAppointments.value = []
+        reviewError.value = error.response?.data?.message || 'Could not load your appointments'
+    }
+}
+
+async function openReviewModal() {
+    if (isLoggedIn.value) {
+        reviewError.value = ''
+        await loadReviewAppointments()
+        showLeaveReviewModal.value = true
+        return
+    }
+
+    loginOpen.value = true
+}
+
+function closeReviewModal() {
+    showLeaveReviewModal.value = false
+}
+
+function handleAuthSuccess() {
+    loginOpen.value = false
+    openReviewModal()
+}
+
+async function handleReviewSubmit(payload) {
+    reviewSubmitting.value = true
+    reviewError.value = ''
+
+    try {
+        await postReview(payload)
+        await loadReviews()
+        showLeaveReviewModal.value = false
+    } catch (error) {
+        reviewError.value =
+            error.response?.data?.errors?.appointment_id?.[0] ||
+            error.response?.data?.errors?.rating?.[0] ||
+            error.response?.data?.errors?.comment?.[0] ||
+            error.response?.data?.message ||
+            'Could not submit your review'
+    } finally {
+        reviewSubmitting.value = false
+    }
+}
+
+watch(isLoggedIn, (loggedIn) => {
+    if (!loggedIn) {
+        showLeaveReviewModal.value = false
+        reviewAppointments.value = []
+        reviewError.value = ''
+    }
 })
 </script>
 <template>
@@ -30,10 +111,25 @@ onMounted(async ()=>{
             </Card>
         </div>
         <div class="text-center mt-50">
-            <Button variant="outlinebackground" class="text-lg md:text-xl font-bold w-fit px-20 py-8">
+            <Button variant="outlinebackground" class="text-lg md:text-xl font-bold w-fit px-20 py-8" @click="openReviewModal">
                 Leave a review
             </Button>
         </div>
+
+        <LeaveReviewModal
+            v-if="showLeaveReviewModal"
+            :appointments="reviewAppointments"
+            :loading="reviewSubmitting"
+            :error-message="reviewError"
+            @close="closeReviewModal"
+            @submit="handleReviewSubmit"
+        />
+
+        <AuthModal
+            v-if="loginOpen"
+            @close="loginOpen = false"
+            @success="handleAuthSuccess"
+        />
     </div>
 </section>
 </template>

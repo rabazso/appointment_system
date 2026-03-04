@@ -23,7 +23,12 @@ class ReviewController extends Controller
      */
     public function store(StoreReviewRequest $request)
     {
-        $review = Review::create($request->safe()->merge(["user_id" => $request->user()->id])->toArray());
+        $review = Review::create(
+            array_merge($request->validated(), [
+                "user_id" => $request->user()->id,
+            ])
+        )->load('user');
+
         return new ReviewResource($review);
     }
 
