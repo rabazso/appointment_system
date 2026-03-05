@@ -20,12 +20,14 @@ export const register = async (data) => {
     const response = await API.post('/register', data);
     const token = response.data.token;
     const user_id = response.data.user.id;
+    const user_name = response.data.user.name;
     const role = response.data.user.role;
 
     const store = useAuthStore();
     
     if (token) store.setToken(token);
     if (user_id) store.setUser(user_id);
+    if (user_name) store.setName(user_name);
     if (role) store.setRole(role);
 
     return response.data;
@@ -36,12 +38,14 @@ export const login = async (data) => {
     const response = await API.post('/login', data);
     const token = response.data.token;
     const user_id = response.data.user.id;
+    const user_name = response.data.user.name;
     const role = response.data.user.role;
 
     const store = useAuthStore();
 
     if (token) store.setToken(token);
     if (user_id) store.setUser(user_id);
+    if (user_name) store.setName(user_name);
     if (role) store.setRole(role);
 
     return response.data;
@@ -55,6 +59,7 @@ export const logout = async () => {
 
     store.setToken(null);
     store.setUser(null);
+    store.setName(null);
     store.setRole(null);
     
     return response.data;
@@ -81,8 +86,13 @@ export const getEmployeesByService = (serviceId) => API.get(`/employees?service_
 export const getEmployeesByServiceAndAppointment = (serviceId, appointment) => API.get(`/employees?service_id=${serviceId}&appointment=${appointment}`);
 export const getReviews = () => API.get('/reviews');
 export const postReview = (payload) => API.post('/reviews', payload);
-export const postAppointment = (serviceId, employeeId, appointmentStart, customerId) => API.post(`/appointments?service_id=${serviceId}&employee_id=${employeeId}&appointment_start=${appointmentStart}&customer_id=${customerId}`);
-export const postGuest = (name, email) => API.post(`/guest?name=${name}&email=${email}`);
+export const postAppointment = (serviceId, employeeId, appointmentStart, customerId) => API.post('/appointments', {
+    service_id: Number(serviceId),
+    employee_id: Number(employeeId),
+    appointment_start: appointmentStart,
+    customer_id: Number(customerId),
+});
+export const postGuest = (name, email) => API.post('/guest', { name, email });
 export const confirmAppointment = (appointmentId, expires, signature) => API.get(`/appointments/confirm/${appointmentId}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
 export const getUserAppointments = () => API.get('/user/appointments');
 export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointments/${appointmentId}/cancel`);

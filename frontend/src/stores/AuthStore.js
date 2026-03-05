@@ -5,6 +5,7 @@ import { logout as apiLogout } from '@/api';
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || null);
   const user_id = ref(localStorage.getItem('user_id') || null);
+  const user_name = ref(localStorage.getItem('user_name') || null);
   const role = ref(localStorage.getItem('role') || null);
 
   const isLoggedIn = computed(() => !!token.value);
@@ -21,6 +22,12 @@ export const useAuthStore = defineStore('auth', () => {
     else localStorage.removeItem('user_id');
   }
 
+  function setName(newUserName) {
+    user_name.value = newUserName;
+    if (newUserName) localStorage.setItem('user_name', newUserName);
+    else localStorage.removeItem('user_name');
+  }
+
   function setRole(newRole) {
     role.value = newRole;
     if (newRole) localStorage.setItem('role', newRole);
@@ -35,9 +42,10 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       setToken(null);
       setUser(null);
+      setName(null);
       setRole(null);
     }
   }
 
-  return { token, user_id, role, isLoggedIn, setToken, setUser, setRole, logout };
+  return { token, user_id, user_name, role, isLoggedIn, setToken, setUser, setName, setRole, logout };
 });

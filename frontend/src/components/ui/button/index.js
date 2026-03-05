@@ -17,6 +17,7 @@ export const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        base: "justify-start py-2 text-lg font-semibold text-left transition-colors duration-300 hover:text-accent rounded-sm",
         outlinebackground:
           "border border-accent text-accent bg-background rounded-lg font-bold shadow-lg hover:bg-accent/10 hover:text-accent dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
       },

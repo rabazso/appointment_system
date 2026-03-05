@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ChevronDown, Menu } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
@@ -27,7 +28,6 @@ const toastMessage = ref('')
 const showToast = ref(false)
 const accountMenuOpen = ref(false)
 const accountMenuRef = ref(null)
-const userName = ref('')
 
 const isAuthenticated = computed(() => auth.isLoggedIn)
 const isBarberId = computed(() => {
@@ -35,7 +35,7 @@ const isBarberId = computed(() => {
   return Number.isInteger(id) && id >= 1 && id <= 5
 })
 const isBarberUser = computed(() => ['employee', 'barber', 'admin'].includes(auth.role) || isBarberId.value)
-const accountButtonLabel = computed(() => userName.value || 'My Account')
+const accountButtonLabel = computed(() => auth.user_name || '')
 const dashboardPath = computed(() => (isBarberUser.value ? '/barberAdminPage' : '/yourAppointments'))
 const isDashboardActive = computed(() => route.path === dashboardPath.value)
 
@@ -90,7 +90,6 @@ async function signOut() {
   try {
     accountMenuOpen.value = false
     await auth.logout()
-    userName.value = ''
     toastMessage.value = 'You have successfully signed out.'
     showToast.value = true
   } catch (error) {
@@ -123,7 +122,7 @@ async function hydrateAccountInfo() {
   try {
     const response = await getCurrentUser()
     if (response?.data?.name) {
-      userName.value = response.data.name
+      auth.setName(response.data.name)
     }
     if (response?.data?.role && !auth.role) {
       auth.setRole(response.data.role)
@@ -150,7 +149,6 @@ onBeforeUnmount(() => {
 
 watch(isAuthenticated, (loggedIn) => {
   if (!loggedIn) {
-    userName.value = ''
     accountMenuOpen.value = false
     return
   }
@@ -173,29 +171,62 @@ watch(isAuthenticated, (loggedIn) => {
       <Sheet v-model:open="sheetOpen">
         <SheetTrigger asChild>
           <button variant="outline" size="icon" class="lg:hidden">
-            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="4" y1="6" x2="20" y2="6" />
-              <line x1="4" y1="12" x2="20" y2="12" />
-              <line x1="4" y1="18" x2="20" y2="18" />
-            </svg>
+            <Menu class="h-6 w-6" />
           </button>
         </SheetTrigger>
         <SheetContent side="left" class="flex flex-col">
-          <RouterLink to="/" class="mr-6 hidden lg:flex">
-            <span class="sr-only">{{ title }}</span>
-          </RouterLink>
+          
           <div class="grid gap-2 py-6 mt-8">
+            <div v-if="isAuthenticated" ref="accountMenuRef">
+              <Button
+                variant="secondary"
+                class="h-11 w-full justify-start text-left text-base font-semibold transition-colors [&_p]:w-full"
+                @click.stop="toggleAccountMenu"
+              >
+                <span class="flex w-full items-center justify-between gap-2">
+                  <span class="max-w-44 truncate">{{ accountButtonLabel }}</span>
+                  <ChevronDown
+                    class="h-3.5 w-3.5 opacity-80 transition-transform duration-200 "
+                    :class="{ 'rotate-180': accountMenuOpen }"
+                  />
+                </span>
+              </Button>
+              <div
+                v-if="accountMenuOpen"
+                class="absolute right-0 mt-2 w-52 rounded-md border bg-background p-1 text-foreground shadow-lg z-50"
+              >
+                <Button
+                  variant="base"
+                  :class="[
+                    'w-full text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
+                    isDashboardActive ? 'text-accent' : ''
+                  ]"
+                  @click="goToDashboard"
+                >
+                  Dashboard
+                </Button>
+                <Button
+                  variant="base"
+                  class="w-full text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                  @click="signOut"
+                >
+                  Sign out
+                </Button>
+              </div>
+            </div>
             <RouterLink
               v-for="link in links"
               :key="link.to"
               :to="link.to"
-              :class="['flex w-full items-center py-2 text-lg font-semibold text-left indent-1.5 transition-colors duration-300 hover:text-accent']"
+              :class="['flex w-full items-center py-2 text-lg font-semibold text-left indent-4 transition-colors duration-300 hover:text-accent']"
               @click.prevent="scrollToLink(link)"
             >
               {{ link.label }}
             </RouterLink>
           </div>
+          <Button variant="base" as-child @click="[loginOpen = true, sheetOpen = false]" v-if="!isAuthenticated">
+            Sign In
+          </Button>
           <div class="flex-1"></div>
           <Button as-child class="px-8 mb-8 w-full" to="/booking">
             Book now
@@ -224,42 +255,33 @@ watch(isAuthenticated, (loggedIn) => {
           <Button type="button" class="h-11 px-5 text-base font-semibold transition-colors" @click.stop="toggleAccountMenu">
             <span class="inline-flex items-center gap-2 whitespace-nowrap">
               <span class="max-w-44 truncate">{{ accountButtonLabel }}</span>
-              <svg
+              <ChevronDown
                 class="h-3.5 w-3.5 opacity-80 transition-transform duration-200"
                 :class="{ 'rotate-180': accountMenuOpen }"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.4"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
+              />
             </span>
           </Button>
           <div
             v-if="accountMenuOpen"
             class="absolute right-0 mt-2 w-52 rounded-md border bg-background p-1 text-foreground shadow-lg z-50"
           >
-            <button
-              type="button"
+            <Button
+              variant="base"
               :class="[
-                'w-full rounded-sm px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
+                'w-full text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
                 isDashboardActive ? 'text-accent' : ''
               ]"
               @click="goToDashboard"
             >
               Dashboard
-            </button>
-            <button
-              type="button"
-              class="w-full rounded-sm px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+            </Button>
+            <Button
+              variant="base"
+              class="w-full text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
               @click="signOut"
             >
               Sign out
-            </button>
+            </Button>
           </div>
         </div>
         <Button data-testid="headerbtn" :class="['hidden md:block px-8 font-medium transition-colors']" @click="loginOpen = true" v-if="!isAuthenticated">
