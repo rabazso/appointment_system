@@ -88,3 +88,4 @@ export const getUserAppointments = () => API.get('/user/appointments');
 export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointments/${appointmentId}/cancel`);
 export const forgotPassword = (email) => API.post('/forgot-password', { email });
 export const resetPassword = (payload) => API.post('/reset-password', payload);
+export const completeBarberAppointment = (appointmentId) => API.post(`/barber/appointments/${appointmentId}/complete`);

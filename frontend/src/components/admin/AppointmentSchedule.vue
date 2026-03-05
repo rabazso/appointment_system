@@ -3,12 +3,12 @@ import { ref } from 'vue'
 import { Card, CardContent } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
-import { X } from 'lucide-vue-next'
+import { Check, X } from 'lucide-vue-next'
 
 const props = defineProps({
   appointments: { type: Array, required: true }
 })
-const emit = defineEmits(['cancel-appointment'])
+const emit = defineEmits(['cancel-appointment', 'complete-appointment'])
 
 const activeTab = ref('appointments')
 const selectedDate = ref(new Date())
@@ -63,6 +63,16 @@ const getStatusText = (status) => {
             <span :class="['px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusColor(apt.status)]">
               {{ getStatusText(apt.status) }}
             </span>
+            <Button 
+                v-if="apt.status === 'confirmed'"
+                size="icon" 
+                variant="ghost" 
+                class="h-8 w-8 text-green-600 hover:text-green-800 hover:bg-green-50" 
+                title="Foglalás teljesítve"
+                @click="emit('complete-appointment', apt.id)"
+            >
+                <Check class="h-4 w-4" />
+            </Button>
             <Button 
                 v-if="['pending', 'confirmed'].includes(apt.status)"
                 size="icon" 

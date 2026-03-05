@@ -239,4 +239,33 @@ class AppointmentController extends Controller
             default => $appointment->start_datetime?->isPast() ? 'completed' : 'upcoming',
         };
     }
+
+    public function completeBarberAppointment(Request $request, Appointment $appointment)
+    {
+        $employee = $request->user()->employee;
+        if (!$employee || $appointment->employee_id !== $employee->id) {
+            return response()->json(['message' => 'You are not allowed to complete this appointment'], 403);
+        }
+
+        if ($appointment->status === 'completed') {
+            return response()->json(['message' => 'Appointment already completed'], 409);
+        }
+
+        if ($appointment->status !== 'confirmed') {
+            return response()->json(['message' => 'Only confirmed appointments can be marked as completed'], 422);
+        }
+
+        $appointment->forceFill([
+            'status' => 'completed',
+        ])->save();
+
+        return response()->json([
+            'message' => 'Appointment completed',
+            'appointment' => [
+                'id' => $appointment->id,
+                'status' => $appointment->status,
+            ],
+        ]);
+    }
 }
+

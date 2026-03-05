@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/barber/appointments', [AppointmentController::class, 'barberAppointments']);
     Route::post('/barber/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelBarberAppointment']);
+    Route::post('/barber/appointments/{appointment}/complete', [AppointmentController::class, 'completeBarberAppointment']);
     Route::get('/barber/reviews', [AppointmentController::class, 'barberReviews']);
     Route::get('/barber/profile', [EmployeeController::class, 'barberProfile']);
     Route::post('/barber/profile', [EmployeeController::class, 'updateBarberProfile']);

@@ -6,6 +6,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import BarberHeader from '@/components/layout/BarberHeader.vue'
 import {
     cancelBarberAppointment,
+    completeBarberAppointment,
     deleteBarberGalleryImage,
     getBarberAppointments,
     getBarberProfile,
@@ -80,6 +81,19 @@ const onCancelAppointment = async (appointmentId) => {
         )
     } catch (error) {
         errorMessage.value = error.response?.data?.message || 'Failed to cancel appointment.'
+    }
+}
+
+const onCompleteAppointment = async (appointmentId) => {
+    try {
+        await completeBarberAppointment(appointmentId)
+        appointments.value = appointments.value.map((appointment) =>
+            appointment.id === appointmentId
+                ? { ...appointment, status: 'completed' }
+                : appointment
+        )
+    } catch (error) {
+        errorMessage.value = error.response?.data?.message || 'Failed to complete appointment.'
     }
 }
 
@@ -189,7 +203,11 @@ onMounted(async () => {
 
                 <div class="grid gap-4 md:grid-cols-7 lg:grid-cols-7">
                     <div class="col-span-4 md:col-span-4 lg:col-span-5">
-                        <AppointmentScheduler :appointments="appointments" @cancel-appointment="onCancelAppointment" />
+                        <AppointmentScheduler
+                            :appointments="appointments"
+                            @cancel-appointment="onCancelAppointment"
+                            @complete-appointment="onCompleteAppointment"
+                        />
                     </div>
                     <div class="col-span-4 md:col-span-3 lg:col-span-2">
                         <AdminSidebar :reviews="reviews" />
