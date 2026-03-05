@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
@@ -18,6 +18,7 @@ import { getCurrentUser } from '@/api'
 
 const props = defineProps({ variant: String, required: false })
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 const sheetOpen = ref(false)
@@ -35,6 +36,8 @@ const isBarberId = computed(() => {
 })
 const isBarberUser = computed(() => ['employee', 'barber', 'admin'].includes(auth.role) || isBarberId.value)
 const accountButtonLabel = computed(() => userName.value || 'My Account')
+const dashboardPath = computed(() => (isBarberUser.value ? '/barberAdminPage' : '/yourAppointments'))
+const isDashboardActive = computed(() => route.path === dashboardPath.value)
 
 let bgcolor = ref(props.variant === 'background' ? 'bg-background' : 'bg-primary')
 let textcolor = ref(props.variant === 'background' ? 'text-foreground' : 'text-primary-foreground')
@@ -218,21 +221,23 @@ watch(isAuthenticated, (loggedIn) => {
 
       <div class="w-auto md:min-w-40 flex justify-end items-center gap-3">
         <div v-if="isAuthenticated" ref="accountMenuRef" class="relative hidden md:block">
-          <Button type="button" class="px-4 font-medium transition-colors gap-2" @click.stop="toggleAccountMenu">
-            <span class="max-w-40 truncate">{{ accountButtonLabel }}</span>
-            <svg
-              class="h-4 w-4 transition-transform duration-200"
-              :class="{ 'rotate-180': accountMenuOpen }"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+          <Button type="button" class="h-11 px-5 text-base font-semibold transition-colors" @click.stop="toggleAccountMenu">
+            <span class="inline-flex items-center gap-2 whitespace-nowrap">
+              <span class="max-w-44 truncate">{{ accountButtonLabel }}</span>
+              <svg
+                class="h-3.5 w-3.5 opacity-80 transition-transform duration-200"
+                :class="{ 'rotate-180': accountMenuOpen }"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
           </Button>
           <div
             v-if="accountMenuOpen"
@@ -240,7 +245,10 @@ watch(isAuthenticated, (loggedIn) => {
           >
             <button
               type="button"
-              class="w-full rounded-sm px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+              :class="[
+                'w-full rounded-sm px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
+                isDashboardActive ? 'text-accent' : ''
+              ]"
               @click="goToDashboard"
             >
               Dashboard
