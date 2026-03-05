@@ -34,7 +34,7 @@ const scrollToLink = async (link) => {
 </script>
 <template>
     <footer class="p-8 md:grid md:grid-cols-3 md:gap-8 flex flex-col items-start gap-8" :class="bgcolor, textcolor">
-        <div class="col-span-1 mx-auto">
+        <div class="col-span-1 mx-auto mt-5 md:mt-0">
             <h2 class="text-2xl font-bold mb-4">Contact</h2>
             <div class="flex space-x-2">
                 <div class="items-end">
@@ -76,7 +76,7 @@ const scrollToLink = async (link) => {
                 </div>
             </div>
         </div>
-        <div class="col-span-1 flex flex-col items-center justify-start">
+        <div class="col-span-1 flex-col items-center justify-start hidden md:flex">
             <div class="mt-4">
                 <RouterLink to="/" class="flex items-center" @click.prevent="scrollToLink({ to: '/', hash: '#hero' })">
                     <div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
@@ -86,7 +86,7 @@ const scrollToLink = async (link) => {
                 </RouterLink>
             </div>
         </div>
-        <div class="col-span-1 md:text-right mx-auto">
+        <div class="col-span-1 md:text-right mx-auto hidden md:block">
             <h2 class="text-2xl font-bold mb-4">Quick Links</h2>
             <ul>
                 <li class="mb-2 underline"><RouterLink to="/">Home</RouterLink></li>

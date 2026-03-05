@@ -80,7 +80,7 @@ function handleAuthSuccess(message) {
             <p>Loading barbers...</p>
         </div>
 
-        <div v-for="(barber, index) in barbers" :key="barber.id" :class="['py-16 px-4 sm:px-6 lg:px-8 flex justify-center', index % 2 === 1 ? 'bg-black text-white' : 'bg-white text-black']">
+        <div v-for="(barber, index) in barbers" :key="barber.id" :class="['py-16 px-4 sm:px-6 lg:px-8 flex justify-center', index % 2 === 1 ? 'bg-primary text-white' : 'bg-background text-black']">
             <div class="max-w-4xl w-full flex flex-col md:flex-row items-center md:items-start gap-8">
                 <div class="w-64 h-64 bg-gray-300 rounded-lg overflow-hidden flex-shrink-0">
                     <img :src="getImageSrc(barber)" :alt="barber.name" class="w-full h-full object-cover" @error="onImageError">

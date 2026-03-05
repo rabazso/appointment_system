@@ -6,10 +6,10 @@ import Footer from '@components/layout/Footer.vue'
 
 <template>
   <div class="flex min-h-screen flex-col bg-background text-foreground">
-    <BaseHeader variant="background" />
+    <BaseHeader />
     <main class="flex-grow">
       <ContactLayout />
     </main>
-    <Footer variant="background" />
+    <Footer />
   </div>
 </template>
