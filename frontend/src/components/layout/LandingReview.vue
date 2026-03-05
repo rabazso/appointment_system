@@ -3,6 +3,7 @@ import { Button } from '@components/ui/button';
 import {Star} from "lucide-vue-next"
 import {Card, CardContent, CardTitle, CardDescription} from '@components/ui/card'
 import {ref, onMounted, computed, watch} from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { getReviews, getUserAppointments, postReview } from '@/api/index';
 import LeaveReviewModal from '@/components/modals/LeaveReviewModal.vue'
 import AuthModal from '@/components/auth/AuthModal.vue'
@@ -14,11 +15,20 @@ const loginOpen = ref(false)
 const reviewAppointments = ref([])
 const reviewSubmitting = ref(false)
 const reviewError = ref('')
+const preselectedAppointmentId = ref('')
 const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 const isLoggedIn = computed(() => auth.isLoggedIn)
 
 onMounted(async ()=>{
     await loadReviews()
+
+    if (isReviewPromptRequested()) {
+        const requestedAppointmentId = route.query.appointment_id
+        await openReviewModal(requestedAppointmentId ? String(requestedAppointmentId) : '')
+        await clearReviewPromptQuery()
+    }
 })
 
 function extractReviews(response) {
@@ -46,7 +56,26 @@ async function loadReviewAppointments() {
     }
 }
 
-async function openReviewModal() {
+function isReviewPromptRequested() {
+    const flag = String(route.query.openReview || '').toLowerCase()
+    return flag === '1' || flag === 'true' || flag === 'yes'
+}
+
+async function clearReviewPromptQuery() {
+    const nextQuery = { ...route.query }
+    delete nextQuery.openReview
+    delete nextQuery.appointment_id
+
+    try {
+        await router.replace({ query: nextQuery, hash: route.hash })
+    } catch {
+        // no-op
+    }
+}
+
+async function openReviewModal(preferredAppointmentId = '') {
+    preselectedAppointmentId.value = preferredAppointmentId ? String(preferredAppointmentId) : ''
+
     if (isLoggedIn.value) {
         reviewError.value = ''
         await loadReviewAppointments()
@@ -59,11 +88,12 @@ async function openReviewModal() {
 
 function closeReviewModal() {
     showLeaveReviewModal.value = false
+    preselectedAppointmentId.value = ''
 }
 
 function handleAuthSuccess() {
     loginOpen.value = false
-    openReviewModal()
+    openReviewModal(preselectedAppointmentId.value)
 }
 
 async function handleReviewSubmit(payload) {
@@ -74,6 +104,7 @@ async function handleReviewSubmit(payload) {
         await postReview(payload)
         await loadReviews()
         showLeaveReviewModal.value = false
+        preselectedAppointmentId.value = ''
     } catch (error) {
         reviewError.value =
             error.response?.data?.errors?.appointment_id?.[0] ||
@@ -91,6 +122,7 @@ watch(isLoggedIn, (loggedIn) => {
         showLeaveReviewModal.value = false
         reviewAppointments.value = []
         reviewError.value = ''
+        preselectedAppointmentId.value = ''
     }
 })
 </script>
@@ -121,6 +153,7 @@ watch(isLoggedIn, (loggedIn) => {
             :appointments="reviewAppointments"
             :loading="reviewSubmitting"
             :error-message="reviewError"
+            :initial-appointment-id="preselectedAppointmentId"
             @close="closeReviewModal"
             @submit="handleReviewSubmit"
         />

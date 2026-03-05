@@ -16,6 +16,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  initialAppointmentId: {
+    type: [String, Number],
+    default: '',
+  },
 })
 
 const emit = defineEmits(['close', 'submit'])
@@ -25,10 +29,23 @@ const comment = ref('')
 const appointmentId = ref('')
 
 watch(
-  () => props.appointments,
-  (nextAppointments) => {
+  () => ({
+    appointments: props.appointments,
+    initialAppointmentId: props.initialAppointmentId,
+  }),
+  ({ appointments: nextAppointments, initialAppointmentId }) => {
     if (!nextAppointments.length) {
       appointmentId.value = ''
+      return
+    }
+
+    const preferredId = initialAppointmentId ? String(initialAppointmentId) : ''
+    const hasPreferredSelection = preferredId
+      ? nextAppointments.some((appointment) => String(appointment.id) === preferredId)
+      : false
+
+    if (hasPreferredSelection) {
+      appointmentId.value = preferredId
       return
     }
 

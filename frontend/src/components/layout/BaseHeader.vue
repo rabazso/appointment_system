@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -26,6 +26,7 @@ const toastMessage = ref('')
 const showToast = ref(false)
 const accountMenuOpen = ref(false)
 const accountMenuRef = ref(null)
+const userName = ref('')
 
 const isAuthenticated = computed(() => auth.isLoggedIn)
 const isBarberId = computed(() => {
@@ -33,7 +34,7 @@ const isBarberId = computed(() => {
   return Number.isInteger(id) && id >= 1 && id <= 5
 })
 const isBarberUser = computed(() => ['employee', 'barber', 'admin'].includes(auth.role) || isBarberId.value)
-const accountPageLabel = computed(() => (isBarberUser.value ? 'Your Admin Page' : 'Your Appointments'))
+const accountButtonLabel = computed(() => userName.value || 'My Account')
 
 let bgcolor = ref(props.variant === 'background' ? 'bg-background' : 'bg-primary')
 let textcolor = ref(props.variant === 'background' ? 'text-foreground' : 'text-primary-foreground')
@@ -86,6 +87,7 @@ async function signOut() {
   try {
     accountMenuOpen.value = false
     await auth.logout()
+    userName.value = ''
     toastMessage.value = 'You have successfully signed out.'
     showToast.value = true
   } catch (error) {
@@ -97,31 +99,34 @@ function handleAuthSuccess(message) {
   loginOpen.value = false
   toastMessage.value = message
   showToast.value = true
+  hydrateAccountInfo()
 }
 
 function toggleAccountMenu() {
   accountMenuOpen.value = !accountMenuOpen.value
 }
 
-function goToYourAppointments() {
+function goToDashboard() {
   accountMenuOpen.value = false
   if (isBarberUser.value) {
-    const adminRoute = router.resolve('/barberAdminPage')
-    window.open(adminRoute.href, '_blank', 'noopener,noreferrer')
+    router.push('/barberAdminPage')
     return
   }
   router.push('/yourAppointments')
 }
 
-async function hydrateRoleIfMissing() {
-  if (!isAuthenticated.value || auth.role) return
+async function hydrateAccountInfo() {
+  if (!isAuthenticated.value) return
   try {
     const response = await getCurrentUser()
-    if (response?.data?.role) {
+    if (response?.data?.name) {
+      userName.value = response.data.name
+    }
+    if (response?.data?.role && !auth.role) {
       auth.setRole(response.data.role)
     }
   } catch (error) {
-    console.error('Failed to hydrate user role', error)
+    console.error('Failed to hydrate account info', error)
   }
 }
 
@@ -133,11 +138,21 @@ function handleClickOutside(event) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
-  hydrateRoleIfMissing()
+  hydrateAccountInfo()
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
+})
+
+watch(isAuthenticated, (loggedIn) => {
+  if (!loggedIn) {
+    userName.value = ''
+    accountMenuOpen.value = false
+    return
+  }
+
+  hydrateAccountInfo()
 })
 </script>
 
@@ -203,7 +218,8 @@ onBeforeUnmount(() => {
 
       <div class="w-auto md:min-w-40 flex justify-end items-center gap-3">
         <div v-if="isAuthenticated" ref="accountMenuRef" class="relative hidden md:block">
-          <Button type="button" class="px-4 font-medium transition-colors" @click.stop="toggleAccountMenu">
+          <Button type="button" class="px-4 font-medium transition-colors gap-2" @click.stop="toggleAccountMenu">
+            <span class="max-w-40 truncate">{{ accountButtonLabel }}</span>
             <svg
               class="h-4 w-4 transition-transform duration-200"
               :class="{ 'rotate-180': accountMenuOpen }"
@@ -225,14 +241,21 @@ onBeforeUnmount(() => {
             <button
               type="button"
               class="w-full rounded-sm px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-              @click="goToYourAppointments"
+              @click="goToDashboard"
             >
-              {{ accountPageLabel }}
+              Dashboard
+            </button>
+            <button
+              type="button"
+              class="w-full rounded-sm px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+              @click="signOut"
+            >
+              Sign out
             </button>
           </div>
         </div>
-        <Button data-testid="headerbtn" :class="['hidden md:block px-8 font-medium transition-colors']" @click="isAuthenticated ? signOut() : loginOpen = true">
-          {{ isAuthenticated ? 'Sign Out' : 'Sign In' }}
+        <Button data-testid="headerbtn" :class="['hidden md:block px-8 font-medium transition-colors']" @click="loginOpen = true" v-if="!isAuthenticated">
+          Sign In
         </Button>
       </div>
     </div>

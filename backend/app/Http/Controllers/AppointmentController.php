@@ -9,6 +9,7 @@ use App\Http\Requests\AppointmentRequest;
 use App\Http\Requests\AppointmentStoreRequest;
 use App\Mail\Booking;
 use App\Mail\BookingSummary;
+use App\Mail\ReviewRequest;
 use App\Models\Appointment;
 use App\Models\Review;
 use Illuminate\Support\Facades\Mail;
@@ -236,7 +237,7 @@ class AppointmentController extends Controller
         return match ($appointment->status) {
             'cancelled', 'no_show' => 'cancelled',
             'completed' => 'completed',
-            default => $appointment->start_datetime?->isPast() ? 'completed' : 'upcoming',
+            default => 'upcoming',
         };
     }
 
@@ -259,6 +260,8 @@ class AppointmentController extends Controller
             'status' => 'completed',
         ])->save();
 
+        $this->sendReviewRequestEmail($appointment);
+
         return response()->json([
             'message' => 'Appointment completed',
             'appointment' => [
@@ -267,5 +270,39 @@ class AppointmentController extends Controller
             ],
         ]);
     }
+
+    private function sendReviewRequestEmail(Appointment $appointment): void
+    {
+        $appointment->loadMissing([
+            'customer:id,name,email',
+            'service:id,name',
+            'employee.user:id,name',
+        ]);
+
+        if (!$appointment->customer?->email) {
+            return;
+        }
+
+        $frontendBase = rtrim((string) config('app.frontend_url'), '/');
+        if ($frontendBase !== '' && !preg_match('#^https?://#', $frontendBase)) {
+            $frontendBase = 'http://' . $frontendBase;
+        }
+
+        if ($frontendBase === '') {
+            return;
+        }
+
+        $query = http_build_query([
+            'openReview' => 1,
+            'appointment_id' => $appointment->id,
+        ], '', '&', PHP_QUERY_RFC3986);
+
+        $reviewLink = $frontendBase . '/?' . $query . '#reviews';
+
+        Mail::to($appointment->customer->email)->send(
+            new ReviewRequest($appointment, $reviewLink)
+        );
+    }
+
 }
 
