@@ -11,6 +11,7 @@ import YourAppointments from '@pages/yourAppointments.vue'
 import BarberAdminPage from '@pages/barberAdminPage.vue'
 import ForgotPassword from '@pages/forgotPassword.vue'
 import ResetPassword from '@pages/resetPassword.vue'
+import Services from '@pages/admin/Services.vue'
 
 const routes = [
   {
@@ -100,6 +101,14 @@ const routes = [
     component: ResetPassword,
     meta: {
       title: 'Reset Password'
+    }
+  },
+  {
+    path: '/admin/services',
+    name: 'Services',
+    component: Services,
+    meta: {
+        title: 'Services'
     }
   }
 ]
