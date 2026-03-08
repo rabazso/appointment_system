@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Calculations\EmployeeCalculation;
+use App\Http\Resources\BarberProfileResource;
+use App\Http\Resources\EmployeeGalleryResource;
+use App\Http\Resources\EmployeeResource;
 use App\Http\Requests\EmployeeRequest;
 use App\Http\Requests\UpdateBarberProfileRequest;
 use App\Http\Requests\UploadBarberGalleryImageRequest;
@@ -17,9 +20,7 @@ class EmployeeController extends Controller
     {
         $employees = $calculation->Employees($request);
 
-        return response()->json(
-            $employees,
-        );
+        return EmployeeResource::collection($employees);
     }
 
     public function barberProfile(Request $request)
@@ -29,21 +30,12 @@ class EmployeeController extends Controller
             return response()->json(['message' => 'Barber profile not found'], 404);
         }
 
-        $employee->load(['user:id,name', 'gallery:id,employee_id,image_url']);
-
-        return response()->json([
-            'id' => $employee->id,
-            'name' => $employee->user?->name,
-            'description' => $employee->bio,
-            'photo_url' => $employee->photo_url,
-            'gallery' => $employee->gallery
-                ->sortByDesc('id')
-                ->values()
-                ->map(fn (EmployeeGallery $item) => [
-                    'id' => $item->id,
-                    'image_url' => $item->image_url,
-                ]),
+        $employee->load([
+            'user:id,name',
+            'gallery' => fn ($query) => $query->select('id', 'employee_id', 'image_url')->orderByDesc('id'),
         ]);
+
+        return new BarberProfileResource($employee);
     }
 
     public function updateBarberProfile(UpdateBarberProfileRequest $request)
@@ -89,10 +81,9 @@ class EmployeeController extends Controller
             'image_url' => $this->publicUrlFromPath($path),
         ]);
 
-        return response()->json([
-            'id' => $gallery->id,
-            'image_url' => $gallery->image_url,
-        ], 201);
+        return (new EmployeeGalleryResource($gallery))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function deleteBarberGalleryImage(Request $request, EmployeeGallery $gallery)

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\GuestRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class AuthController extends Controller
         event(new Registered($user));
 
         return response()->json([
-            'user' => $user,
+            'user' => new UserResource($user),
             'message' => 'Registered. Please verify your email address before logging in.',
         ], 201);
     }
@@ -50,7 +51,11 @@ class AuthController extends Controller
 
         $token = $user->createToken('user-token')->plainTextToken;
 
-        return response()->json(['user' => $user, 'token' => $token, 'message' => 'Logged in']);
+        return response()->json([
+            'user' => new UserResource($user),
+            'token' => $token,
+            'message' => 'Logged in',
+        ]);
     }
 
     public function logout(Request $request)
@@ -93,12 +98,13 @@ class AuthController extends Controller
     public function guest(GuestRequest $request)
     {
         $data = $request->validated();
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => null,
-        ]);
 
-        return response()->json(['user' => $user, "message" => 'Make appoinment']);
+        return response()->json([
+            'guest' => [
+                'name' => $data['name'],
+                'email' => $data['email'],
+            ],
+            'message' => 'Guest details are valid.',
+        ]);
     }
 }

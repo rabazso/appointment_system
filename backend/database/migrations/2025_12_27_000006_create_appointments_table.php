@@ -7,11 +7,13 @@ return new class extends Migration {
     public function up() {
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->constrained('users');
+            $table->foreignId('customer_id')->nullable()->constrained('users');
+            $table->string('guest_name', 255)->nullable();
+            $table->string('guest_email', 255)->nullable();
             $table->foreignId('employee_id')->constrained();
             $table->foreignId('service_id')->constrained();
             $table->integer('price');
-             $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled', 'no_show']);
+            $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled', 'no_show']);
             $table->dateTime('start_datetime');
             $table->dateTime('end_datetime');
             $table->timestamp('confirmed_at')->nullable();

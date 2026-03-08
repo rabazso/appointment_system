@@ -2,13 +2,11 @@
 
 namespace App\Calculations;
 
-use App\Mail\BookingConfirmation;
 use App\Models\Service;
 use App\Models\Employee;
 use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class CreateAppointment
@@ -20,6 +18,8 @@ class CreateAppointment
         $employeeId = $request->get('employee_id');
         $appointmentStart = Carbon::parse($request->get('appointment_start'));
         $customerId = $request->get('customer_id');
+        $guestName = $request->get('guest_name');
+        $guestEmail = $request->get('guest_email');
 
         if ($appointmentStart->lt(now())) {
             throw ValidationException::withMessages(["appointment_start" => "Appointment cannot be created in the past"]);
@@ -65,8 +65,16 @@ class CreateAppointment
             throw ValidationException::withMessages(['error' => 'Employee is not available during this time for this service']);
         }
 
+        if (!$customerId && (!$guestName || !$guestEmail)) {
+            throw ValidationException::withMessages([
+                'customer_id' => 'Please log in or provide guest details.',
+            ]);
+        }
+
         return Appointment::create([
             'customer_id' => $customerId,
+            'guest_name' => $customerId ? null : $guestName,
+            'guest_email' => $customerId ? null : $guestEmail,
             'employee_id' => $employeeId,
             'service_id' => $serviceId,
             'price' => $price,

@@ -22,7 +22,7 @@ class EmployeeCalculation
         }
 
         $employees = Employee::query()
-            ->with('user')
+            ->with(['user:id,name,email'])
             ->when(
                 $serviceId,
                 fn($x) =>
@@ -31,6 +31,9 @@ class EmployeeCalculation
                     fn($y) =>
                     $y->where('services.id', $serviceId)
                 )
+                ->with([
+                    'services' => fn ($y) => $y->where('services.id', $serviceId),
+                ])
             )
             ->when(
                 $appointmentStart && $serviceId,
@@ -43,26 +46,7 @@ class EmployeeCalculation
                         ->where('end_datetime', '>', $slotStart)
                 )
             )
-            ->get()
-            ->map(function ($employee) use ($serviceId) {
-                $data = [
-                    'id' => $employee->id,
-                    'name' => $employee->user->name,
-                    'bio' => $employee->bio,
-                    'photo_url' => $employee->photo_url,
-                    'email' => $employee->user->email,
-                ];
-
-                if ($serviceId) {
-                    $service = $employee->services->Where('id', $serviceId)->First();
-
-                    $data['services'] = [
-                        'service_id' => $service->pivot->service_id,
-                        'price' => $service->pivot->price
-                    ];
-                }
-                return $data;
-            });
+            ->get();
 
         return $employees;
     }

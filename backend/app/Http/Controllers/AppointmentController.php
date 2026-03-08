@@ -7,6 +7,10 @@ use App\Calculations\AppointmentCalculation;
 use App\Calculations\CreateAppointment;
 use App\Http\Requests\AppointmentRequest;
 use App\Http\Requests\AppointmentStoreRequest;
+use App\Http\Resources\AppointmentResource;
+use App\Http\Resources\AppointmentStatusResource;
+use App\Http\Resources\BarberAppointmentResource;
+use App\Http\Resources\UserAppointmentResource;
 use App\Mail\Booking;
 use App\Mail\BookingSummary;
 use App\Mail\ReviewRequest;
@@ -27,22 +31,23 @@ class AppointmentController extends Controller
     }
 
     public function store(AppointmentStoreRequest $request, CreateAppointment $create)
-    {
-        $appointment = $create->Create($request);
-        $backendConfirmUrl = URL::temporarySignedRoute(
-            "appointments.confirm",
-            now()->addMinutes(60),
-            ["appointment" => $appointment->id],
-            false
-        );
-        $backendBase = rtrim((string) config('app.url'), '/');
-        if ($backendBase !== '' && !preg_match('#^https?://#', $backendBase)) {
-            $backendBase = 'http://' . $backendBase;
-        }
-        $confirmationLink = $backendBase . $backendConfirmUrl;
-        Mail::to($appointment->customer->email)->send(new Booking($appointment, $confirmationLink));
-        return response()->json(["message"=> "Booking created, confirmation email sent", "appointment" => $appointment,], 201);
+{
+    $appointment = $create->Create($request);
+    
+    $confirmationLink = URL::signedRoute("appointments.confirm", ["appointment" => $appointment->id], now()->addMinutes(60));
+    
+    $recipientEmail = $appointment->customer?->email ?? $appointment->guest_email;
+    if ($recipientEmail) {
+        Mail::to($recipientEmail)->send(new Booking($appointment, $confirmationLink));
     }
+    
+    $appointment->loadMissing(['service:id,name', 'employee.user:id,name', 'customer:id,name,email']);
+
+    return response()->json([
+        'message' => 'Booking created, confirmation email sent',
+        'appointment' => (new AppointmentResource($appointment))->toArray($request),
+    ], 201);
+}
 
     public function userAppointments(Request $request)
     {
@@ -53,28 +58,13 @@ class AppointmentController extends Controller
                 'employee.user:id,name',
             ])
             ->orderByDesc('start_datetime')
-            ->get()
-            ->map(function (Appointment $appointment) {
-                return [
-                    'id' => $appointment->id,
-                    'status' => $appointment->status,
-                    'display_status' => $this->displayStatus($appointment),
-                    'start_datetime' => $appointment->start_datetime?->toIso8601String(),
-                    'end_datetime' => $appointment->end_datetime?->toIso8601String(),
-                    'price' => $appointment->price,
-                    'service' => [
-                        'id' => $appointment->service?->id,
-                        'name' => $appointment->service?->name,
-                    ],
-                    'employee' => [
-                        'id' => $appointment->employee?->id,
-                        'name' => $appointment->employee?->user?->name,
-                    ],
-                ];
-            })
+            ->get();
+
+        $payload = $appointments
+            ->map(fn (Appointment $appointment) => (new UserAppointmentResource($appointment))->toArray($request))
             ->values();
 
-        return response()->json($appointments);
+        return response()->json($payload);
     }
 
     public function confirm(Request $request, Appointment $appointment){
@@ -96,7 +86,10 @@ class AppointmentController extends Controller
         $appointment->load(['service', 'employee.user', 'employee.services']);
         $summary = $this->buildSummary($appointment);
         $query = http_build_query($summary, '', '&', PHP_QUERY_RFC3986);
-        Mail::to($appointment->customer->email)->send(new BookingSummary($appointment));
+        $recipientEmail = $appointment->customer?->email ?? $appointment->guest_email;
+        if ($recipientEmail) {
+            Mail::to($recipientEmail)->send(new BookingSummary($appointment));
+        }
         return redirect()->away($frontendBase . "/summary" . ($query ? "?{$query}" : ''));
     }
 
@@ -120,10 +113,7 @@ class AppointmentController extends Controller
 
         return response()->json([
             'message' => 'Appointment cancelled',
-            'appointment' => [
-                'id' => $appointment->id,
-                'status' => $appointment->status,
-            ],
+            'appointment' => (new AppointmentStatusResource($appointment))->toArray($request),
         ]);
     }
 
@@ -141,21 +131,13 @@ class AppointmentController extends Controller
                 'customer:id,name',
             ])
             ->orderBy('start_datetime')
-            ->get()
-            ->map(function (Appointment $appointment) {
-                return [
-                    'id' => $appointment->id,
-                    'status' => $appointment->status,
-                    'client' => $appointment->customer?->name ?? $appointment->guest_name ?? 'Guest',
-                    'service' => $appointment->service?->name,
-                    'time' => optional($appointment->start_datetime)->format('H:i'),
-                    'start_datetime' => $appointment->start_datetime?->toIso8601String(),
-                    'end_datetime' => $appointment->end_datetime?->toIso8601String(),
-                ];
-            })
+            ->get();
+
+        $payload = $appointments
+            ->map(fn (Appointment $appointment) => (new BarberAppointmentResource($appointment))->toArray($request))
             ->values();
 
-        return response()->json($appointments);
+        return response()->json($payload);
     }
 
     public function cancelBarberAppointment(Request $request, Appointment $appointment)
@@ -179,10 +161,7 @@ class AppointmentController extends Controller
 
         return response()->json([
             'message' => 'Appointment cancelled',
-            'appointment' => [
-                'id' => $appointment->id,
-                'status' => $appointment->status,
-            ],
+            'appointment' => (new AppointmentStatusResource($appointment))->toArray($request),
         ]);
     }
 
@@ -232,15 +211,6 @@ class AppointmentController extends Controller
         ];
     }
 
-    private function displayStatus(Appointment $appointment): string
-    {
-        return match ($appointment->status) {
-            'cancelled', 'no_show' => 'cancelled',
-            'completed' => 'completed',
-            default => 'upcoming',
-        };
-    }
-
     public function completeBarberAppointment(Request $request, Appointment $appointment)
     {
         $employee = $request->user()->employee;
@@ -264,10 +234,7 @@ class AppointmentController extends Controller
 
         return response()->json([
             'message' => 'Appointment completed',
-            'appointment' => [
-                'id' => $appointment->id,
-                'status' => $appointment->status,
-            ],
+            'appointment' => (new AppointmentStatusResource($appointment))->toArray($request),
         ]);
     }
 
@@ -305,4 +272,3 @@ class AppointmentController extends Controller
     }
 
 }
-

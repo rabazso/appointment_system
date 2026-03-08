@@ -15,14 +15,7 @@ class GuestRequest extends FormRequest
     {
         return [
             'name' => 'required|string',
-            'email' => 'required|email|unique:users,email',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'email.unique' => 'This email is already registered. Please log in to book an appointment.',
+            'email' => 'required|email',
         ];
     }
 }

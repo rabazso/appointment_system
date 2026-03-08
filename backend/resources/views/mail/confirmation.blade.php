@@ -1,4 +1,4 @@
-<p>Dear {{ $appointment->customer->name }},</p>
+<p>Dear {{ $appointment->guest_name ?? $appointment->customer?->name ?? 'Guest' }},</p>
 
 <p>link:</p>
 

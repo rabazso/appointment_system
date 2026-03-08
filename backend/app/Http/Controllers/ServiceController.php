@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ServiceResource;
 use Illuminate\Http\Request;
 use App\Models\Service;
 
@@ -12,7 +13,7 @@ class ServiceController extends Controller
      */
     public function index()
     {
-        return Service::all();
+        return ServiceResource::collection(Service::query()->get());
     }
 
     /**
