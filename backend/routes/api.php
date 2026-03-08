@@ -1,16 +1,14 @@
 <?php
 
-use App\Models\User;
-use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ForgotPasswordController;
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\ResetPasswordTokenController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceController;
 
@@ -52,71 +50,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-Route::post('/forgot-password', function (Request $request) {
-    $request->validate(['email' => 'required|email']);
+Route::post('/forgot-password', ForgotPasswordController::class)->middleware('guest')->name('password.email');
 
-    $status = Password::sendResetLink($request->only('email'));
+Route::get('/reset-password/{token}', ResetPasswordTokenController::class)->middleware('guest')->name('password.reset');
 
-    if ($status !== Password::RESET_LINK_SENT) {
-        return response()->json([
-            'message' => __($status),
-            'errors' => [
-                'email' => [__($status)],
-            ],
-        ], 422);
-    }
-
-    return response()->json([
-        'message' => __($status),
-    ]);
-})->middleware('guest')->name('password.email');
-
-Route::get('/reset-password/{token}', function (Request $request, string $token) {
-    return response()->json([
-        'token' => $token,
-        'email' => $request->query('email'),
-    ]);
-})->middleware('guest')->name('password.reset');
-
-Route::post('/reset-password', function (Request $request) {
-    $request->validate([
-        'token' => 'required',
-        'email' => 'required|email',
-        'password' => [
-            'required',
-            'string',
-            'min:8',
-            'regex:/[a-z]/',
-            'regex:/[A-Z]/',
-            'regex:/[0-9]/',
-            'regex:/[@$!%*?&.]/',
-            'confirmed',
-        ],
-    ]);
-
-    $status = Password::reset(
-        $request->only('email', 'password', 'password_confirmation', 'token'),
-        function (User $user, string $password) {
-            $user->forceFill([
-                'password' => Hash::make($password),
-            ])->setRememberToken(Str::random(60));
-
-            $user->save();
-
-            event(new PasswordReset($user));
-        }
-    );
-
-    if ($status !== Password::PASSWORD_RESET) {
-        return response()->json([
-            'message' => __($status),
-            'errors' => [
-                'email' => [__($status)],
-            ],
-        ], 422);
-    }
-
-    return response()->json([
-        'message' => __($status),
-    ]);
-})->middleware('guest')->name('password.update');
+Route::post('/reset-password', ResetPasswordController::class)->middleware('guest')->name('password.update');

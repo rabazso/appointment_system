@@ -2,29 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\GuestRequest;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $data = $request->validate([
-        'name' => 'required|string',
-        'email' => 'required|email|unique:users,email',
-        'password' => [
-            'required',
-            'string',
-            'min:8',
-            'regex:/[a-z]/',
-            'regex:/[A-Z]/',
-            'regex:/[0-9]/',
-            'regex:/[@$!%*?&.]/',
-        ],
-    ]);
+        $data = $request->validated();
 
         $user = User::create([
             'name' => $data['name'],
@@ -40,12 +30,9 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $data = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
+        $data = $request->validated();
 
         $user = User::where('email', $data['email'])->first();
 
@@ -103,28 +90,13 @@ class AuthController extends Controller
         return response()->json(['message' => 'Verification email sent']);
     }
 
-    public function guest(Request $request)
+    public function guest(GuestRequest $request)
     {
-        $user = User::where('email', $request->email)->first();
-
-        $data = $request->validate([
-            'name' => 'required|string',
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('users', 'email')->ignore(optional($user)->id),
-            ],
-        ]);
-
-        if (!$user) {
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => null,
-            ]);
-        }
-        $user->update([
+        $data = $request->validated();
+        $user = User::create([
             'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => null,
         ]);
 
         return response()->json(['user' => $user, "message" => 'Make appoinment']);
