@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Calculations\EmployeeCalculation;
 use App\Http\Requests\EmployeeRequest;
+use App\Http\Requests\UpdateBarberProfileRequest;
+use App\Http\Requests\UploadBarberGalleryImageRequest;
 use App\Models\EmployeeGallery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -44,18 +46,14 @@ class EmployeeController extends Controller
         ]);
     }
 
-    public function updateBarberProfile(Request $request)
+    public function updateBarberProfile(UpdateBarberProfileRequest $request)
     {
         $employee = $request->user()->employee;
         if (!$employee) {
             return response()->json(['message' => 'Barber profile not found'], 404);
         }
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
-            'photo' => ['nullable', 'image', 'max:5120'],
-        ]);
+        $validated = $request->validated();
 
         $request->user()->forceFill([
             'name' => $validated['name'],
@@ -77,16 +75,14 @@ class EmployeeController extends Controller
         return $this->barberProfile($request);
     }
 
-    public function uploadBarberGalleryImage(Request $request)
+    public function uploadBarberGalleryImage(UploadBarberGalleryImageRequest $request)
     {
         $employee = $request->user()->employee;
         if (!$employee) {
             return response()->json(['message' => 'Barber profile not found'], 404);
         }
 
-        $validated = $request->validate([
-            'image' => ['required', 'image', 'max:5120'],
-        ]);
+        $validated = $request->validated();
 
         $path = $validated['image']->store('images/' . $employee->id, 'public');
         $gallery = $employee->gallery()->create([
