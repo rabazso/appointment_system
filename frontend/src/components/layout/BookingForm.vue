@@ -25,6 +25,7 @@ const selectedBarber = ref('')
 const selectedDate = ref('')
 const selectedTime = ref('')
 const userData = ref({ name: '', email: ''})
+const bookingErrorMessage = ref('')
 
 const openSection = ref('service')
 
@@ -95,25 +96,34 @@ const pad = (n) => n.toString().padStart(2,'0')
 const handleSubmit = async () => {
   try {
     if (!isReadyForUser()) return
+    bookingErrorMessage.value = ''
 
     const dateStr = `${selectedDate.value.year}-${pad(selectedDate.value.month)}-${pad(selectedDate.value.day)}`
     const appointmentStart = `${dateStr} ${selectedTime.value}`
 
-    let customerId = null
+    const appointmentPayload = {
+      service_id: Number(selectedService.value),
+      employee_id: Number(selectedBarber.value),
+      appointment_start: appointmentStart,
+    }
 
     if (!isAuthenticated.value){
       try {
-        const response = await postGuest(userData.value.name, userData.value.email)
-        customerId = response.data.user.id
+        await postGuest(userData.value.name, userData.value.email)
+        appointmentPayload.guest_name = userData.value.name?.trim()
+        appointmentPayload.guest_email = userData.value.email?.trim()
       } catch (e) {
-        console.error(e)
+        bookingErrorMessage.value = extractBookingError(e, 'Could not validate guest details.')
+        return
       }
     } else {
       const storedId = localStorage.getItem('user_id')
-      if (storedId) customerId = parseInt(storedId, 10)
+      if (storedId) {
+        appointmentPayload.customer_id = parseInt(storedId, 10)
+      }
     }
 
-    await postAppointment(selectedService.value, selectedBarber.value, appointmentStart, customerId)
+    await postAppointment(appointmentPayload)
 
     const serviceObj = services.value.find(s => s.id === selectedService.value)
     const barberObj = barbers.value.find(b => b.id === selectedBarber.value)
@@ -132,10 +142,46 @@ const handleSubmit = async () => {
     })
 
   } catch (err) {
-    console.error(err)
-    alert('Failed to book appointment. Please try again.')
+    bookingErrorMessage.value = extractBookingError(
+      err,
+      'Failed to book appointment. Please check your details and try again.'
+    )
+
+    if (!isAuthenticated.value) {
+      openSection.value = 'userdata'
+      await nextTick()
+      userDataRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   }
 }
+
+function extractBookingError(error, fallbackMessage) {
+  return (
+    error?.response?.data?.errors?.email?.[0] ||
+    error?.response?.data?.errors?.guest_email?.[0] ||
+    error?.response?.data?.errors?.customer_id?.[0] ||
+    error?.response?.data?.message ||
+    fallbackMessage
+  )
+}
+
+watch(() => userData.value.name, () => {
+  bookingErrorMessage.value = ''
+})
+
+watch(() => userData.value.email, () => {
+  bookingErrorMessage.value = ''
+})
+
+watch([selectedService, selectedBarber, selectedDate, selectedTime], () => {
+  bookingErrorMessage.value = ''
+})
+
+watch(isAuthenticated, (loggedIn) => {
+  if (loggedIn) {
+    bookingErrorMessage.value = ''
+  }
+})
 </script>
 
 <template>
@@ -268,6 +314,9 @@ const handleSubmit = async () => {
         </AccordionTrigger>
         <AccordionContent>
           <CardContent class="space-y-4">
+            <div v-if="bookingErrorMessage" class="mb-4 py-2 px-3 rounded text-white bg-red-500">
+              {{ bookingErrorMessage }}
+            </div>
             <Label class="block font-semibold">Name</Label>
             <input v-model="userData.name" type="text" placeholder="Your full name" required class="w-full border border-border rounded-md p-2 bg-background text-foreground"/>
             <Label class="block font-semibold">Email</Label>
@@ -278,6 +327,10 @@ const handleSubmit = async () => {
       </div>
     </AccordionItem>
   </Accordion>
+
+  <div v-if="bookingErrorMessage && isAuthenticated" class="mb-2 py-2 px-3 rounded text-white bg-red-500">
+    {{ bookingErrorMessage }}
+  </div>
 
   <Card v-if="isReadyForUser()" class="border-accent/30 bg-accent/10" >
     <CardHeader>

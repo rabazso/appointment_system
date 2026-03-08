@@ -86,12 +86,7 @@ export const getEmployeesByService = (serviceId) => API.get(`/employees?service_
 export const getEmployeesByServiceAndAppointment = (serviceId, appointment) => API.get(`/employees?service_id=${serviceId}&appointment=${appointment}`);
 export const getReviews = () => API.get('/reviews');
 export const postReview = (payload) => API.post('/reviews', payload);
-export const postAppointment = (serviceId, employeeId, appointmentStart, customerId) => API.post('/appointments', {
-    service_id: Number(serviceId),
-    employee_id: Number(employeeId),
-    appointment_start: appointmentStart,
-    customer_id: Number(customerId),
-});
+export const postAppointment = (payload) => API.post('/appointments', payload);
 export const postGuest = (name, email) => API.post('/guest', { name, email });
 export const confirmAppointment = (appointmentId, expires, signature) => API.get(`/appointments/confirm/${appointmentId}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
 export const getUserAppointments = () => API.get('/user/appointments');
