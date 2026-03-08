@@ -89,3 +89,8 @@ export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointm
 export const forgotPassword = (email) => API.post('/forgot-password', { email });
 export const resetPassword = (payload) => API.post('/reset-password', payload);
 export const completeBarberAppointment = (appointmentId) => API.post(`/barber/appointments/${appointmentId}/complete`);
+
+export const postService = (payload) => API.post('/services', payload);
+export const putService = (id, payload) => API.put(`/services/${id}`, payload);
+export const patchService = (id, payload) => API.patch(`/services/${id}`, payload)
+export const deleteService = (id) => API.delete(`/services/${id}`);
