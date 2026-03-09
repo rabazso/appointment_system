@@ -51,6 +51,7 @@ class EmployeeCalculation
                     'bio' => $employee->bio,
                     'photo_url' => $employee->photo_url,
                     'email' => $employee->user->email,
+                    'active' => $employee->active
                 ];
 
                 if ($serviceId) {
