@@ -31,23 +31,35 @@ class AppointmentController extends Controller
     }
 
     public function store(AppointmentStoreRequest $request, CreateAppointment $create)
-{
-    $appointment = $create->Create($request);
-    
-    $confirmationLink = URL::signedRoute("appointments.confirm", ["appointment" => $appointment->id], now()->addMinutes(60));
-    
-    $recipientEmail = $appointment->customer?->email ?? $appointment->guest_email;
-    if ($recipientEmail) {
-        Mail::to($recipientEmail)->send(new Booking($appointment, $confirmationLink));
-    }
-    
-    $appointment->loadMissing(['service:id,name', 'employee.user:id,name', 'customer:id,name,email']);
+    {
+        $appointment = $create->Create($request);
 
-    return response()->json([
-        'message' => 'Booking created, confirmation email sent',
-        'appointment' => (new AppointmentResource($appointment))->toArray($request),
-    ], 201);
-}
+        $confirmationLink = $this->buildConfirmationLink($appointment);
+        
+        $recipientEmail = $appointment->customer?->email ?? $appointment->guest_email;
+        if ($recipientEmail) {
+            Mail::to($recipientEmail)->send(new Booking($appointment, $confirmationLink));
+        }
+        
+        $appointment->loadMissing(['service:id,name', 'employee.user:id,name', 'customer:id,name,email']);
+
+        return response()->json([
+            'message' => 'Booking created, confirmation email sent',
+            'appointment' => (new AppointmentResource($appointment))->toArray($request),
+        ], 201);
+    }
+
+    private function buildConfirmationLink(Appointment $appointment): string
+    {
+        $relativeSignedUrl = URL::temporarySignedRoute(
+            'appointments.confirm',
+            now()->addMinutes(60),
+            ['appointment' => $appointment->id],
+            false
+        );
+
+        return url($relativeSignedUrl);
+    }
 
     public function userAppointments(Request $request)
     {
@@ -67,11 +79,8 @@ class AppointmentController extends Controller
         return response()->json($payload);
     }
 
-    public function confirm(Request $request, Appointment $appointment){
-        $frontendBase = rtrim((string) config('app.frontend_url'), '/');
-        if ($frontendBase !== '' && !preg_match('#^https?://#', $frontendBase)) {
-            $frontendBase = 'http://' . $frontendBase;
-        }
+    public function confirm(Appointment $appointment){
+        $frontendBase = 'http://' . rtrim((string) config('app.frontend_url'), '/');
         if ($frontendBase === '') {
             return response()->json(["message" => "Frontend URL is not configured"], 500);
         }
