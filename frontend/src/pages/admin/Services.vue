@@ -13,7 +13,7 @@
           <Button @click="openAddModal">+ new service</Button>
         </header>
 
-        <div class="lg:max-w-7xl md:max-w-md mx-auto gap-6 grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 md:grid-cols-1">
+        <div class="max-w-7xl mx-auto gap-6 grid grid-cols-1 xl:grid-cols-3 md:grid-cols-2 w-full">
           <article v-for="service in services" :key="service.id"
             class=" flex flex-col min-h-64 rounded-2xl bg-white p-4 shadow-lg">
             <div class="mb-3 flex items-center justify-between">
@@ -55,7 +55,7 @@
           </article>
         </div>
 
-        <div v-if="showAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center">
+        <div v-if="showAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center pl-64" @click.self="showAddModal = false">
         <div class="bg-white rounded-2xl p-6 pt-12 w-96 relative">
           <button class="absolute top-2 right-2" @click="showAddModal = false">
             <X class="w-8 h-8" />
@@ -93,7 +93,7 @@
         </div>
       </div>
 
-      <div v-if="showDeleteModal" class="fixed inset-0 bg-black/50 flex items-center justify-center">
+      <div v-if="showDeleteModal" class="fixed inset-0 bg-black/50 flex items-center justify-center pl-64" @click.self="showDeleteModal = false">
         <div class="bg-white rounded-2xl p-6 pt-12 w-64 relative">
           <button class="absolute top-2 right-2" @click="showDeleteModal = false">
             <X class="w-8 h-8" />
