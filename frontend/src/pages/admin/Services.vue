@@ -1,16 +1,26 @@
   <template>
     <div class="flex bg-slate-100 h-dvh overflow-hidden">
 
-      <Sidebar />
+      <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false"/>
 
-      <main class="flex-1 w-full p-6 overflow-y-auto">
-        <header class="mb-8 flex items-center justify-between rounded-2xl bg-white p-8 shadow-sm">
+      <main class="flex-1 w-full p-8 overflow-y-auto">
+        <header class="mb-8 md:p-8 p-4 gap-4 flex flex-col md:flex-row md:items-center md:justify-between rounded-2xl bg-white shadow-sm">
+          <div class="flex items-center gap-4">
+            <button
+              class="inline-flex shrink-0 h-9 w-9 items-center justify-center rounded-lg border border-black/10 bg-white md:hidden"
+              @click="sidebarOpen = true"
+            >
+              <Menu class="h-5 w-5" />
+            </button>
           <div>
-            <h1 class="text-4xl font-semibold text-black">Services</h1>
-            <p class="mt-1 text-xs text-gray-500">Manage your business services</p>
+            <h1 class="text-4xl font-semibold text-black whitespace-nowrap">Services</h1>
+            <p class="mt-1 text-xs text-gray-500 whitespace-nowrap">
+              Manage your business services</p>
           </div>
-
+          </div>
+          <div class="flex justify-end">
           <Button @click="openAddModal">+ new service</Button>
+          </div>
         </header>
 
         <div class="max-w-7xl mx-auto gap-6 grid grid-cols-1 xl:grid-cols-3 md:grid-cols-2 w-full">
@@ -116,7 +126,7 @@
   import Button from '@/components/admin/Button.vue'
   import Sidebar from '@/components/admin/Sidebar.vue'
   import ToggleButton from '@/components/admin/ToggleButton.vue'
-  import { Pencil, Trash, X } from 'lucide-vue-next'
+  import { Pencil, Trash, X, Menu} from 'lucide-vue-next'
   import {
     getServices,
     postService,
@@ -131,7 +141,6 @@
     services.value = (await getServices()).data
   })
 
-
   const showAddModal = ref(false)
   const showDeleteModal = ref(false)
   const selectedService = ref(null)
@@ -140,6 +149,8 @@
     name: '',
     description: '',
   })
+
+const sidebarOpen = ref(false)
 
   function openAddModal() {
     selectedService.value = null
