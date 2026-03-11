@@ -11,6 +11,7 @@ use App\Http\Resources\AppointmentResource;
 use App\Http\Resources\AppointmentStatusResource;
 use App\Http\Resources\BarberAppointmentResource;
 use App\Http\Resources\UserAppointmentResource;
+use App\Mail\AppointmentCancelled;
 use App\Mail\Booking;
 use App\Mail\BookingSummary;
 use App\Mail\ReviewRequest;
@@ -174,6 +175,7 @@ class AppointmentController extends Controller
             'status' => 'cancelled',
             'cancellation_reason' => $reason,
         ])->save();
+        $this->sendBarberCancellationEmail($appointment);
 
         return response()->json([
             'message' => 'Appointment cancelled',
@@ -285,6 +287,22 @@ class AppointmentController extends Controller
         Mail::to($appointment->customer->email)->send(
             new ReviewRequest($appointment, $reviewLink)
         );
+    }
+
+    private function sendBarberCancellationEmail(Appointment $appointment): void
+    {
+        $appointment->loadMissing([
+            'customer:id,name,email',
+            'service:id,name',
+            'employee.user:id,name',
+        ]);
+
+        $recipientEmail = $appointment->customer?->email ?? $appointment->guest_email;
+        if (!$recipientEmail) {
+            return;
+        }
+
+        Mail::to($recipientEmail)->send(new AppointmentCancelled($appointment));
     }
 
 }
