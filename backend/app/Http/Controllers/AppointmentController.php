@@ -164,8 +164,15 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Only pending or confirmed appointments can be cancelled'], 422);
         }
 
+        $reason = trim((string) $request->input('cancellation_reason', ''));
+        validator(
+            ['cancellation_reason' => $reason],
+            ['cancellation_reason' => ['required', 'string', 'min:30', 'max:500']]
+        )->validate();
+
         $appointment->forceFill([
             'status' => 'cancelled',
+            'cancellation_reason' => $reason,
         ])->save();
 
         return response()->json([
