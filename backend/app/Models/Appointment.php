@@ -7,7 +7,7 @@ class Appointment extends Model
     protected $fillable = [
         'customer_id','guest_name','guest_email',
         'employee_id','service_id','price',
-        'status','start_datetime','end_datetime','cancelled_at'
+        'status','cancellation_reason','start_datetime','end_datetime','cancelled_at'
     ];
 
     protected $casts = [
