@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\AppointmentCancelled;
 use App\Models\Appointment;
 use App\Models\Employee;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -17,11 +20,12 @@ class BarberCancelAppointmentTest extends TestCase
     public function test_barber_can_cancel_own_appointment_with_valid_reason(): void
     {
         [$barberUser, $employee] = $this->createBarber();
-        $customer = User::factory()->create();
+        $customer = $this->createUser();
         $service = $this->createService();
         $appointment = $this->createAppointment($customer->id, $employee->id, $service->id, 'confirmed');
         $reason = str_repeat('a', 30);
 
+        Mail::fake();
         Sanctum::actingAs($barberUser);
 
         $this->postJson("/api/barber/appointments/{$appointment->id}/cancel", [
@@ -33,12 +37,18 @@ class BarberCancelAppointmentTest extends TestCase
         $appointment->refresh();
         $this->assertSame('cancelled', $appointment->status);
         $this->assertSame($reason, $appointment->cancellation_reason);
+
+        Mail::assertSent(AppointmentCancelled::class, function (AppointmentCancelled $mail) use ($customer, $appointment, $reason) {
+            return $mail->hasTo($customer->email)
+                && $mail->appointment->is($appointment)
+                && $mail->appointment->cancellation_reason === $reason;
+        });
     }
 
     public function test_barber_cancel_requires_cancellation_reason_with_minimum_length(): void
     {
         [$barberUser, $employee] = $this->createBarber();
-        $customer = User::factory()->create();
+        $customer = $this->createUser();
         $service = $this->createService();
         $appointment = $this->createAppointment($customer->id, $employee->id, $service->id, 'pending');
 
@@ -63,7 +73,7 @@ class BarberCancelAppointmentTest extends TestCase
     {
         [$ownerUser, $ownerEmployee] = $this->createBarber();
         [$otherBarberUser] = $this->createBarber();
-        $customer = User::factory()->create();
+        $customer = $this->createUser();
         $service = $this->createService();
         $appointment = $this->createAppointment($customer->id, $ownerEmployee->id, $service->id, 'confirmed');
 
@@ -81,7 +91,7 @@ class BarberCancelAppointmentTest extends TestCase
     public function test_barber_cannot_cancel_already_cancelled_appointment(): void
     {
         [$barberUser, $employee] = $this->createBarber();
-        $customer = User::factory()->create();
+        $customer = $this->createUser();
         $service = $this->createService();
         $appointment = $this->createAppointment($customer->id, $employee->id, $service->id, 'cancelled');
         $appointment->update(['cancellation_reason' => str_repeat('z', 40)]);
@@ -99,13 +109,26 @@ class BarberCancelAppointmentTest extends TestCase
 
     private function createBarber(): array
     {
-        $user = User::factory()->create(['role' => 'employee']);
+        $user = $this->createUser(['role' => 'employee']);
         $employee = Employee::create([
             'user_id' => $user->id,
             'bio' => 'Barber bio',
         ]);
 
         return [$user, $employee];
+    }
+
+    private function createUser(array $attributes = []): User
+    {
+        $defaults = [
+            'name' => 'Test User',
+            'email' => 'user-' . Str::uuid() . '@example.test',
+            'password' => bcrypt('password'),
+            'role' => 'user',
+            'email_verified_at' => now(),
+        ];
+
+        return User::create(array_merge($defaults, $attributes));
     }
 
     private function createService(): Service
