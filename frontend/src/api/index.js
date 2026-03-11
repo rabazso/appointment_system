@@ -67,7 +67,8 @@ export const logout = async () => {
 
 export const getCurrentUser = () => API.get('/user');
 export const getBarberAppointments = () => API.get('/barber/appointments');
-export const cancelBarberAppointment = (appointmentId) => API.post(`/barber/appointments/${appointmentId}/cancel`);
+export const cancelBarberAppointment = (appointmentId, payload) =>
+    API.post(`/barber/appointments/${appointmentId}/cancel`, payload);
 export const getBarberReviews = () => API.get('/barber/reviews');
 export const getBarberProfile = () => API.get('/barber/profile');
 export const updateBarberProfile = (payload) => API.post('/barber/profile', payload, {

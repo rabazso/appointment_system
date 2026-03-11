@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Pencil, Plus, X } from 'lucide-vue-next'
 import AppointmentScheduler from '@/components/admin/AppointmentSchedule.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
@@ -18,6 +18,14 @@ import {
 const currentTab = ref('appointments')
 const loading = ref(true)
 const errorMessage = ref('')
+const cancelModalOpen = ref(false)
+const cancellingAppointment = ref(false)
+const pendingCancelAppointmentId = ref(null)
+const cancellationReason = ref('')
+const cancelModalError = ref('')
+
+const MIN_CANCELLATION_REASON_LENGTH = 30
+const MAX_CANCELLATION_REASON_LENGTH = 500
 
 const appointments = ref([])
 const reviews = ref([])
@@ -71,16 +79,69 @@ const loadData = async () => {
     }
 }
 
-const onCancelAppointment = async (appointmentId) => {
+const appointmentToCancel = computed(() =>
+    appointments.value.find((appointment) => appointment.id === pendingCancelAppointmentId.value) || null
+)
+
+const trimmedCancellationReason = computed(() => cancellationReason.value.trim())
+
+const cancellationReasonLength = computed(() => trimmedCancellationReason.value.length)
+
+const isCancellationReasonValid = computed(() =>
+    cancellationReasonLength.value >= MIN_CANCELLATION_REASON_LENGTH
+    && cancellationReasonLength.value <= MAX_CANCELLATION_REASON_LENGTH
+)
+
+const openCancelModal = (appointmentId) => {
+    pendingCancelAppointmentId.value = appointmentId
+    cancellationReason.value = ''
+    cancelModalError.value = ''
+    cancelModalOpen.value = true
+}
+
+const closeCancelModal = () => {
+    cancelModalOpen.value = false
+    pendingCancelAppointmentId.value = null
+    cancellationReason.value = ''
+    cancelModalError.value = ''
+}
+
+const onCancelAppointment = (appointmentId) => {
+    openCancelModal(appointmentId)
+}
+
+const confirmCancelAppointment = async () => {
+    if (!pendingCancelAppointmentId.value || !isCancellationReasonValid.value || cancellingAppointment.value) {
+        return
+    }
+
+    cancellingAppointment.value = true
+    cancelModalError.value = ''
+    errorMessage.value = ''
+
     try {
-        await cancelBarberAppointment(appointmentId)
+        await cancelBarberAppointment(pendingCancelAppointmentId.value, {
+            cancellation_reason: trimmedCancellationReason.value
+        })
+
         appointments.value = appointments.value.map((appointment) =>
-            appointment.id === appointmentId
-                ? { ...appointment, status: 'cancelled' }
+            appointment.id === pendingCancelAppointmentId.value
+                ? {
+                    ...appointment,
+                    status: 'cancelled',
+                    cancellation_reason: trimmedCancellationReason.value
+                }
                 : appointment
         )
+
+        closeCancelModal()
     } catch (error) {
-        errorMessage.value = error.response?.data?.message || 'Failed to cancel appointment.'
+        cancelModalError.value =
+            error.response?.data?.errors?.cancellation_reason?.[0]
+            || error.response?.data?.message
+            || 'Failed to cancel appointment.'
+    } finally {
+        cancellingAppointment.value = false
     }
 }
 
@@ -337,6 +398,85 @@ onMounted(async () => {
                             @click="saveProfile"
                         >
                             {{ profileSaving ? 'Saving...' : 'Save' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                v-if="cancelModalOpen"
+                class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+                @click.self="closeCancelModal"
+            >
+                <div class="w-full max-w-lg rounded-xl border bg-background shadow-2xl">
+                    <div class="flex items-start justify-between gap-4 border-b px-6 py-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-foreground">Cancel appointment?</h2>
+                            <p class="mt-1 text-sm text-muted-foreground">
+                                Add a clear reason for the client before canceling.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            class="text-muted-foreground transition-colors hover:text-foreground"
+                            :disabled="cancellingAppointment"
+                            @click="closeCancelModal"
+                        >
+                            <X class="h-5 w-5" />
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 px-6 py-4">
+                        <div class="rounded-lg border bg-muted/20 p-3 text-sm">
+                            <p class="font-medium text-foreground">{{ appointmentToCancel?.service || 'Service' }}</p>
+                            <p class="mt-1 text-muted-foreground">
+                                Client: {{ appointmentToCancel?.client || 'Guest' }} | Time: {{ appointmentToCancel?.time || '--:--' }}
+                            </p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label for="barber-cancellation-reason" class="text-sm font-medium text-foreground">
+                                Cancellation reason
+                            </label>
+                            <textarea
+                                id="barber-cancellation-reason"
+                                v-model="cancellationReason"
+                                rows="4"
+                                :maxlength="MAX_CANCELLATION_REASON_LENGTH"
+                                :disabled="cancellingAppointment"
+                                placeholder="Please explain why this appointment is being cancelled..."
+                                class="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+                            ></textarea>
+                            <p
+                                class="text-xs"
+                                :class="isCancellationReasonValid ? 'text-muted-foreground' : 'text-red-600'"
+                            >
+                                {{ cancellationReasonLength }} / {{ MAX_CANCELLATION_REASON_LENGTH }} characters
+                                (minimum {{ MIN_CANCELLATION_REASON_LENGTH }})
+                            </p>
+                        </div>
+
+                        <p v-if="cancelModalError" class="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
+                            {{ cancelModalError }}
+                        </p>
+                    </div>
+
+                    <div class="flex justify-end gap-2 border-t px-6 py-4">
+                        <button
+                            type="button"
+                            class="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                            :disabled="cancellingAppointment"
+                            @click="closeCancelModal"
+                        >
+                            Keep Appointment
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            :disabled="cancellingAppointment || !isCancellationReasonValid"
+                            @click="confirmCancelAppointment"
+                        >
+                            {{ cancellingAppointment ? 'Cancelling...' : 'Cancel Appointment' }}
                         </button>
                     </div>
                 </div>
