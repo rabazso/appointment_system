@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
@@ -45,7 +46,7 @@ class BarberCancelAppointmentTest extends TestCase
         });
     }
 
-    public function test_barber_cancel_requires_cancellation_reason_with_minimum_length(): void
+    public function test_barber_cancel_requires_cancellation_reason_with_minimum_length_for_upcoming_appointments(): void
     {
         [$barberUser, $employee] = $this->createBarber();
         $customer = $this->createUser();
@@ -67,6 +68,37 @@ class BarberCancelAppointmentTest extends TestCase
         $appointment->refresh();
         $this->assertSame('pending', $appointment->status);
         $this->assertNull($appointment->cancellation_reason);
+    }
+
+    public function test_barber_can_cancel_past_appointment_without_reason_for_no_show(): void
+    {
+        [$barberUser, $employee] = $this->createBarber();
+        $customer = $this->createUser();
+        $service = $this->createService();
+        $appointment = $this->createAppointment(
+            $customer->id,
+            $employee->id,
+            $service->id,
+            'confirmed',
+            now()->subHour()
+        );
+
+        Mail::fake();
+        Sanctum::actingAs($barberUser);
+
+        $this->postJson("/api/barber/appointments/{$appointment->id}/cancel", [])
+            ->assertOk()
+            ->assertJsonPath('appointment.status', 'cancelled');
+
+        $appointment->refresh();
+        $this->assertSame('cancelled', $appointment->status);
+        $this->assertNull($appointment->cancellation_reason);
+
+        Mail::assertSent(AppointmentCancelled::class, function (AppointmentCancelled $mail) use ($customer, $appointment) {
+            return $mail->hasTo($customer->email)
+                && $mail->appointment->is($appointment)
+                && $mail->appointment->cancellation_reason === null;
+        });
     }
 
     public function test_barber_cannot_cancel_appointment_of_another_barber(): void
@@ -142,9 +174,15 @@ class BarberCancelAppointmentTest extends TestCase
         ]);
     }
 
-    private function createAppointment(int $customerId, int $employeeId, int $serviceId, string $status): Appointment
+    private function createAppointment(
+        int $customerId,
+        int $employeeId,
+        int $serviceId,
+        string $status,
+        ?Carbon $start = null
+    ): Appointment
     {
-        $start = now()->addDay();
+        $start = $start ? $start->copy() : now()->addDay();
 
         return Appointment::create([
             'customer_id' => $customerId,

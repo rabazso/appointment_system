@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Card, CardContent } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ const emit = defineEmits(['cancel-appointment', 'complete-appointment'])
 
 const activeTab = ref('appointments')
 const selectedDate = ref(new Date())
+const STATUS_ORDER = ['pending', 'confirmed', 'completed', 'cancelled']
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -32,6 +33,40 @@ const getStatusText = (status) => {
     }
     return labels[status] || status
 }
+
+const groupedAppointments = computed(() => {
+  const grouped = new Map(STATUS_ORDER.map((status) => [status, []]))
+
+  for (const appointment of props.appointments) {
+    if (!grouped.has(appointment.status)) {
+      grouped.set(appointment.status, [])
+    }
+    grouped.get(appointment.status).push(appointment)
+  }
+
+  const normalizeDate = (value) => {
+    if (!value) return Number.MAX_SAFE_INTEGER
+    const timestamp = new Date(value).getTime()
+    return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER
+  }
+
+  for (const appointments of grouped.values()) {
+    appointments.sort((a, b) => normalizeDate(a.start_datetime) - normalizeDate(b.start_datetime))
+  }
+
+  const orderedStatuses = [
+    ...STATUS_ORDER,
+    ...Array.from(grouped.keys()).filter((status) => !STATUS_ORDER.includes(status))
+  ]
+
+  return orderedStatuses
+    .map((status) => ({
+      status,
+      label: getStatusText(status),
+      appointments: grouped.get(status) ?? []
+    }))
+    .filter((group) => group.appointments.length > 0)
+})
 </script>
 
 <template>
@@ -48,46 +83,61 @@ const getStatusText = (status) => {
 
     <CardContent class="p-6">
       <div v-if="activeTab === 'appointments'" class="space-y-4">
-        <div v-for="apt in appointments" :key="apt.id" class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-          <div class="flex items-center gap-4">
-            <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-              {{ apt.client.charAt(0) }}
-            </div>
-            <div>
-              <h3 class="font-semibold">{{ apt.client }}</h3>
-              <p class="text-sm text-muted-foreground">{{ apt.service }} • {{ apt.time }}</p>
-            </div>
-          </div>
-          
-          <div class="flex items-center gap-4">
-            <span :class="['px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusColor(apt.status)]">
-              {{ getStatusText(apt.status) }}
-            </span>
-            <Button 
-                v-if="apt.status === 'confirmed'"
-                size="icon" 
-                variant="ghost" 
-                class="h-8 w-8 text-green-600 hover:text-green-800 hover:bg-green-50" 
-                title="Foglalás teljesítve"
-                @click="emit('complete-appointment', apt.id)"
-            >
-                <Check class="h-4 w-4" />
-            </Button>
-            <Button 
-                v-if="['pending', 'confirmed'].includes(apt.status)"
-                size="icon" 
-                variant="ghost" 
-                class="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50" 
-                title="Foglalás lemondása"
-                @click="emit('cancel-appointment', apt.id)"
-            >
-                <X class="h-4 w-4" />
-            </Button>
-          </div>
+        <div v-if="appointments.length === 0" class="text-center py-10 text-muted-foreground">
+          No appointments yet.
         </div>
 
-        <div v-if="appointments.length === 0" class="text-center py-10 text-muted-foreground">
-            No appointments yet.
+        <div v-else class="space-y-6">
+          <section v-for="group in groupedAppointments" :key="group.status" class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-semibold tracking-wide text-foreground uppercase">{{ group.label }}</h3>
+              <span class="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                {{ group.appointments.length }}
+              </span>
+            </div>
+
+            <div
+              v-for="apt in group.appointments"
+              :key="apt.id"
+              class="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+            >
+              <div class="flex items-center gap-4">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
+                  {{ apt.client.charAt(0) }}
+                </div>
+                <div>
+                  <h4 class="font-semibold">{{ apt.client }}</h4>
+                  <p class="text-sm text-muted-foreground">{{ apt.service }} • {{ apt.time }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-4">
+                <span :class="['px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusColor(apt.status)]">
+                  {{ getStatusText(apt.status) }}
+                </span>
+                <Button
+                  v-if="apt.status === 'confirmed'"
+                  size="icon"
+                  variant="ghost"
+                  class="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-800"
+                  title="Foglalás teljesítve"
+                  @click="emit('complete-appointment', apt.id)"
+                >
+                  <Check class="h-4 w-4" />
+                </Button>
+                <Button
+                  v-if="['pending', 'confirmed'].includes(apt.status)"
+                  size="icon"
+                  variant="ghost"
+                  class="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-700"
+                  title="Foglalás lemondása"
+                  @click="emit('cancel-appointment', apt.id)"
+                >
+                  <X class="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
 

@@ -83,14 +83,28 @@ const appointmentToCancel = computed(() =>
     appointments.value.find((appointment) => appointment.id === pendingCancelAppointmentId.value) || null
 )
 
+const isPastAppointmentCancellation = computed(() => {
+    const startDateTime = appointmentToCancel.value?.start_datetime
+    if (!startDateTime) return false
+
+    const timestamp = new Date(startDateTime).getTime()
+    return Number.isFinite(timestamp) && timestamp < Date.now()
+})
+
+const isCancellationReasonRequired = computed(() => !isPastAppointmentCancellation.value)
+
 const trimmedCancellationReason = computed(() => cancellationReason.value.trim())
 
 const cancellationReasonLength = computed(() => trimmedCancellationReason.value.length)
 
-const isCancellationReasonValid = computed(() =>
-    cancellationReasonLength.value >= MIN_CANCELLATION_REASON_LENGTH
-    && cancellationReasonLength.value <= MAX_CANCELLATION_REASON_LENGTH
-)
+const isCancellationReasonValid = computed(() => {
+    if (!isCancellationReasonRequired.value) {
+        return cancellationReasonLength.value <= MAX_CANCELLATION_REASON_LENGTH
+    }
+
+    return cancellationReasonLength.value >= MIN_CANCELLATION_REASON_LENGTH
+        && cancellationReasonLength.value <= MAX_CANCELLATION_REASON_LENGTH
+})
 
 const openCancelModal = (appointmentId) => {
     pendingCancelAppointmentId.value = appointmentId
@@ -129,7 +143,7 @@ const confirmCancelAppointment = async () => {
                 ? {
                     ...appointment,
                     status: 'cancelled',
-                    cancellation_reason: trimmedCancellationReason.value
+                    cancellation_reason: trimmedCancellationReason.value || null
                 }
                 : appointment
         )
@@ -413,7 +427,12 @@ onMounted(async () => {
                         <div>
                             <h2 class="text-lg font-semibold text-foreground">Cancel appointment?</h2>
                             <p class="mt-1 text-sm text-muted-foreground">
-                                Add a clear reason for the client before canceling.
+                                <template v-if="isCancellationReasonRequired">
+                                    Add a clear reason for the client before canceling.
+                                </template>
+                                <template v-else>
+                                    This appointment is in the past, so reason is optional for a no-show.
+                                </template>
                             </p>
                         </div>
                         <button
@@ -437,6 +456,7 @@ onMounted(async () => {
                         <div class="space-y-2">
                             <label for="barber-cancellation-reason" class="text-sm font-medium text-foreground">
                                 Cancellation reason
+                                <span v-if="!isCancellationReasonRequired" class="text-muted-foreground">(optional)</span>
                             </label>
                             <textarea
                                 id="barber-cancellation-reason"
@@ -444,15 +464,22 @@ onMounted(async () => {
                                 rows="4"
                                 :maxlength="MAX_CANCELLATION_REASON_LENGTH"
                                 :disabled="cancellingAppointment"
-                                placeholder="Please explain why this appointment is being cancelled..."
+                                :placeholder="isCancellationReasonRequired
+                                    ? 'Please explain why this appointment is being cancelled...'
+                                    : 'Optional note for this no-show cancellation...'"
                                 class="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
                             ></textarea>
                             <p
                                 class="text-xs"
-                                :class="isCancellationReasonValid ? 'text-muted-foreground' : 'text-red-600'"
+                                :class="isCancellationReasonRequired && !isCancellationReasonValid ? 'text-red-600' : 'text-muted-foreground'"
                             >
                                 {{ cancellationReasonLength }} / {{ MAX_CANCELLATION_REASON_LENGTH }} characters
-                                (minimum {{ MIN_CANCELLATION_REASON_LENGTH }})
+                                <template v-if="isCancellationReasonRequired">
+                                    (minimum {{ MIN_CANCELLATION_REASON_LENGTH }})
+                                </template>
+                                <template v-else>
+                                    (optional for past appointments)
+                                </template>
                             </p>
                         </div>
 

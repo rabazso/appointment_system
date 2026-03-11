@@ -166,14 +166,19 @@ class AppointmentController extends Controller
         }
 
         $reason = trim((string) $request->input('cancellation_reason', ''));
+        $isPastAppointment = $appointment->start_datetime?->isPast() ?? false;
+        $reasonRules = $isPastAppointment
+            ? ['nullable', 'string', 'max:500']
+            : ['required', 'string', 'min:30', 'max:500'];
+
         validator(
             ['cancellation_reason' => $reason],
-            ['cancellation_reason' => ['required', 'string', 'min:30', 'max:500']]
+            ['cancellation_reason' => $reasonRules]
         )->validate();
 
         $appointment->forceFill([
             'status' => 'cancelled',
-            'cancellation_reason' => $reason,
+            'cancellation_reason' => $reason !== '' ? $reason : null,
         ])->save();
         $this->sendBarberCancellationEmail($appointment);
 
