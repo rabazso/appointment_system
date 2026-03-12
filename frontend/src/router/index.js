@@ -118,7 +118,7 @@ export const router = createRouter({
           resolve({
             el: to.hash,
             behavior: 'smooth',
-            top: 70
+            top: 68
           })
         }, 120)
       })
