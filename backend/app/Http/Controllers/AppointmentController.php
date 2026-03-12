@@ -169,7 +169,7 @@ class AppointmentController extends Controller
         $isPastAppointment = $appointment->start_datetime?->isPast() ?? false;
         $reasonRules = $isPastAppointment
             ? ['nullable', 'string', 'max:500']
-            : ['required', 'string', 'min:30', 'max:500'];
+            : ['required', 'string', 'min:10', 'max:500'];
 
         validator(
             ['cancellation_reason' => $reason],

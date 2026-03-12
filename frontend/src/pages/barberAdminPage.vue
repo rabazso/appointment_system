@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { Pencil, Plus, X } from 'lucide-vue-next'
 import AppointmentScheduler from '@/components/admin/AppointmentSchedule.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
@@ -20,11 +20,13 @@ const loading = ref(true)
 const errorMessage = ref('')
 const cancelModalOpen = ref(false)
 const cancellingAppointment = ref(false)
-const pendingCancelAppointmentId = ref(null)
+const selectedAppointmentIds = ref([])
+const pendingCancelAppointmentIds = ref([])
 const cancellationReason = ref('')
 const cancelModalError = ref('')
 
-const MIN_CANCELLATION_REASON_LENGTH = 30
+const CANCELLABLE_STATUSES = ['pending', 'confirmed']
+const MIN_CANCELLATION_REASON_LENGTH = 10
 const MAX_CANCELLATION_REASON_LENGTH = 500
 
 const appointments = ref([])
@@ -79,16 +81,57 @@ const loadData = async () => {
     }
 }
 
-const appointmentToCancel = computed(() =>
-    appointments.value.find((appointment) => appointment.id === pendingCancelAppointmentId.value) || null
+const cancellableAppointmentIdSet = computed(() => new Set(
+    appointments.value
+        .filter((appointment) => CANCELLABLE_STATUSES.includes(appointment.status))
+        .map((appointment) => appointment.id)
+))
+
+const selectedCancellableAppointmentIds = computed(() =>
+    selectedAppointmentIds.value.filter((appointmentId) => cancellableAppointmentIdSet.value.has(appointmentId))
 )
 
-const isPastAppointmentCancellation = computed(() => {
-    const startDateTime = appointmentToCancel.value?.start_datetime
-    if (!startDateTime) return false
+const appointmentsToCancel = computed(() => {
+    if (!pendingCancelAppointmentIds.value.length) {
+        return []
+    }
 
-    const timestamp = new Date(startDateTime).getTime()
-    return Number.isFinite(timestamp) && timestamp < Date.now()
+    const appointmentMap = new Map(
+        appointments.value.map((appointment) => [appointment.id, appointment])
+    )
+
+    return pendingCancelAppointmentIds.value
+        .map((appointmentId) => appointmentMap.get(appointmentId))
+        .filter(Boolean)
+})
+
+const cancellationSelectionCount = computed(() => appointmentsToCancel.value.length)
+
+watch(cancellableAppointmentIdSet, (allowedIdSet) => {
+    selectedAppointmentIds.value = selectedAppointmentIds.value.filter((appointmentId) =>
+        allowedIdSet.has(appointmentId)
+    )
+    pendingCancelAppointmentIds.value = pendingCancelAppointmentIds.value.filter((appointmentId) =>
+        allowedIdSet.has(appointmentId)
+    )
+}, { immediate: true })
+
+const getAppointmentTimestamp = (appointment) => {
+    const rawValue = appointment?.start_datetime
+    if (!rawValue) return Number.NaN
+
+    return new Date(rawValue).getTime()
+}
+
+const isPastAppointmentCancellation = computed(() => {
+    if (!appointmentsToCancel.value.length) {
+        return false
+    }
+
+    return appointmentsToCancel.value.every((appointment) => {
+        const timestamp = getAppointmentTimestamp(appointment)
+        return Number.isFinite(timestamp) && timestamp < Date.now()
+    })
 })
 
 const isCancellationReasonRequired = computed(() => !isPastAppointmentCancellation.value)
@@ -106,8 +149,15 @@ const isCancellationReasonValid = computed(() => {
         && cancellationReasonLength.value <= MAX_CANCELLATION_REASON_LENGTH
 })
 
-const openCancelModal = (appointmentId) => {
-    pendingCancelAppointmentId.value = appointmentId
+const openCancelModal = (appointmentIds) => {
+    const normalizedIds = Array.from(new Set(appointmentIds))
+        .filter((appointmentId) => cancellableAppointmentIdSet.value.has(appointmentId))
+
+    if (!normalizedIds.length) {
+        return
+    }
+
+    pendingCancelAppointmentIds.value = normalizedIds
     cancellationReason.value = ''
     cancelModalError.value = ''
     cancelModalOpen.value = true
@@ -115,17 +165,42 @@ const openCancelModal = (appointmentId) => {
 
 const closeCancelModal = () => {
     cancelModalOpen.value = false
-    pendingCancelAppointmentId.value = null
+    pendingCancelAppointmentIds.value = []
     cancellationReason.value = ''
     cancelModalError.value = ''
 }
 
 const onCancelAppointment = (appointmentId) => {
-    openCancelModal(appointmentId)
+    openCancelModal([appointmentId])
 }
 
+const onToggleAppointmentSelection = (appointmentId) => {
+    if (!cancellableAppointmentIdSet.value.has(appointmentId)) {
+        return
+    }
+
+    const exists = selectedAppointmentIds.value.includes(appointmentId)
+    selectedAppointmentIds.value = exists
+        ? selectedAppointmentIds.value.filter((id) => id !== appointmentId)
+        : [...selectedAppointmentIds.value, appointmentId]
+}
+
+const clearAppointmentSelection = () => {
+    selectedAppointmentIds.value = []
+}
+
+const onCancelSelectedAppointments = () => {
+    openCancelModal(selectedCancellableAppointmentIds.value)
+}
+
+const extractCancellationError = (error) =>
+    error.response?.data?.errors?.cancellation_reason?.[0]
+    || error.response?.data?.message
+    || 'Failed to cancel appointment.'
+
 const confirmCancelAppointment = async () => {
-    if (!pendingCancelAppointmentId.value || !isCancellationReasonValid.value || cancellingAppointment.value) {
+    const appointmentIds = [...pendingCancelAppointmentIds.value]
+    if (!appointmentIds.length || !isCancellationReasonValid.value || cancellingAppointment.value) {
         return
     }
 
@@ -134,26 +209,64 @@ const confirmCancelAppointment = async () => {
     errorMessage.value = ''
 
     try {
-        await cancelBarberAppointment(pendingCancelAppointmentId.value, {
-            cancellation_reason: trimmedCancellationReason.value
-        })
-
-        appointments.value = appointments.value.map((appointment) =>
-            appointment.id === pendingCancelAppointmentId.value
-                ? {
-                    ...appointment,
-                    status: 'cancelled',
-                    cancellation_reason: trimmedCancellationReason.value || null
-                }
-                : appointment
+        const reason = trimmedCancellationReason.value
+        const results = await Promise.allSettled(
+            appointmentIds.map((appointmentId) =>
+                cancelBarberAppointment(appointmentId, { cancellation_reason: reason })
+            )
         )
 
-        closeCancelModal()
+        const cancelledIds = []
+        let firstFailureMessage = ''
+
+        results.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                cancelledIds.push(appointmentIds[index])
+                return
+            }
+
+            if (!firstFailureMessage) {
+                firstFailureMessage = extractCancellationError(result.reason)
+            }
+        })
+
+        if (cancelledIds.length) {
+            const cancelledIdSet = new Set(cancelledIds)
+
+            appointments.value = appointments.value.map((appointment) =>
+                cancelledIdSet.has(appointment.id)
+                    ? {
+                        ...appointment,
+                        status: 'cancelled',
+                        cancellation_reason: reason || null
+                    }
+                    : appointment
+            )
+
+            selectedAppointmentIds.value = selectedAppointmentIds.value.filter(
+                (appointmentId) => !cancelledIdSet.has(appointmentId)
+            )
+        }
+
+        const failedCount = appointmentIds.length - cancelledIds.length
+
+        if (failedCount === 0) {
+            closeCancelModal()
+            return
+        }
+
+        if (cancelledIds.length) {
+            const cancelledIdSet = new Set(cancelledIds)
+            pendingCancelAppointmentIds.value = appointmentIds.filter(
+                (appointmentId) => !cancelledIdSet.has(appointmentId)
+            )
+        }
+
+        cancelModalError.value = cancelledIds.length
+            ? `Cancelled ${cancelledIds.length} appointment${cancelledIds.length === 1 ? '' : 's'}. ${failedCount} failed. ${firstFailureMessage}`
+            : firstFailureMessage
     } catch (error) {
-        cancelModalError.value =
-            error.response?.data?.errors?.cancellation_reason?.[0]
-            || error.response?.data?.message
-            || 'Failed to cancel appointment.'
+        cancelModalError.value = extractCancellationError(error)
     } finally {
         cancellingAppointment.value = false
     }
@@ -280,8 +393,12 @@ onMounted(async () => {
                     <div class="col-span-4 md:col-span-4 lg:col-span-5">
                         <AppointmentScheduler
                             :appointments="appointments"
+                            :selected-appointment-ids="selectedCancellableAppointmentIds"
                             @cancel-appointment="onCancelAppointment"
                             @complete-appointment="onCompleteAppointment"
+                            @toggle-appointment-selection="onToggleAppointmentSelection"
+                            @clear-appointment-selection="clearAppointmentSelection"
+                            @cancel-selected-appointments="onCancelSelectedAppointments"
                         />
                     </div>
                     <div class="col-span-4 md:col-span-3 lg:col-span-2">
@@ -425,7 +542,9 @@ onMounted(async () => {
                 <div class="w-full max-w-lg rounded-xl border bg-background shadow-2xl">
                     <div class="flex items-start justify-between gap-4 border-b px-6 py-4">
                         <div>
-                            <h2 class="text-lg font-semibold text-foreground">Cancel appointment?</h2>
+                            <h2 class="text-lg font-semibold text-foreground">
+                                {{ cancellationSelectionCount > 1 ? 'Cancel appointments?' : 'Cancel appointment?' }}
+                            </h2>
                             <p class="mt-1 text-sm text-muted-foreground">
                                 <template v-if="isCancellationReasonRequired">
                                     Add a clear reason for the client before canceling.
@@ -447,10 +566,29 @@ onMounted(async () => {
 
                     <div class="space-y-4 px-6 py-4">
                         <div class="rounded-lg border bg-muted/20 p-3 text-sm">
-                            <p class="font-medium text-foreground">{{ appointmentToCancel?.service || 'Service' }}</p>
-                            <p class="mt-1 text-muted-foreground">
-                                Client: {{ appointmentToCancel?.client || 'Guest' }} | Time: {{ appointmentToCancel?.time || '--:--' }}
-                            </p>
+                            <template v-if="cancellationSelectionCount === 1">
+                                <p class="font-medium text-foreground">{{ appointmentsToCancel[0]?.service || 'Service' }}</p>
+                                <p class="mt-1 text-muted-foreground">
+                                    Client: {{ appointmentsToCancel[0]?.client || 'Guest' }} | Time: {{ appointmentsToCancel[0]?.time || '--:--' }}
+                                </p>
+                            </template>
+                            <template v-else>
+                                <p class="font-medium text-foreground">
+                                    {{ cancellationSelectionCount }} appointments selected
+                                </p>
+                                <ul class="mt-2 space-y-1 text-muted-foreground">
+                                    <li
+                                        v-for="appointment in appointmentsToCancel.slice(0, 5)"
+                                        :key="appointment.id"
+                                        class="truncate"
+                                    >
+                                        {{ appointment.client || 'Guest' }} - {{ appointment.service || 'Service' }} - {{ appointment.time || '--:--' }}
+                                    </li>
+                                </ul>
+                                <p v-if="cancellationSelectionCount > 5" class="mt-2 text-xs text-muted-foreground">
+                                    And {{ cancellationSelectionCount - 5 }} more...
+                                </p>
+                            </template>
                         </div>
 
                         <div class="space-y-2">
@@ -500,10 +638,16 @@ onMounted(async () => {
                         <button
                             type="button"
                             class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-                            :disabled="cancellingAppointment || !isCancellationReasonValid"
+                            :disabled="cancellingAppointment || !isCancellationReasonValid || cancellationSelectionCount === 0"
                             @click="confirmCancelAppointment"
                         >
-                            {{ cancellingAppointment ? 'Cancelling...' : 'Cancel Appointment' }}
+                            {{
+                                cancellingAppointment
+                                    ? 'Cancelling...'
+                                    : cancellationSelectionCount > 1
+                                        ? `Cancel ${cancellationSelectionCount} Appointments`
+                                        : 'Cancel Appointment'
+                            }}
                         </button>
                     </div>
                 </div>

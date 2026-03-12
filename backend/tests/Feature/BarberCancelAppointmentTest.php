@@ -24,7 +24,7 @@ class BarberCancelAppointmentTest extends TestCase
         $customer = $this->createUser();
         $service = $this->createService();
         $appointment = $this->createAppointment($customer->id, $employee->id, $service->id, 'confirmed');
-        $reason = str_repeat('a', 30);
+        $reason = str_repeat('a', 10);
 
         Mail::fake();
         Sanctum::actingAs($barberUser);
@@ -60,7 +60,7 @@ class BarberCancelAppointmentTest extends TestCase
             ->assertJsonValidationErrors(['cancellation_reason']);
 
         $this->postJson("/api/barber/appointments/{$appointment->id}/cancel", [
-            'cancellation_reason' => str_repeat('b', 29),
+            'cancellation_reason' => str_repeat('b', 9),
         ])
             ->assertStatus(422)
             ->assertJsonValidationErrors(['cancellation_reason']);

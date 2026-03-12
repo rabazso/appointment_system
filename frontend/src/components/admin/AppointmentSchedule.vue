@@ -6,13 +6,21 @@ import { Button } from '@/components/ui/button'
 import { Check, X } from 'lucide-vue-next'
 
 const props = defineProps({
-  appointments: { type: Array, required: true }
+  appointments: { type: Array, required: true },
+  selectedAppointmentIds: { type: Array, default: () => [] }
 })
-const emit = defineEmits(['cancel-appointment', 'complete-appointment'])
+const emit = defineEmits([
+  'cancel-appointment',
+  'complete-appointment',
+  'toggle-appointment-selection',
+  'clear-appointment-selection',
+  'cancel-selected-appointments'
+])
 
 const activeTab = ref('appointments')
 const selectedDate = ref(new Date())
 const STATUS_ORDER = ['pending', 'confirmed', 'completed', 'cancelled']
+const selectedAppointmentIdSet = computed(() => new Set(props.selectedAppointmentIds))
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -33,6 +41,8 @@ const getStatusText = (status) => {
     }
     return labels[status] || status
 }
+
+const isAppointmentCancellable = (status) => ['pending', 'confirmed'].includes(status)
 
 const groupedAppointments = computed(() => {
   const grouped = new Map(STATUS_ORDER.map((status) => [status, []]))
@@ -83,6 +93,31 @@ const groupedAppointments = computed(() => {
 
     <CardContent class="p-6">
       <div v-if="activeTab === 'appointments'" class="space-y-4">
+        <div
+          v-if="selectedAppointmentIds.length > 0"
+          class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-3"
+        >
+          <p class="text-sm font-medium text-red-800">
+            {{ selectedAppointmentIds.length }} appointment{{ selectedAppointmentIds.length === 1 ? '' : 's' }} selected
+          </p>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-800 transition hover:bg-red-100"
+              @click="emit('clear-appointment-selection')"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              class="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-700"
+              @click="emit('cancel-selected-appointments')"
+            >
+              Cancel Selected
+            </button>
+          </div>
+        </div>
+
         <div v-if="appointments.length === 0" class="text-center py-10 text-muted-foreground">
           No appointments yet.
         </div>
@@ -102,6 +137,14 @@ const groupedAppointments = computed(() => {
               class="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <div class="flex items-center gap-4">
+                <label v-if="isAppointmentCancellable(apt.status)" class="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    :checked="selectedAppointmentIdSet.has(apt.id)"
+                    @change="emit('toggle-appointment-selection', apt.id)"
+                  >
+                </label>
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
                   {{ apt.client.charAt(0) }}
                 </div>
@@ -126,7 +169,7 @@ const groupedAppointments = computed(() => {
                   <Check class="h-4 w-4" />
                 </Button>
                 <Button
-                  v-if="['pending', 'confirmed'].includes(apt.status)"
+                  v-if="isAppointmentCancellable(apt.status)"
                   size="icon"
                   variant="ghost"
                   class="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-700"
