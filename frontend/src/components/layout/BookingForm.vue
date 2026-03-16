@@ -147,7 +147,7 @@ const handleSubmit = async () => {
       'Failed to book appointment. Please check your details and try again.'
     )
 
-    if (!isAuthenticated.value) {
+    if (!isAuthenticated.value && hasGuestDetailsError(err)) {
       openSection.value = 'userdata'
       await nextTick()
       userDataRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -160,9 +160,16 @@ function extractBookingError(error, fallbackMessage) {
     error?.response?.data?.errors?.email?.[0] ||
     error?.response?.data?.errors?.guest_email?.[0] ||
     error?.response?.data?.errors?.customer_id?.[0] ||
+    error?.response?.data?.errors?.appointment_start?.[0] ||
     error?.response?.data?.message ||
     fallbackMessage
   )
+}
+
+function hasGuestDetailsError(error) {
+  const fieldErrors = error?.response?.data?.errors || {}
+
+  return Boolean(fieldErrors.email || fieldErrors.guest_email || fieldErrors.customer_id)
 }
 
 watch(() => userData.value.name, () => {
