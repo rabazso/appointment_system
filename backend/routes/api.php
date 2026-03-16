@@ -52,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::post('/forgot-password', ForgotPasswordController::class)->middleware('guest')->name('password.email');
 
-Route::get('/reset-password/{token}', ResetPasswordTokenController::class)->middleware('guest')->name('password.reset');
+Route::get('/reset-password/{token}', function (string $token) {
+    return view('auth.reset-password', ['token' => $token]);
+})->middleware('guest')->name('password.reset');
 
 Route::post('/reset-password', ResetPasswordController::class)->middleware('guest')->name('password.update');

@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->dateTime('start_datetime');
             $table->dateTime('end_datetime');
             $table->timestamp('confirmed_at')->nullable();
+            $table->text('cancellation_reason')->nullable();
             $table->softDeletes();
             $table->timestamps();
 });
