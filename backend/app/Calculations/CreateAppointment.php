@@ -13,15 +13,16 @@ class CreateAppointment
 {
     function Create(Request $request)
     {
+        $timezone = (string) config('app.timezone', 'UTC');
         $serviceId = $request->get('service_id');
         $service = Service::findOrFail($serviceId);
         $employeeId = $request->get('employee_id');
-        $appointmentStart = Carbon::parse($request->get('appointment_start'));
-        $customerId = $request->get('customer_id');
-        $guestName = $request->get('guest_name');
-        $guestEmail = $request->get('guest_email');
+        $appointmentStart = Carbon::createFromFormat('Y-m-d H:i', (string) $request->get('appointment_start'), $timezone);
+        $customerId = $request->filled('customer_id') ? (int) $request->get('customer_id') : null;
+        $guestName = trim((string) $request->get('guest_name', '')) ?: null;
+        $guestEmail = trim(mb_strtolower((string) $request->get('guest_email', ''))) ?: null;
 
-        if ($appointmentStart->lt(now())) {
+        if ($appointmentStart->lt(Carbon::now($timezone))) {
             throw ValidationException::withMessages(["appointment_start" => "Appointment cannot be created in the past"]);
         }
 
@@ -71,6 +72,8 @@ class CreateAppointment
             ]);
         }
 
+        $this->ensureWeeklyBookingLimitNotExceeded($appointmentStart, $customerId, $guestEmail);
+
         return Appointment::create([
             'customer_id' => $customerId,
             'guest_name' => $customerId ? null : $guestName,
@@ -83,5 +86,32 @@ class CreateAppointment
             'end_datetime' => $slotEnd,
         ]);
         
+    }
+
+    private function ensureWeeklyBookingLimitNotExceeded(Carbon $appointmentStart, mixed $customerId, ?string $guestEmail): void
+    {
+        $weekStart = $appointmentStart->copy()->startOfWeek(Carbon::MONDAY)->startOfDay();
+        $weekEnd = $appointmentStart->copy()->endOfWeek(Carbon::SUNDAY)->endOfDay();
+
+        $query = Appointment::query()
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereBetween('start_datetime', [
+                $weekStart->toDateTimeString(),
+                $weekEnd->toDateTimeString(),
+            ]);
+
+        if ($customerId) {
+            $query->where('customer_id', $customerId);
+        } elseif ($guestEmail) {
+            $query->whereRaw('LOWER(guest_email) = ?', [$guestEmail]);
+        } else {
+            return;
+        }
+
+        if ($query->exists()) {
+            throw ValidationException::withMessages([
+                'appointment_start' => 'You can only keep 1 appointment per week. Please choose a date in another week.',
+            ]);
+        }
     }
 }
