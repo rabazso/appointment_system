@@ -32,6 +32,10 @@
     "vue-router": "4.5.1"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/interaction": "^6.1.20",
+    "@fullcalendar/vue3": "^6.1.20",
     "@internationalized/date": "^3.10.1",
     "tailwindcss-animated": "^2.0.0"
   }

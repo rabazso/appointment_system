@@ -13,6 +13,7 @@ import ForgotPassword from '@pages/forgotPassword.vue'
 import ResetPassword from '@pages/resetPassword.vue'
 import Services from '@pages/admin/Services.vue'
 import Employees from '@pages/admin/Employees.vue'
+import Schedule from '@pages/admin/Schedule.vue'
 
 const routes = [
   {
@@ -118,6 +119,14 @@ const routes = [
     component: Employees,
     meta: {
         title: 'Employees'
+    }
+  },
+  {
+    path: '/admin/schedule',
+    name: 'Schedule',
+    component: Schedule,
+    meta: {
+        title: 'Schedule'
     }
   }
 ]

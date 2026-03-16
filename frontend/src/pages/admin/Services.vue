@@ -49,7 +49,7 @@
             </p>
 
             <div class="mt-auto flex justify-end pt-3">
-              <ToggleButton v-model="service.active" @click="toggleServiceStatus(service)"/>
+              <ToggleButton v-model="service.active"/>
             </div>
           </article>
         </div>
@@ -189,12 +189,6 @@ const sidebarOpen = ref(false)
       services.value = (await getServices()).data 
 
     showAddModal.value = false
-  }
-
-  async function toggleServiceStatus(service) {
-
-      await patchService(service.id, {active :service.active})
-      services.value = (await getServices()).data
   }
 
   async function removeService() {
