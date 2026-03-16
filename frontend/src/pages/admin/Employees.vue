@@ -3,32 +3,17 @@
     <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
 
     <main class="flex-1 w-full overflow-y-auto p-8">
-      <header
-  class="mb-8 md:p-8 p-4 flex flex-col gap-4 rounded-2xl bg-white shadow-sm md:flex-row md:items-center md:justify-between"
->
-  <div class="flex items-center gap-4">
-    <button
-      class="inline-flex shrink-0 h-9 w-9 items-center justify-center rounded-lg border border-black/10 bg-white md:hidden"
-      @click="sidebarOpen = true"
-    >
-      <Menu class="h-5 w-5" />
-    </button>
-
-    <div>
-      <h1 class="text-4xl font-semibold text-black whitespace-nowrap">
-        Employees
-      </h1>
-      <p class="mt-1 text-xs text-gray-500 whitespace-nowrap">
-        Manage your business employees
-      </p>
-    </div>
-  </div>
-  <div class="flex justify-end">
-    <Button>
-      + new employee
-    </Button>
-  </div>
-</header>
+      <Header
+        title="Employees"
+        description="Manage your business employees"
+        @menu-click="sidebarOpen = true"
+      >
+        <template #actions>
+          <Button>
+            + new employee
+          </Button>
+        </template>
+      </Header>
 
       <div
         class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
@@ -90,8 +75,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Trash, User, Menu } from 'lucide-vue-next'
+import { Trash, User } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
+import Header from '@/components/admin/Header.vue'
 import ToggleButton from '@/components/admin/ToggleButton.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import { getEmployees } from '@/api/index'
