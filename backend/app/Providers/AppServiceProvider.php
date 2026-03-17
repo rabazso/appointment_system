@@ -41,12 +41,19 @@ class AppServiceProvider extends ServiceProvider
                 false
             );
 
-            $backendBase = rtrim((string) config('app.url'), '/');
-            if ($backendBase !== '' && !preg_match('#^https?://#', $backendBase)) {
-                $backendBase = 'http://' . $backendBase;
+            $frontendBase = rtrim((string) config('app.frontend_url'), '/');
+            if ($frontendBase !== '' && !preg_match('#^https?://#', $frontendBase)) {
+                $frontendBase = 'http://' . $frontendBase;
             }
 
-            return $backendBase . $relativeSignedUrl;
+            $query = parse_url($relativeSignedUrl, PHP_URL_QUERY);
+
+            return $frontendBase
+                . '/verify-email/'
+                . $notifiable->getKey()
+                . '/'
+                . sha1($notifiable->getEmailForVerification())
+                . ($query ? "?{$query}" : '');
         });
 
         ResetPassword::createUrlUsing(function (User $user, string $token): string {

@@ -11,6 +11,7 @@ import YourAppointments from '@pages/yourAppointments.vue'
 import BarberAdminPage from '@pages/barberAdminPage.vue'
 import ForgotPassword from '@pages/forgotPassword.vue'
 import ResetPassword from '@pages/resetPassword.vue'
+import VerifyEmail from '@pages/verifyEmail.vue'
 
 const routes = [
   {
@@ -100,6 +101,14 @@ const routes = [
     component: ResetPassword,
     meta: {
       title: 'Reset Password'
+    }
+  },
+  {
+    path: '/verify-email/:id/:hash',
+    name: 'VerifyEmail',
+    component: VerifyEmail,
+    meta: {
+      title: 'Verify Email'
     }
   }
 ]

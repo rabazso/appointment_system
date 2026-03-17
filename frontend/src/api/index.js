@@ -90,6 +90,8 @@ export const postReview = (payload) => API.post('/reviews', payload);
 export const postAppointment = (payload) => API.post('/appointments', payload);
 export const postGuest = (name, email) => API.post('/guest', { name, email });
 export const confirmAppointment = (appointmentId, expires, signature) => API.get(`/appointments/confirm/${appointmentId}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
+export const verifyEmailAddress = (userId, hash, expires, signature) =>
+    API.get(`/email/verify/${userId}/${hash}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
 export const getUserAppointments = () => API.get('/user/appointments');
 export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointments/${appointmentId}/cancel`);
 export const forgotPassword = (email) => API.post('/forgot-password', { email });

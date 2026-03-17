@@ -67,19 +67,35 @@ class AuthController extends Controller
 
     public function verifyEmail(Request $request, int $id, string $hash)
     {
+        if (!$request->hasValidSignature(false)) {
+            return response()->json([
+                'status' => 'invalid',
+                'message' => 'This verification link is invalid or has expired.',
+            ], 403);
+        }
+
         $user = User::findOrFail($id);
 
         if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-            return response()->json(['message' => 'Invalid verification link'], 403);
+            return response()->json([
+                'status' => 'invalid',
+                'message' => 'This verification link is invalid or has expired.',
+            ], 403);
         }
 
         if ($user->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Email already verified']);
+            return response()->json([
+                'status' => 'already_verified',
+                'message' => 'Your email is already verified.',
+            ]);
         }
 
         $user->markEmailAsVerified();
 
-        return response()->json(['message' => 'Email verified successfully']);
+        return response()->json([
+            'status' => 'verified',
+            'message' => 'Your email has been verified successfully.',
+        ]);
     }
 
     public function resendVerification(Request $request)

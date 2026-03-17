@@ -16,7 +16,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/guest', [AuthController::class, 'guest']);
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
-    ->middleware(['signed:relative', 'throttle:6,1'])
+    ->middleware(['throttle:6,1'])
     ->name('verification.verify');
 
 Route::get('/services', [ServiceController::class, 'index']);
