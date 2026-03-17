@@ -1,12 +1,14 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\User;
 
-return new class extends Migration {
-    public function up() {
-         Schema::create('employees', function (Blueprint $table) {
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('employees', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')
                 ->unique()
@@ -17,9 +19,12 @@ return new class extends Migration {
             $table->text('bio')->nullable();
             $table->string('photo_url', 500)->nullable();
             $table->string('instagram_url', 255)->nullable();
+            $table->timestamps();
         });
     }
-    public function down() {
-        Schema::dropIfExists('employees'); 
+
+    public function down(): void
+    {
+        Schema::dropIfExists('employees');
     }
 };

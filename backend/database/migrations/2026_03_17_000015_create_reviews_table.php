@@ -6,24 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
-            $table->foreignId("user_id")->constrained()->onDelete("cascade");
-            $table->foreignId("appointment_id")->constrained("appointments")->onDelete("cascade");
-            $table->integer("rating");
-            $table->text("comment")->nullable();
+            $table->foreignId('customer_id')
+                ->constrained()
+                ->cascadeOnDelete();
+            $table->foreignId('appointment_id')
+                ->constrained()
+                ->cascadeOnDelete();
+            $table->integer('rating');
+            $table->text('comment')->nullable();
+            $table->boolean('is_visible')->default(true);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('reviews');
