@@ -3,9 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class EmailVerificationFlowTest extends TestCase
@@ -60,6 +63,37 @@ class EmailVerificationFlowTest extends TestCase
             ]);
 
         $this->assertNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_registration_sends_the_custom_verification_notification(): void
+    {
+        Notification::fake();
+
+        $this->postJson('/api/register', [
+            'name' => 'Fresh Client',
+            'email' => 'fresh-client@example.test',
+            'password' => 'Password1!',
+            'password_confirmation' => 'Password1!',
+        ])->assertCreated();
+
+        $user = User::where('email', 'fresh-client@example.test')->firstOrFail();
+
+        Notification::assertSentTo($user, VerifyEmailNotification::class);
+    }
+
+    public function test_resend_verification_uses_the_custom_verification_notification(): void
+    {
+        Notification::fake();
+
+        $user = $this->createUser(['email_verified_at' => null]);
+
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/email/verification-notification')
+            ->assertOk()
+            ->assertJson(['message' => 'Verification email sent']);
+
+        Notification::assertSentTo($user, VerifyEmailNotification::class);
     }
 
     private function verificationUrlFor(User $user): string
