@@ -4,6 +4,34 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.formkit-form {
+  @apply space-y-4;
+}
+
+.formkit-outer {
+  @apply mb-2;
+}
+
+.formkit-label {
+  @apply block text-sm text-foreground font-medium mb-1;
+}
+
+.formkit-input {
+  @apply w-full px-4 py-2 rounded-lg border border-border bg-background outline-none transition focus:border-ring ;
+}
+
+.formkit-help {
+  @apply text-xs text-zinc-500 mt-1;
+}
+
+.formkit-messages {
+  @apply text-sm text-destructive-foreground mt-1;
+}
+
+button[type="submit"]{
+  @apply w-full bg-accent text-accent-foreground hover:bg-accent/70 rounded-lg shadow-lg font-bold;
+}
+
 @theme inline {
   --font-geist: 'Geist';
   --color-background: var(--background);
