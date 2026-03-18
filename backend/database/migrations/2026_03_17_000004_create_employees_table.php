@@ -14,11 +14,11 @@ return new class extends Migration
                 ->unique()
                 ->constrained()
                 ->cascadeOnDelete();
-            $table->string('name', 255);
-            $table->string('phone', 50)->unique();
+            $table->string('name');
+            $table->string('phone')->unique();
             $table->text('bio')->nullable();
-            $table->string('photo_url', 500)->nullable();
-            $table->string('instagram_url', 255)->nullable();
+            $table->string('photo_path')->nullable();
+            $table->string('instagram_url')->nullable();
             $table->timestamps();
         });
     }

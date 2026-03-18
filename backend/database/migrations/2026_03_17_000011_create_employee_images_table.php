@@ -8,18 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('employee_gallery', function (Blueprint $table) {
+        Schema::create('employee_images', function (Blueprint $table) {
             $table->id();
             $table->foreignId('employee_id')
                 ->constrained()
                 ->cascadeOnDelete();
-            $table->string('image_url');
+            $table->string('image_path');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('employee_gallery');
+        Schema::dropIfExists('employee_images');
     }
 };

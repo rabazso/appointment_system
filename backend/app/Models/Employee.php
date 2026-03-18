@@ -10,7 +10,7 @@ class Employee extends Model
         'name',
         'phone',
         'bio',
-        'photo_url',
+        'photo_path',
         'instagram_url',
     ];
 
@@ -34,9 +34,9 @@ class Employee extends Model
         return $this->hasMany(EmployeeService::class);
     }
 
-    public function gallery()
+    public function image()
     {
-        return $this->hasMany(EmployeeGallery::class);
+        return $this->hasMany(EmployeeImage::class);
     }
 
     public function workingHours()
