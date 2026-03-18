@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->integer('max_advance_booking_days');
             $table->integer('cancellation_deadline_hours');
-            $table->integer('slot_interval');
+            $table->integer('slot_interval_minutes');
             $table->boolean('sync_opening_hours_with_employee_schedule')->default(false);
             $table->timestamps();
         });

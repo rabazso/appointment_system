@@ -2,58 +2,37 @@
 
 namespace Database\Seeders;
 
+use App\Models\Appointment;
 use App\Models\Review;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ReviewSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        Review::insert([
-            [
-                'user_id' => 1,
-                'appointment_id' => 1,
-                'rating' => 5,
-                'comment' => 'Nagyon elégedett vagyok a szolgáltatással!',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => 2,
-                'appointment_id' => 2,
-                'rating' => 4,
-                'comment' => 'Kedves kiszolgálás, ajánlom.',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => 3,
-                'appointment_id' => 3,
-                'rating' => 3,
-                'comment' => 'Átlagos élmény volt.',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => 4,
-                'appointment_id' => 4,
-                'rating' => 5,
-                'comment' => 'Minden tökéletes volt, biztosan visszatérek!',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'user_id' => 5,
-                'appointment_id' => 5,
-                'rating' => 2,
-                'comment' => 'Nem teljesen azt kaptam, amire számítottam.',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+        $appointments = Appointment::query()
+            ->where('status', 'completed')
+            ->take(5)
+            ->get();
+
+        $comments = [
+            ['rating' => 5, 'comment' => 'I am very satisfied with the service.'],
+            ['rating' => 4, 'comment' => 'Friendly service.'],
+            ['rating' => 5, 'comment' => 'Precise work and a great atmosphere.'],
+            ['rating' => 4, 'comment' => 'Quick and clean haircut.'],
+            ['rating' => 3, 'comment' => 'It was okay.'],
+        ];
+
+        foreach ($appointments as $index => $appointment) {
+            $reviewData = $comments[array_rand($comments)];
+
+            Review::create([
+                'appointment_id' => $appointment->id,
+                'customer_id' => $appointment->customer_id,
+                'rating' => $reviewData['rating'],
+                'comment' => $reviewData['comment'],
+                'is_visible' => true,
+            ]);
+        }
     }
 }

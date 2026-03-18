@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->integer('weekday');
             $table->boolean('is_open')->default(true);
-            $table->time('open_time');
-            $table->time('close_time');
+            $table->time('open_time')->nullable();
+            $table->time('close_time')->nullable();
             $table->date('valid_from');
             $table->date('valid_to')->nullable();
             $table->timestamps();
