@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('shop_opening_hours', function (Blueprint $table) {
+        Schema::create('shop_schedules', function (Blueprint $table) {
             $table->id();
             $table->integer('weekday');
             $table->boolean('is_open')->default(true);
@@ -22,6 +22,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('shop_opening_hours');
+        Schema::dropIfExists('shop_schedules');
     }
 };

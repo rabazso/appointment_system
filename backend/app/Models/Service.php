@@ -1,22 +1,32 @@
 <?php
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
     protected $fillable = [
-        'name','description','default_duration','default_price','active'
+        'name',
+        'description',
     ];
-    protected $appends = ['duration'];
 
     public function employees()
     {
-        return $this->belongsToMany(Employee::class, 'employee_services')
-            ->withPivot('price', 'duration');
+        return $this->belongsToMany(Employee::class, 'employee_services');
     }
 
-    public function getDurationAttribute()
+    public function versions()
     {
-        return $this->default_duration;
+        return $this->hasMany(ServiceVersion::class);
+    }
+
+    public function employeeServices()
+    {
+        return $this->hasMany(EmployeeService::class);
+    }
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
     }
 }

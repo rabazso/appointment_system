@@ -1,20 +1,23 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class EmployeeTimeOff extends Model
+class EmployeeWorkingHour extends Model
 {
     protected $fillable = [
         'employee_id',
-        'date',
-        'type',
-        'status',
-        'note',
+        'weekday',
+        'start_time',
+        'end_time',
+        'valid_from',
+        'valid_to',
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'valid_from' => 'date',
+        'valid_to' => 'date',
     ];
 
     public function employee()

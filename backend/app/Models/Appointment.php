@@ -1,24 +1,32 @@
 <?php
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Appointment extends Model
 {
     protected $fillable = [
-        'customer_id','guest_name','guest_email',
-        'employee_id','service_id','price',
-        'status','start_datetime','end_datetime','cancelled_at'
+        'customer_id',
+        'employee_id',
+        'service_id',
+        'duration',
+        'price',
+        'status',
+        'customer_note',
+        'start_datetime',
+        'end_datetime',
     ];
 
     protected $casts = [
+        'duration' => 'integer',
+        'price' => 'integer',
         'start_datetime' => 'datetime',
-        'end_datetime' => 'datetime',
-        'confirmed_at' => 'datetime',
+        'end_datetime' => 'datetime'
     ];
 
     public function customer()
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(Customer::class);
     }
 
     public function employee()

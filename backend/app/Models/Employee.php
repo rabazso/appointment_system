@@ -1,14 +1,23 @@
 <?php
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
-    protected $table = 'employees';
-
     protected $fillable = [
-        'user_id','bio','photo_url','instagram_url','active'
+        'user_id',
+        'name',
+        'phone',
+        'bio',
+        'photo_url',
+        'instagram_url',
     ];
+
+    public function versions()
+    {
+        return $this->hasMany(EmployeeVersion::class);
+    }
 
     public function user()
     {
@@ -17,8 +26,12 @@ class Employee extends Model
 
     public function services()
     {
-        return $this->belongsToMany(Service::class, 'employee_services')
-            ->withPivot('price', 'duration');
+        return $this->belongsToMany(Service::class, 'employee_services');
+    }
+
+    public function employeeServices()
+    {
+        return $this->hasMany(EmployeeService::class);
     }
 
     public function gallery()
@@ -28,7 +41,12 @@ class Employee extends Model
 
     public function workingHours()
     {
-        return $this->hasMany(WorkingHour::class);
+        return $this->hasMany(EmployeeWorkingHour::class);
+    }
+
+    public function breaks()
+    {
+        return $this->hasMany(EmployeeBreak::class);
     }
 
     public function timeOff()

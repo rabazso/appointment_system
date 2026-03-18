@@ -15,18 +15,11 @@ class User extends Authenticatable implements MustVerifyEmail
     use CanResetPassword;
 
     protected $fillable = [
-        'name',
         'email',
         'password',
         'phone',
         'role',
-        'verified',
         'email_verified_at',
-    ];
-
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'verified' => 'boolean',
     ];
 
     protected $hidden = ['password'];
@@ -36,13 +29,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Employee::class);
     }
 
-    public function appointments()
+    public function customer()
     {
-        return $this->hasMany(Appointment::class, 'customer_id');
-    }
-
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
+        return $this->hasOne(Customer::class);
     }
 }

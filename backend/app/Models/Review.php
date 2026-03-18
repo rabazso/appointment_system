@@ -6,12 +6,26 @@ use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
-    protected $fillable = ["user_id", "appointment_id", "rating", "comment"];
+    protected $fillable = [
+        'customer_id',
+        'appointment_id',
+        'rating',
+        'comment',
+        'is_visible',
+    ];
 
-    public function user(){
-        return $this->belongsTo(User::class);
+    protected $casts = [
+        'rating' => 'integer',
+        'is_visible' => 'boolean',
+    ];
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
-    public function appointment(){
+
+    public function appointment()
+    {
         return $this->belongsTo(Appointment::class);
     }
 }
