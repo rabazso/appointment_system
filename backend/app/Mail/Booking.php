@@ -2,15 +2,12 @@
 
 namespace App\Mail;
 
-use App\Http\Requests\AppointmentStoreRequest;
 use App\Models\Appointment;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\URL;
 
 class Booking extends Mailable
 {
@@ -30,7 +27,7 @@ class Booking extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Barber Shop: Booking Confirmation',
+            subject: 'Confirm your Barber Shop appointment',
         );
     }
 
@@ -43,7 +40,8 @@ class Booking extends Mailable
             view: 'mail.confirmation',
              with: [
                 'appointment' => $this->appointment,
-                "confirmationLink" => $this->confirmationLink,
+                'confirmationLink' => $this->confirmationLink,
+                'expiresInMinutes' => 60,
             ],
         );
     }

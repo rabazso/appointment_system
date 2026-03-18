@@ -34,6 +34,7 @@ class AppointmentController extends Controller
     public function store(AppointmentStoreRequest $request, CreateAppointment $create)
     {
         $appointment = $create->Create($request);
+        $appointment->loadMissing(['service:id,name', 'employee.user:id,name', 'customer:id,name,email']);
 
         $confirmationLink = $this->buildConfirmationLink($appointment);
         
@@ -41,8 +42,6 @@ class AppointmentController extends Controller
         if ($recipientEmail) {
             Mail::to($recipientEmail)->send(new Booking($appointment, $confirmationLink));
         }
-        
-        $appointment->loadMissing(['service:id,name', 'employee.user:id,name', 'customer:id,name,email']);
 
         return response()->json([
             'message' => 'Booking created, confirmation email sent',
