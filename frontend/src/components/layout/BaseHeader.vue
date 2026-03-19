@@ -284,7 +284,7 @@ watch(isAuthenticated, (loggedIn) => {
             </Button>
           </div>
         </div>
-        <Button data-testid="headerbtn" :class="['hidden md:block px-8 font-medium transition-colors']" @click="loginOpen = true" v-if="!isAuthenticated">
+        <Button data-testid="headerbtn" :class="['hidden md:block h-11 text-base px-8 font-semibold transition-colors']" @click="loginOpen = true" v-if="!isAuthenticated">
           Sign In
         </Button>
       </div>

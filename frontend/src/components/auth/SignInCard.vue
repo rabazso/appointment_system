@@ -17,7 +17,7 @@ const data = ref({
 const errorMessage = ref('')
 const loading = ref(false)
 
-async function submit() {
+async function submitHandler() {
   errorMessage.value = ''
   loading.value = true
   try {
@@ -53,22 +53,20 @@ async function submit() {
         {{ errorMessage }}
       </div>
 
-      <form @submit.prevent="submit" class="space-y-4">
-        <div>
-          <Label>Email</Label>
-          <Input data-testid="email-input" v-model="data.email" />
-        </div>
-        <div>
-          <Label>Password</Label>
-          <Input data-testid="password-input" v-model="data.password" type="password" />
-        </div>
+      <FormKit 
+        type="form"
+        :submit-label="loading ? 'Signing in…' : 'Sign in'"
+        data-testid="signin-form"
+        autocomplete="off"
+        :submit-attrs="{ 'data-testid': 'signin-submit', disabled: loading }"
+        @submit="submitHandler"
+        :incomplete-message="false">
+        <FormKit data-testid="email-input" v-model="data.email" type="text" name="email" label="Email" placeholder="barbershop@example.com" validation="required|email" />
+        <FormKit data-testid="password-input" v-model="data.password" type="password" name="password" label="Password" placeholder="Your password" validation="required" />
         <div class="text-right">
           <RouterLink to="/forgot-password" class="text-sm underline hover:opacity-80">Forgot password?</RouterLink>
         </div>
-        <Button data-testid="login-submit" class="w-full" :disabled="loading">
-          {{ loading ? 'Signing in…' : 'Sign In' }}
-        </Button>
-      </form>
+      </FormKit>
     </CardContent>
   </Card>
 </template>

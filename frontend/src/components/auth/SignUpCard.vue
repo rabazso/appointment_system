@@ -78,24 +78,18 @@ const passwordRules = computed(() => [
     </CardHeader>
 
     <CardContent>
-      <div
-        v-if="errorMessage"
-        data-testid="errormsg-signup"
-        class="mb-4 rounded bg-red-500 px-3 py-2 text-white"
-      >
-        {{ errorMessage }}
-      </div>
-
       <FormKit
         type="form"
         :submit-label="loading ? 'Signing up…' : 'Sign up'"
         data-testid="signup-form"
+        autocomplete="off"
         :submit-attrs="{ 'data-testid': 'signup-submit', disabled: loading }"
         @submit="submitHandler"
+        :incomplete-message="false"
       >
-        <FormKit data-testid="firstname-input" type="text" name="firstName" label="First Name" validation="required|alpha:latin" />
-        <FormKit data-testid="lastname-input" type="text" name="lastName" label="Last Name" validation="required|alpha:latin" />
-        <FormKit data-testid="email-input" type="text" name="email" label="Email" validation="required|email" />
+        <FormKit data-testid="firstname-input" type="text" name="firstName" label="First Name" placeholder="John" validation="required|alpha:latin" />
+        <FormKit data-testid="lastname-input" type="text" name="lastName" label="Last Name" placeholder="Doe" validation="required|alpha:latin" />
+        <FormKit data-testid="email-input" type="text" name="email" label="Email" placeholder="barbershop@example.com" validation="required|email" />
         <FormKit data-testid="password-input" v-model="password" type="password" name="password" label="Password" placeholder="Your password" validation-visibility="live"
           :validation="[['required'], ['length', 8], ['matches', /[A-Z]/], ['matches', /[a-z]/], ['matches', /[0-9]/], ['matches', /[@$!%*?&.]/]]"
           :classes="{messages: 'hidden'}" />
@@ -116,6 +110,13 @@ const passwordRules = computed(() => [
           </ul>
         </div>
         <FormKit data-testid="confpass-input" type="password" name="password_confirm" label="Confirm password" placeholder="Confirm password" validation="required|confirm"/>
+        <div
+        v-if="errorMessage"
+        data-testid="errormsg-signup"
+        class="text-sm text-destructive-foreground mt-1"
+        >
+          {{ errorMessage }}
+        </div>
       </FormKit>
     </CardContent>
   </Card>

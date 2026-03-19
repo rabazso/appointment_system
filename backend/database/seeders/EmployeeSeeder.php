@@ -63,7 +63,7 @@ class EmployeeSeeder extends Seeder
             $employee = Employee::create([
                 'user_id' => $user->id,
                 'bio' => $employeeData['bio'],
-                'photo_url' => null,
+                'photo_url' => 'url',
             ]);
 
             EmployeeGallery::firstOrCreate([
