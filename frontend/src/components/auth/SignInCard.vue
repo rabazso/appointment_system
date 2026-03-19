@@ -49,9 +49,7 @@ async function submitHandler() {
     </CardHeader>
 
     <CardContent>
-      <div data-testid="errormsg-login" v-if="errorMessage" class="mb-4 py-2 px-3 rounded text-white bg-red-500">
-        {{ errorMessage }}
-      </div>
+      
 
       <FormKit 
         type="form"
@@ -63,6 +61,9 @@ async function submitHandler() {
         :incomplete-message="false">
         <FormKit data-testid="email-input" v-model="data.email" type="text" name="email" label="Email" placeholder="barbershop@example.com" validation="required|email" />
         <FormKit data-testid="password-input" v-model="data.password" type="password" name="password" label="Password" placeholder="Your password" validation="required" />
+        <div data-testid="errormsg-login" v-if="errorMessage" class="text-sm text-destructive-foreground mt-1">
+          {{ errorMessage }}
+        </div>
         <div class="text-right">
           <RouterLink to="/forgot-password" class="text-sm underline hover:opacity-80">Forgot password?</RouterLink>
         </div>

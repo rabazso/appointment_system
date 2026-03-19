@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronDown, Menu } from 'lucide-vue-next'
+import { ChevronDown, LayoutDashboard, LogOut, Menu } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
@@ -11,6 +11,7 @@ import {
   NavigationMenuItem,
   navigationMenuTriggerStyle
 } from '@/components/ui/navigation-menu'
+import { CircleUserRound } from 'lucide-vue-next';
 
 import AuthModal from '@/components/auth/AuthModal.vue'
 import Toast from '@/components/ui/Toast.vue'
@@ -35,7 +36,7 @@ const isBarberId = computed(() => {
   return Number.isInteger(id) && id >= 1 && id <= 5
 })
 const isBarberUser = computed(() => ['employee', 'barber', 'admin'].includes(auth.role) || isBarberId.value)
-const accountButtonLabel = computed(() => auth.user_name || '')
+const accountButtonLabel = computed(() => auth.user_name || 'Account')
 const dashboardPath = computed(() => (isBarberUser.value ? '/barberAdminPage' : '/yourAppointments'))
 const isDashboardActive = computed(() => route.path === dashboardPath.value)
 
@@ -177,43 +178,7 @@ watch(isAuthenticated, (loggedIn) => {
         <SheetContent side="left" class="flex flex-col">
           
           <div class="grid gap-2 py-6 mt-8">
-            <div v-if="isAuthenticated" ref="accountMenuRef">
-              <Button
-                variant="secondary"
-                class="h-11 w-full justify-start text-left text-base font-semibold transition-colors [&_p]:w-full"
-                @click.stop="toggleAccountMenu"
-              >
-                <span class="flex w-full items-center justify-between gap-2">
-                  <span class="max-w-44 truncate">{{ accountButtonLabel }}</span>
-                  <ChevronDown
-                    class="h-3.5 w-3.5 opacity-80 transition-transform duration-200 "
-                    :class="{ 'rotate-180': accountMenuOpen }"
-                  />
-                </span>
-              </Button>
-              <div
-                v-if="accountMenuOpen"
-                class="absolute right-0 mt-2 w-52 rounded-md border bg-background p-1 text-foreground shadow-lg z-50"
-              >
-                <Button
-                  variant="base"
-                  :class="[
-                    'w-full text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
-                    isDashboardActive ? 'text-accent' : ''
-                  ]"
-                  @click="goToDashboard"
-                >
-                  Dashboard
-                </Button>
-                <Button
-                  variant="base"
-                  class="w-full text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-                  @click="signOut"
-                >
-                  Sign out
-                </Button>
-              </div>
-            </div>
+            
             <RouterLink
               v-for="link in links"
               :key="link.to"
@@ -223,6 +188,50 @@ watch(isAuthenticated, (loggedIn) => {
             >
               {{ link.label }}
             </RouterLink>
+          </div>
+          <div v-if="isAuthenticated" ref="accountMenuRef" class="space-y-2">
+            <Button
+              variant="base"
+              class="h-12 w-full justify-start rounded-xl px-4 text-left shadow-none [&_p]:w-full"
+              @click.stop="toggleAccountMenu"
+            >
+              <span class="flex w-full items-center justify-between gap-2">
+                <span class="inline-flex min-w-0 items-center gap-3">
+                  <CircleUserRound class="size-8 text-foreground" />
+                </span>
+              </span>
+            </Button>
+            <div
+              v-if="accountMenuOpen"
+              class="overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-sm"
+            >
+              <div class="border-b border-border px-4 py-3">
+                <p class="truncate text-sm font-semibold text-foreground">{{ accountButtonLabel }}</p>
+              </div>
+              <div class="p-1.5">
+                <Button
+                  variant="ghost"
+                  class="h-10 w-full justify-start rounded-lg px-3 text-sm font-medium"
+                  :class="isDashboardActive ? 'bg-accent text-accent-foreground' : ''"
+                  @click="goToDashboard"
+                >
+                  <span class="inline-flex items-center gap-2">
+                    <LayoutDashboard class="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  class="mt-1 h-10 w-full justify-start rounded-lg px-3 text-sm font-medium text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  @click="signOut"
+                >
+                  <span class="inline-flex items-center gap-2">
+                    <LogOut class="h-4 w-4" />
+                    <span>Sign out</span>
+                  </span>
+                </Button>
+              </div>
+            </div>
           </div>
           <Button variant="base" as-child @click="[loginOpen = true, sheetOpen = false]" v-if="!isAuthenticated">
             Sign In
@@ -252,39 +261,48 @@ watch(isAuthenticated, (loggedIn) => {
 
       <div class="w-auto md:min-w-40 flex justify-end items-center gap-3">
         <div v-if="isAuthenticated" ref="accountMenuRef" class="relative hidden md:block">
-          <Button type="button" class="h-11 px-5 text-base font-semibold transition-colors" @click.stop="toggleAccountMenu">
-            <span class="inline-flex items-center gap-2 whitespace-nowrap">
-              <span class="max-w-44 truncate">{{ accountButtonLabel }}</span>
-              <ChevronDown
-                class="h-3.5 w-3.5 opacity-80 transition-transform duration-200"
-                :class="{ 'rotate-180': accountMenuOpen }"
-              />
+          <Button
+            variant="base"
+            class="h-11 rounded-xl px-4 shadow-none"
+            @click.stop="toggleAccountMenu"
+          >
+            <span class="inline-flex items-center gap-3 whitespace-nowrap">
+              <CircleUserRound class="size-8 text-primary-foreground" />
             </span>
           </Button>
           <div
             v-if="accountMenuOpen"
-            class="absolute right-0 mt-2 w-52 rounded-md border bg-background p-1 text-foreground shadow-lg z-50"
+            class="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-lg"
           >
-            <Button
-              variant="base"
-              :class="[
-                'w-full text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
-                isDashboardActive ? 'text-accent' : ''
-              ]"
-              @click="goToDashboard"
-            >
-              Dashboard
-            </Button>
-            <Button
-              variant="base"
-              class="w-full text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-              @click="signOut"
-            >
-              Sign out
-            </Button>
+            <div class="border-b border-border px-4 py-3">
+              <p class="truncate text-sm font-semibold text-foreground">{{ accountButtonLabel }}</p>
+            </div>
+            <div class="p-1.5">
+              <Button
+                variant="ghost"
+                class="h-10 w-full justify-start rounded-lg px-3 text-sm font-medium"
+                :class="isDashboardActive ? 'bg-accent text-accent-foreground' : ''"
+                @click="goToDashboard"
+              >
+                <span class="inline-flex items-center gap-2">
+                  <LayoutDashboard class="h-4 w-4" />
+                  <span>Dashboard</span>
+                </span>
+              </Button>
+              <Button
+                variant="ghost"
+                class="mt-1 h-10 w-full justify-start rounded-lg px-3 text-sm font-medium text-destructive hover:bg-destructive/10 hover:text-destructive"
+                @click="signOut"
+              >
+                <span class="inline-flex items-center gap-2">
+                  <LogOut class="h-4 w-4" />
+                  <span>Sign out</span>
+                </span>
+              </Button>
+            </div>
           </div>
         </div>
-        <Button data-testid="headerbtn" :class="['hidden md:block h-11 text-base px-8 font-semibold transition-colors']" @click="loginOpen = true" v-if="!isAuthenticated">
+        <Button data-testid="headerbtn" :class="['hidden md:block px-8 font-medium transition-colors']" @click="loginOpen = true" v-if="!isAuthenticated">
           Sign In
         </Button>
       </div>
