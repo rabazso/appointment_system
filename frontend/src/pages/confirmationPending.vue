@@ -18,36 +18,40 @@ const goHome = () => router.push('/')
 </script>
 
 <template>
-  <div class="min-h-screen w-full flex items-center justify-center bg-background p-4">
-    <Card class="w-full max-w-md shadow-lg border-2 border-accent/20">
-      <CardHeader class="text-center">
-        <CardTitle>Check Your Email</CardTitle>
-        <CardDescription>We sent a confirmation link. Please confirm your booking.</CardDescription>
+  <div class="min-h-screen bg-[#f5f5f5] px-4 py-10">
+    <div class="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center">
+      <Card class="w-full max-w-2xl border border-[#f0c99f] bg-white shadow-xl shadow-black/5">
+        <CardHeader class="px-6 pt-8 text-center md:px-10">
+          <CardTitle class="text-3xl font-bold text-black">Check Your Email</CardTitle>
+          <CardDescription class="mx-auto max-w-lg text-base leading-8 text-slate-600">
+            We sent a confirmation link. Please confirm your booking.
+          </CardDescription>
       </CardHeader>
-      <CardContent class="space-y-4">
-        <div v-if="booking" class="rounded-lg border border-accent/30 bg-accent/10 p-4 space-y-2">
+      <CardContent class="space-y-5 px-6 md:px-10">
+        <div v-if="booking" class="rounded-2xl border border-[#f0c99f] bg-[#fbefe1] p-5">
           <div class="flex justify-between items-center">
-            <p class="text-muted-foreground">Service:</p>
-            <p class="font-semibold text-foreground">{{ booking.serviceName }}</p>
+            <p class="text-lg text-slate-600">Service:</p>
+            <p class="text-lg font-bold text-black">{{ booking.serviceName }}</p>
           </div>
-          <div class="flex justify-between items-center">
-            <p class="text-muted-foreground">Barber:</p>
-            <p class="font-semibold text-foreground">{{ booking.barberName }}</p>
+          <div class="flex justify-between items-center border-t border-black/10 py-3">
+            <p class="text-lg text-slate-600">Barber:</p>
+            <p class="text-lg font-bold text-black">{{ booking.barberName }}</p>
           </div>
-          <div class="flex justify-between items-center">
-            <p class="text-muted-foreground">Date:</p>
-            <p class="font-semibold text-foreground">{{ booking.date }}</p>
+          <div class="flex justify-between items-center border-t border-black/10 py-3">
+            <p class="text-lg text-slate-600">Date:</p>
+            <p class="text-lg font-bold text-black">{{ booking.date }}</p>
           </div>
-          <div class="flex justify-between items-center">
-            <p class="text-muted-foreground">Time:</p>
-            <p class="font-semibold text-foreground">{{ booking.time }}</p>
+          <div class="flex justify-between items-center border-t border-black/10 pt-3">
+            <p class="text-lg text-slate-600">Time:</p>
+            <p class="text-lg font-bold text-black">{{ booking.time }}</p>
           </div>
         </div>
-        <p class="text-sm text-muted-foreground text-center">Once you confirm, we will show your summary.</p>
+        <p class="text-center text-base text-slate-600">Once you confirm, we will show your summary.</p>
       </CardContent>
-      <CardFooter>
-        <Button @click="goHome" class="w-full">Back to Home</Button>
+      <CardFooter class="px-6 pb-8 md:px-10">
+        <Button @click="goHome" class="h-12 w-full rounded-xl bg-[#f69436] text-base font-semibold text-black hover:bg-[#ec8a2f]">Back to Home</Button>
       </CardFooter>
-    </Card>
+      </Card>
+    </div>
   </div>
 </template>
