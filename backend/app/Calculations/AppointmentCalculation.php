@@ -39,7 +39,7 @@ class AppointmentCalculation
         $to   = $selectedDate->copy()->endOfDay()->toDateTimeString();
 
         $employees = Employee::with([
-            'workingHours' => fn($query) => $query->where('weekday', $selectedDate->dayOfWeekIso),
+            'workingHours' => fn($query) => $query->where('weekday', $selectedDate->dayOfWeek),
             'appointments' => fn($query) => $query
                 ->whereIn('status', ['pending', 'confirmed'])
                 ->whereBetween('start_datetime', [$from, $to])

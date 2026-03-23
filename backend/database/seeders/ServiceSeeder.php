@@ -3,45 +3,47 @@
 namespace Database\Seeders;
 
 use App\Models\Service;
-use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 
 class ServiceSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $faker = Faker::create();
-
-        $services = [
+        $definitions = [
             [
-                'name' => 'Regular haircut',
-                'default_duration' => 30,
-                'description' => 'A quick, precise haircut for a clean, polished look. Perfect for busy schedules.',
+                'name' => 'Short haircut',
+                'description' => 'A quick short haircut for a clean and easy-to-maintain look.',
             ],
             [
-                'name' => 'Perfect haircut',
-                'default_duration' => 60,
-                'description' => 'Basically the same as regular, but you give the barber more time, so he could be more precise.',
+                'name' => 'Long haircut',
+                'description' => 'A haircut tailored for longer hair with extra attention to shape and flow.',
+            ],
+            [
+                'name' => 'Normal haircut',
+                'description' => 'A balanced standard haircut for an everyday sharp and polished style.',
             ],
             [
                 'name' => 'Beard trim',
-                'default_duration' => 30,
                 'description' => 'Expert trimming and shaping to maintain a sharp, well-groomed beard.',
             ],
             [
                 'name' => 'Fullbox',
-                'default_duration' => 60,
-                'description' => 'A bundle option for a regular haircut and a beard trim.',
+                'description' => 'A normal haircut and beard trim in one booking.',
+            ],
+            [
+                'name' => 'Father and son haircut',
+                'description' => 'A shared grooming session for father and son with matching fresh cuts.',
+            ],
+            [
+                'name' => 'Brothers haircut',
+                'description' => 'A haircut service tailored for brothers booking together.',
             ],
         ];
 
-        foreach ($services as $serviceData) {
+        foreach ($definitions as $definition) {
             Service::create([
-                ...$serviceData,
-                'default_price' => $faker->numberBetween(50, 100),
+                'name' => $definition['name'],
+                'description' => $definition['description'],
             ]);
         }
     }

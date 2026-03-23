@@ -3,51 +3,48 @@
 namespace Database\Seeders;
 
 use App\Models\Appointment;
-use App\Models\Employee;
-use App\Models\Service;
-use App\Models\User;
+use App\Models\Customer;
+use App\Models\EmployeeService;
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class AppointmentSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $customers = User::pluck('id');
-        $employees = Employee::pluck('id');
-        $services = Service::pluck('id');
+        $customers = Customer::query()->get();
+        $employeeServices = EmployeeService::query()
+            ->with(['employee', 'service', 'versions'])
+            ->get();
 
-        if ($customers->isEmpty() || $employees->isEmpty() || $services->isEmpty()) {
-            return;
-        }
+        $statusOptions = ['pending', 'confirmed', 'completed', 'cancelled', 'no_show'];
+        $customerIndex = 0;
 
-        for ($i = 0; $i < 5; $i++) {
+        foreach ($employeeServices->groupBy('employee_id') as $employeeId => $services) {
+            foreach ($statusOptions as $statusIndex => $status) {
+                $customer = $customers[$customerIndex % $customers->count()];
+                $customerIndex++;
 
-            $start = Carbon::now()
-                ->addDays(rand(1, 14))
-                ->setTime(rand(9, 17), 0);
+                $employeeService = $services->random();
+                $version = $employeeService->versions->first();
 
-            $end = (clone $start)->addMinutes(30);
 
-            $statusOptions = ['pending', 'confirmed', 'completed', 'cancelled', 'no_show'];
-            $status = $statusOptions[array_rand($statusOptions)];
+                $start = Carbon::now()
+                    ->addDays(($employeeId * 7) + $statusIndex + 1)
+                    ->setTime(rand(10, 18), 0);
 
-            Appointment::create([
-                'customer_id' => $customers->random(),
-                'employee_id' => $employees->random(),
-                'service_id' => $services->random(),
-                'price' => rand(50, 100),
-                'status' => $status,
-                'start_datetime' => $start,
-                'end_datetime' => $end,
-                'confirmed_at' => $status === 'confirmed' || $status === 'completed'
-                    ? Carbon::now()
-                    : null,
-            ]);
+                Appointment::create([
+                    'customer_id' => $customer->id,
+                    'employee_id' => $employeeService->employee_id,
+                    'service_id' => $employeeService->service_id,
+                    'start_datetime' => $start,
+                    'end_datetime' => $start->copy()->addMinutes($version->duration),
+                    'duration' => $version->duration,
+                    'price' => $version->price,
+                    'status' => $status,
+                    'customer_note' => 'A note from the customer.',
+                ]);
+            }
         }
     }
 }
