@@ -6,7 +6,7 @@ use App\Models\Employee;
 use App\Models\EmployeeTimeOff;
 use Illuminate\Database\Seeder;
 
-class EmployeeTimeOffSeeder extends Seeder
+class EmployeeTimeOffRequestSeeder extends Seeder
 {
     public function run(): void
     {
@@ -15,7 +15,7 @@ class EmployeeTimeOffSeeder extends Seeder
                 [
                     'date' => now()->addDays(7)->toDateString(),
                     'type' => 'sickness',
-                    'status' => 'requested',
+                    'status' => 'pending',
                     'note' => 'A reason for the time off.',
                 ],
             ],
@@ -23,13 +23,13 @@ class EmployeeTimeOffSeeder extends Seeder
                 [
                     'date' => now()->addDays(8)->toDateString(),
                     'type' => 'vacation',
-                    'status' => 'cancel_requested',
+                    'status' => 'cancelled',
                     'note' => 'A reason for the time off.',
                 ],
             ],
             'Bouncy Bella' => [
                 [
-                    'date' => now()->addDays(9)->toDateString(),
+                    'date' => now()->addDays(10)->toDateString(),
                     'type' => 'vacation',
                     'status' => 'approved',
                     'note' => 'A reason for the time off.',
@@ -37,8 +37,8 @@ class EmployeeTimeOffSeeder extends Seeder
             ],
             'Loud Lucy' => [
                 [
-                    'date' => now()->addDays(10)->toDateString(),
-                    'type' => 'emergency',
+                    'date' => now()->addDays(13)->toDateString(),
+                    'type' => 'personal',
                     'status' => 'cancelled',
                     'note' => 'A reason for the time off.',
                 ],

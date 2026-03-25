@@ -3,11 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\Employee;
-use App\Models\EmployeeService;
+use App\Models\EmployeeServiceConfiguration;
+use App\Models\EmployeeServiceConfigurationItem;
 use App\Models\Service;
 use Illuminate\Database\Seeder;
 
-class EmployeeServiceSeeder extends Seeder
+class EmployeeServiceConfigurationSeeder extends Seeder
 {
     public function run(): void
     {
@@ -22,20 +23,23 @@ class EmployeeServiceSeeder extends Seeder
         foreach ($definitions as $employeeName => $serviceNames) {
             $employee = Employee::where('name', $employeeName)->first();
 
-            if (!$employee) {
-                continue;
-            }
+            $configuration = EmployeeServiceConfiguration::create([
+                'employee_id' => $employee->id,
+                'valid_from' => now()->startOfDay(),
+                'valid_to' => null,
+            ]);
 
             foreach ($serviceNames as $serviceName) {
                 $service = Service::where('name', $serviceName)->first();
 
-                if (!$service) {
-                    continue;
-                }
+                $usesDefaultValues = (bool) random_int(0, 1);
 
-                EmployeeService::create([
-                    'employee_id' => $employee->id,
+                EmployeeServiceConfigurationItem::create([
+                    'configuration_id' => $configuration->id,
                     'service_id' => $service->id,
+                    'uses_default_values' => $usesDefaultValues,
+                    'duration' => $usesDefaultValues ? null : 30,
+                    'price' => $usesDefaultValues ? null : 5000,
                 ]);
             }
         }

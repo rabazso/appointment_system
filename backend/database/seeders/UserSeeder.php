@@ -19,9 +19,9 @@ class UserSeeder extends Seeder
 
         for ($i = 0; $i < 10; $i++) {
             User::create([
-                'name' => $faker->name,
                 'email' => $faker->unique()->safeEmail,
                 'password' => Hash::make('password'),
+                'role' => 'customer',
                 'email_verified_at' => Carbon::now(),
             ]);
         }

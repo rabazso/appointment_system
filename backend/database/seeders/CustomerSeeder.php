@@ -21,28 +21,24 @@ class CustomerSeeder extends Seeder
                 'email' => $faker->unique()->safeEmail(),
                 'phone' => $faker->unique()->phoneNumber(),
             ];
-            
+
             if ($index % 2 === 0) {
-                $user = User::create(
-                [
+                $user = User::create([
                     'email' => $definition['email'],
                     'password' => Hash::make('password'),
-                    'role' => 'user',
+                    'role' => 'customer',
                     'email_verified_at' => now(),
-                ]
-                );
-            }
-            else {
+                ]);
+            } else {
                 $user = null;
-                Customer::create(
-                [
-                    'email' => $definition['email'],
-                    'user_id' => $user?->id,
-                    'name' => $definition['name'],
-                    'phone' => $definition['phone'],
-                ]
-            );
             }
+
+            Customer::create([
+                'email' => $definition['email'],
+                'user_id' => $user?->id,
+                'name' => $definition['name'],
+                'phone' => $definition['phone'],
+            ]);
         }
     }
 }
