@@ -10,17 +10,10 @@ return new class extends Migration
     {
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')
-                ->constrained()
-                ->cascadeOnDelete();
-            $table->foreignId('employee_id')
-                ->constrained()
-                ->cascadeOnDelete();
-            $table->foreignId('service_id')
-                ->constrained()
-                ->cascadeOnDelete();
-            $table->integer('duration');
-            $table->integer('price');
+            $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
+            $table->integer('total_duration');
+            $table->integer('total_price');
             $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled', 'no_show']);
             $table->text('customer_note')->nullable();
             $table->dateTime('start_datetime');

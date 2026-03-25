@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('role', ['user', 'employee', 'admin'])->default('user');
+            $table->enum('role', ['customer', 'employee', 'admin'])->default('customer');
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();
         });

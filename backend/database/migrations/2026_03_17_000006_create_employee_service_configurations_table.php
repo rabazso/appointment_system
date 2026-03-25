@@ -8,22 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('employee_service_versions', function (Blueprint $table) {
+        Schema::create('employee_service_configurations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('employee_service_id')
-                ->constrained()
-                ->cascadeOnDelete();
-            $table->integer('duration');
-            $table->integer('price');
+            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
             $table->dateTime('valid_from');
             $table->dateTime('valid_to')->nullable();
-            $table->boolean('is_active')->default(true);
             $table->timestamps();
-        });
+});
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('employee_service_versions');
+        Schema::dropIfExists('employee_service_configurations');
     }
 };

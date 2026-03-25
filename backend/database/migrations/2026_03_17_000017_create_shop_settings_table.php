@@ -10,12 +10,8 @@ return new class extends Migration
     {
         Schema::create('shop_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('shop_name')->default('My Shop');
-            $table->string('shop_logo')->nullable();
-            $table->integer('max_advance_booking_days');
-            $table->integer('cancellation_deadline_hours');
-            $table->integer('slot_interval_minutes');
-            $table->boolean('sync_opening_hours_with_employee_schedule')->default(false);
+            $table->string('logo_path')->nullable();
+            $table->text('about_us_text')->nullable();
             $table->timestamps();
         });
     }

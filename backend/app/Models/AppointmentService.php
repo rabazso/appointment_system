@@ -4,15 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ServiceVersion extends Model
+class AppointmentService extends Model
 {
     protected $fillable = [
+        'appointment_id',
         'service_id',
-        'default_duration',
-        'default_price',
-        'valid_from',
-        'valid_to',
+        'duration',
+        'price',
     ];
+
+    public function appointment()
+    {
+        return $this->belongsTo(Appointment::class);
+    }
 
     public function service()
     {

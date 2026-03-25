@@ -24,17 +24,12 @@ class Employee extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function services()
+    public function configurations()
     {
-        return $this->belongsToMany(Service::class, 'employee_services');
+        return $this->hasMany(EmployeeServiceConfiguration::class);
     }
 
-    public function employeeServices()
-    {
-        return $this->hasMany(EmployeeService::class);
-    }
-
-    public function image()
+    public function images()
     {
         return $this->hasMany(EmployeeImage::class);
     }
@@ -49,7 +44,7 @@ class Employee extends Model
         return $this->hasMany(EmployeeBreak::class);
     }
 
-    public function timeOff()
+    public function timeOffRequests()
     {
         return $this->hasMany(EmployeeTimeOff::class);
     }

@@ -8,20 +8,12 @@ class Appointment extends Model
     protected $fillable = [
         'customer_id',
         'employee_id',
-        'service_id',
-        'duration',
-        'price',
+        'total_duration',
+        'total_price',
         'status',
         'customer_note',
         'start_datetime',
         'end_datetime',
-    ];
-
-    protected $casts = [
-        'duration' => 'integer',
-        'price' => 'integer',
-        'start_datetime' => 'datetime',
-        'end_datetime' => 'datetime'
     ];
 
     public function customer()
@@ -34,9 +26,9 @@ class Appointment extends Model
         return $this->belongsTo(Employee::class);
     }
 
-    public function service()
+    public function appointmentServices()
     {
-        return $this->belongsTo(Service::class);
+        return $this->hasMany(AppointmentService::class);
     }
 
     public function review()

@@ -8,19 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('service_versions', function (Blueprint $table) {
+        Schema::create('appointment_services', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('appointment_id')->constrained()->cascadeOnDelete();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
-            $table->integer('default_duration');
-            $table->integer('default_price');
-            $table->dateTime('valid_from');
-            $table->dateTime('valid_to')->nullable();
+            $table->integer('duration');
+            $table->integer('price');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('service_versions');
+        Schema::dropIfExists('appointment_services');
     }
 };

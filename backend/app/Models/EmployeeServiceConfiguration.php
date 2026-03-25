@@ -4,14 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class EmployeeVersion extends Model
+class EmployeeServiceConfiguration extends Model
 {
     protected $fillable = [
         'employee_id',
-        'uses_default_booking_interval',
-        'booking_interval_minutes',
-        'uses_default_booking_window',
-        'booking_window_days',
         'valid_from',
         'valid_to',
     ];
@@ -19,5 +15,10 @@ class EmployeeVersion extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(EmployeeServiceConfigurationItem::class, 'configuration_id');
     }
 }

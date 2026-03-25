@@ -14,11 +14,6 @@ class Review extends Model
         'is_visible',
     ];
 
-    protected $casts = [
-        'rating' => 'integer',
-        'is_visible' => 'boolean',
-    ];
-
     public function customer()
     {
         return $this->belongsTo(Customer::class);

@@ -10,9 +10,9 @@ class Service extends Model
         'description',
     ];
 
-    public function employees()
+    public function configurationItems()
     {
-        return $this->belongsToMany(Employee::class, 'employee_services');
+        return $this->hasMany(EmployeeServiceConfigurationItem::class);
     }
 
     public function versions()
@@ -20,13 +20,8 @@ class Service extends Model
         return $this->hasMany(ServiceVersion::class);
     }
 
-    public function employeeServices()
+    public function appointmentServices()
     {
-        return $this->hasMany(EmployeeService::class);
-    }
-
-    public function appointments()
-    {
-        return $this->hasMany(Appointment::class);
+        return $this->hasMany(AppointmentService::class);
     }
 }

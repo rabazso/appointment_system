@@ -15,11 +15,6 @@ class EmployeeBreak extends Model
         'valid_to',
     ];
 
-    protected $casts = [
-        'valid_from' => 'date',
-        'valid_to' => 'date',
-    ];
-
     public function employee()
     {
         return $this->belongsTo(Employee::class);

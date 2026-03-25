@@ -8,19 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('shop_holidays', function (Blueprint $table) {
+        Schema::create('shop_opening_hours', function (Blueprint $table) {
             $table->id();
-            $table->date('date');
-            $table->string('name');
-            $table->boolean('is_open')->default(false);
+            $table->integer('weekday');
             $table->time('open_time')->nullable();
             $table->time('close_time')->nullable();
+            $table->date('valid_from');
+            $table->date('valid_to')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('shop_holidays');
+        Schema::dropIfExists('shop_opening_hours');
     }
 };
