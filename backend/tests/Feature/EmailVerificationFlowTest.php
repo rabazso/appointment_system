@@ -96,6 +96,30 @@ class EmailVerificationFlowTest extends TestCase
         Notification::assertSentTo($user, VerifyEmailNotification::class);
     }
 
+    public function test_verified_customer_can_log_in_and_receives_a_serialized_verification_timestamp(): void
+    {
+        $user = $this->createUser([
+            'role' => 'customer',
+            'email_verified_at' => now(),
+        ]);
+
+        $response = $this->postJson('/api/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Logged in')
+            ->assertJsonPath('user.id', $user->id)
+            ->assertJsonPath('user.role', 'customer')
+            ->assertJsonPath('user.verified', true)
+            ->assertJsonPath('user.email_verified_at', $user->fresh()->email_verified_at?->toIso8601String());
+
+        $this->assertIsString($response->json('token'));
+        $this->assertNotSame('', $response->json('token'));
+    }
+
+
     private function verificationUrlFor(User $user): string
     {
         return URL::temporarySignedRoute(
@@ -115,7 +139,7 @@ class EmailVerificationFlowTest extends TestCase
             'name' => 'Test User',
             'email' => 'user-' . Str::uuid() . '@example.test',
             'password' => bcrypt('password'),
-            'role' => 'user',
+            'role' => 'customer',
             'email_verified_at' => now(),
         ];
 
