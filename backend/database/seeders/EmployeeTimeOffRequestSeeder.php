@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Employee;
-use App\Models\EmployeeTimeOff;
+use App\Models\EmployeeTimeOffRequest;
 use Illuminate\Database\Seeder;
 
 class EmployeeTimeOffRequestSeeder extends Seeder
@@ -13,7 +13,7 @@ class EmployeeTimeOffRequestSeeder extends Seeder
         $definitions = [
             'Blowout Ben' => [
                 [
-                    'date' => now()->addDays(7)->toDateString(),
+                    'date' => now()->addDays(3)->toDateString(),
                     'type' => 'sickness',
                     'status' => 'pending',
                     'note' => 'A reason for the time off.',
@@ -21,7 +21,7 @@ class EmployeeTimeOffRequestSeeder extends Seeder
             ],
             'Crispy Chris' => [
                 [
-                    'date' => now()->addDays(8)->toDateString(),
+                    'date' => now()->addDays(7)->toDateString(),
                     'type' => 'vacation',
                     'status' => 'cancelled',
                     'note' => 'A reason for the time off.',
@@ -37,7 +37,7 @@ class EmployeeTimeOffRequestSeeder extends Seeder
             ],
             'Loud Lucy' => [
                 [
-                    'date' => now()->addDays(13)->toDateString(),
+                    'date' => now()->addDays(14)->toDateString(),
                     'type' => 'personal',
                     'status' => 'cancelled',
                     'note' => 'A reason for the time off.',
@@ -49,7 +49,7 @@ class EmployeeTimeOffRequestSeeder extends Seeder
             $employee = Employee::where('name', $employeeName)->first();
 
             foreach ($timeOffEntries as $entry) {
-                EmployeeTimeOff::create([
+                EmployeeTimeOffRequest::create([
                     'employee_id' => $employee->id,
                     'date' => $entry['date'],
                     'type' => $entry['type'],

@@ -3,10 +3,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class EmployeeTimeOff extends Model
+class EmployeeTimeOffRequest extends Model
 {
-    protected $table = 'employee_time_off_requests';
-
     protected $fillable = [
         'employee_id',
         'date',
