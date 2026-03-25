@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Employee;
 use App\Models\User;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -119,6 +120,57 @@ class EmailVerificationFlowTest extends TestCase
         $this->assertNotSame('', $response->json('token'));
     }
 
+    public function test_verified_employee_can_log_in_and_receives_a_serialized_verification_timestamp(): void
+    {
+        $user = $this->createUser([
+            'role' => 'employee',
+            'email_verified_at' => now(),
+        ]);
+
+        Employee::create([
+            'user_id' => $user->id,
+            'name' => 'Barber Test',
+            'phone' => 'employee-' . Str::uuid(),
+            'bio' => 'Test barber profile.',
+            'photo_path' => null,
+            'instagram_url' => null,
+        ]);
+
+        $response = $this->postJson('/api/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Logged in')
+            ->assertJsonPath('user.id', $user->id)
+            ->assertJsonPath('user.role', 'employee')
+            ->assertJsonPath('user.verified', true)
+            ->assertJsonPath('user.email_verified_at', $user->fresh()->email_verified_at?->toIso8601String());
+
+        $this->assertIsString($response->json('token'));
+        $this->assertNotSame('', $response->json('token'));
+    }
+
+    public function test_unverified_user_cannot_log_in_and_receives_the_verification_message(): void
+    {
+        Notification::fake();
+
+        $user = $this->createUser([
+            'role' => 'customer',
+            'email_verified_at' => null,
+        ]);
+
+        $this->postJson('/api/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertStatus(403)
+            ->assertJson([
+                'message' => 'Email address is not verified. A new verification link was sent.',
+            ]);
+
+        Notification::assertSentTo($user, VerifyEmailNotification::class);
+    }
 
     private function verificationUrlFor(User $user): string
     {
