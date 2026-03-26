@@ -9,10 +9,9 @@ use App\Http\Resources\EmployeeResource;
 use App\Http\Requests\EmployeeRequest;
 use App\Http\Requests\UpdateBarberProfileRequest;
 use App\Http\Requests\UploadBarberGalleryImageRequest;
-use App\Models\EmployeeGallery;
+use App\Models\EmployeeImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
 {
@@ -31,8 +30,7 @@ class EmployeeController extends Controller
         }
 
         $employee->load([
-            'user:id,name',
-            'gallery' => fn ($query) => $query->select('id', 'employee_id', 'image_url')->orderByDesc('id'),
+            'gallery' => fn ($query) => $query->select('id', 'employee_id', 'image_path')->orderByDesc('id'),
         ]);
 
         return new BarberProfileResource($employee);
@@ -47,18 +45,14 @@ class EmployeeController extends Controller
 
         $validated = $request->validated();
 
-        $request->user()->forceFill([
-            'name' => $validated['name'],
-        ])->save();
-
+        $employee->name = $validated['name'];
         $employee->bio = $validated['description'] ?? null;
 
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('images/' . $employee->id, 'public');
-            $photoUrl = $this->publicUrlFromPath($path);
-            $employee->photo_url = $photoUrl;
+            $employee->photo_path = $path;
             $employee->gallery()->create([
-                'image_url' => $photoUrl,
+                'image_path' => $path,
             ]);
         }
 
@@ -78,7 +72,7 @@ class EmployeeController extends Controller
 
         $path = $validated['image']->store('images/' . $employee->id, 'public');
         $gallery = $employee->gallery()->create([
-            'image_url' => $this->publicUrlFromPath($path),
+            'image_path' => $path,
         ]);
 
         return (new EmployeeGalleryResource($gallery))
@@ -86,7 +80,7 @@ class EmployeeController extends Controller
             ->setStatusCode(201);
     }
 
-    public function deleteBarberGalleryImage(Request $request, EmployeeGallery $gallery)
+    public function deleteBarberGalleryImage(Request $request, EmployeeImage $gallery)
     {
         $employee = $request->user()->employee;
         if (!$employee) {
@@ -97,50 +91,12 @@ class EmployeeController extends Controller
             return response()->json(['message' => 'You are not allowed to delete this image'], 403);
         }
 
-        $storedPath = $this->extractPublicPathFromUrl($gallery->image_url);
-        if ($storedPath) {
-            Storage::disk('public')->delete($storedPath);
+        if ($gallery->image_path) {
+            Storage::disk('public')->delete($gallery->image_path);
         }
 
         $gallery->delete();
 
         return response()->json(['message' => 'Image deleted']);
-    }
-
-    private function publicUrlFromPath(string $path): string
-    {
-        $relative = Storage::disk('public')->url($path);
-
-        if (Str::startsWith($relative, ['http://', 'https://'])) {
-            return $relative;
-        }
-
-        $baseUrl = rtrim((string) config('app.url'), '/');
-        if ($baseUrl !== '' && !preg_match('#^https?://#', $baseUrl)) {
-            $baseUrl = 'http://' . $baseUrl;
-        }
-
-        return $baseUrl === '' ? $relative : $baseUrl . $relative;
-    }
-
-    private function extractPublicPathFromUrl(?string $url): ?string
-    {
-        if (!$url) {
-            return null;
-        }
-
-        $parts = parse_url($url);
-        $path = $parts['path'] ?? null;
-        if (!$path) {
-            return null;
-        }
-
-        $storagePrefix = '/storage/';
-        $position = strpos($path, $storagePrefix);
-        if ($position === false) {
-            return null;
-        }
-
-        return substr($path, $position + strlen($storagePrefix));
     }
 }

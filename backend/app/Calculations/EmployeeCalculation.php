@@ -22,7 +22,7 @@ class EmployeeCalculation
         }
 
         $employees = Employee::query()
-            ->with(['user:id,name,email'])
+            ->with(['user:id,email'])
             ->when(
                 $serviceId,
                 fn($x) =>

@@ -15,7 +15,7 @@ class BarberProfileResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
-            'name' => $this->user?->name,
+            'name' => $this->name,
             'description' => $this->bio,
             'photo_url' => $this->photo_url,
             'gallery' => EmployeeGalleryResource::collection($this->whenLoaded('gallery')),
