@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class EmployeeServiceConfigurationItem extends Model
+class EmployeeService extends Model
 {
     protected $fillable = [
         'configuration_id',

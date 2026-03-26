@@ -11,9 +11,9 @@ class Service extends Model
         'description',
     ];
 
-    public function configurationItems()
+    public function employeeServices()
     {
-        return $this->hasMany(EmployeeServiceConfigurationItem::class);
+        return $this->hasMany(EmployeeService::class);
     }
 
     public function versions()

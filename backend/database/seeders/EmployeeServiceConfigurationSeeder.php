@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Employee;
 use App\Models\EmployeeServiceConfiguration;
-use App\Models\EmployeeServiceConfigurationItem;
+use App\Models\EmployeeService;
 use App\Models\Service;
 use Illuminate\Database\Seeder;
 
@@ -34,7 +34,7 @@ class EmployeeServiceConfigurationSeeder extends Seeder
 
                 $usesDefaultValues = (bool) random_int(0, 1);
 
-                EmployeeServiceConfigurationItem::create([
+                EmployeeService::create([
                     'configuration_id' => $configuration->id,
                     'service_id' => $service->id,
                     'uses_default_values' => $usesDefaultValues,

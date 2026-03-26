@@ -17,8 +17,8 @@ class EmployeeServiceConfiguration extends Model
         return $this->belongsTo(Employee::class);
     }
 
-    public function items()
+    public function services()
     {
-        return $this->hasMany(EmployeeServiceConfigurationItem::class, 'configuration_id');
+        return $this->hasMany(EmployeeService::class, 'configuration_id');
     }
 }
