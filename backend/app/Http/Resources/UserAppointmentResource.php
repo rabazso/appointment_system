@@ -18,14 +18,14 @@ class UserAppointmentResource extends JsonResource
             'display_status' => $this->displayStatus(),
             'start_datetime' => $this->start_datetime?->toIso8601String(),
             'end_datetime' => $this->end_datetime?->toIso8601String(),
-            'price' => $this->price,
+            'price' => $this->total_price,
             'service' => [
                 'id' => $this->service?->id,
                 'name' => $this->service?->name,
             ],
             'employee' => [
                 'id' => $this->employee?->id,
-                'name' => $this->employee?->user?->name,
+                'name' => $this->employee?->name,
             ],
         ];
     }
