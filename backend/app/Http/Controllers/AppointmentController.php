@@ -34,7 +34,11 @@ class AppointmentController extends Controller
     public function store(AppointmentStoreRequest $request, CreateAppointment $create)
     {
         $appointment = $create->Create($request);
-        $appointment->loadMissing(['service:id,name', 'employee.user:id,name', 'customer:id,name,email']);
+        $appointment->loadMissing([
+            'service' => fn ($query) => $query->select('services.id', 'services.name'),
+            'employee:id,name',
+            'customer:id,name,email',
+        ]);
 
         $confirmationLink = $this->buildConfirmationLink($appointment);
         
@@ -66,8 +70,8 @@ class AppointmentController extends Controller
         $appointments = Appointment::query()
             ->where('customer_id', $request->user()->id)
             ->with([
-                'service:id,name',
-                'employee.user:id,name',
+                'service' => fn ($query) => $query->select('services.id', 'services.name'),
+                'employee:id,name',
             ])
             ->orderByDesc('start_datetime')
             ->get();
@@ -92,7 +96,11 @@ class AppointmentController extends Controller
             "status" => "confirmed",
             "confirmed_at" => now(),
         ])->save();
-        $appointment->load(['service', 'employee.user', 'employee.services']);
+        $appointment->load([
+            'service' => fn ($query) => $query->select('services.id', 'services.name'),
+            'employee:id,name',
+            'appointmentServices:id,appointment_id,price',
+        ]);
         $summary = $this->buildSummary($appointment);
         $query = http_build_query($summary, '', '&', PHP_QUERY_RFC3986);
         $recipientEmail = $appointment->customer?->email ?? $appointment->guest_email;
@@ -136,7 +144,7 @@ class AppointmentController extends Controller
         $appointments = Appointment::query()
             ->where('employee_id', $employee->id)
             ->with([
-                'service:id,name',
+                'service' => fn ($query) => $query->select('services.id', 'services.name'),
                 'customer:id,name',
             ])
             ->orderBy('start_datetime')
@@ -215,18 +223,11 @@ class AppointmentController extends Controller
     {
         $employee = $appointment->employee;
         $service = $appointment->service;
-        $price = null;
-
-        if ($employee && $employee->relationLoaded('services')) {
-            $serviceMatch = $employee->services->firstWhere('id', $appointment->service_id);
-            if ($serviceMatch && $serviceMatch->pivot) {
-                $price = $serviceMatch->pivot->price;
-            }
-        }
+        $price = $appointment->appointmentServices->first()?->price ?? $appointment->total_price;
 
         return [
             'serviceName' => $service?->name,
-            'barberName' => $employee?->user?->name,
+            'barberName' => $employee?->name,
             'date' => optional($appointment->start_datetime)->format('Y-m-d'),
             'time' => optional($appointment->start_datetime)->format('H:i'),
             'price' => $price,
@@ -264,8 +265,8 @@ class AppointmentController extends Controller
     {
         $appointment->loadMissing([
             'customer:id,name,email',
-            'service:id,name',
-            'employee.user:id,name',
+            'service' => fn ($query) => $query->select('services.id', 'services.name'),
+            'employee:id,name',
         ]);
 
         if (!$appointment->customer?->email) {
@@ -297,8 +298,8 @@ class AppointmentController extends Controller
     {
         $appointment->loadMissing([
             'customer:id,name,email',
-            'service:id,name',
-            'employee.user:id,name',
+            'service' => fn ($query) => $query->select('services.id', 'services.name'),
+            'employee:id,name',
         ]);
 
         $recipientEmail = $appointment->customer?->email ?? $appointment->guest_email;
