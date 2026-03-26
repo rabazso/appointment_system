@@ -8,20 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('employee_breaks', function (Blueprint $table) {
+        Schema::create('employee_working_hours', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('schedule_configuration_id')->nullable()->constrained('employee_schedule_configurations')->cascadeOnDelete();
             $table->integer('weekday');
             $table->time('start_time');
             $table->time('end_time');
-            $table->date('valid_from');
-            $table->date('valid_to')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('employee_breaks');
+        Schema::dropIfExists('employee_working_hours');
     }
 };

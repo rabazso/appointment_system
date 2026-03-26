@@ -7,16 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class EmployeeBreak extends Model
 {
     protected $fillable = [
-        'employee_id',
+        'schedule_configuration_id',
         'weekday',
         'start_time',
         'end_time',
-        'valid_from',
-        'valid_to',
     ];
 
-    public function employee()
+    public function scheduleConfiguration()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(EmployeeScheduleConfiguration::class, 'schedule_configuration_id');
     }
 }

@@ -24,24 +24,19 @@ class Employee extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function configurations()
+    public function serviceConfigurations()
     {
         return $this->hasMany(EmployeeServiceConfiguration::class);
+    }
+
+    public function scheduleConfigurations()
+    {
+        return $this->hasMany(EmployeeScheduleConfiguration::class);
     }
 
     public function images()
     {
         return $this->hasMany(EmployeeImage::class);
-    }
-
-    public function workingHours()
-    {
-        return $this->hasMany(EmployeeWorkingHour::class);
-    }
-
-    public function breaks()
-    {
-        return $this->hasMany(EmployeeBreak::class);
     }
 
     public function timeOffRequests()

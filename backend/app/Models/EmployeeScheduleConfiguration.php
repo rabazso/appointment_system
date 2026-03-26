@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Models;
+
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+
+class EmployeeScheduleConfiguration extends Model
+{
+    protected $fillable = [
+        'employee_id',
+        'valid_from',
+        'valid_to',
+    ];
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function workingHours()
+    {
+        return $this->hasMany(EmployeeWorkingHour::class, 'schedule_configuration_id');
+    }
+
+    public function breaks()
+    {
+        return $this->hasMany(EmployeeBreak::class, 'schedule_configuration_id');
+    }
+}

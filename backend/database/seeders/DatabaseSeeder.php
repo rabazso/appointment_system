@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             EmployeeSeeder::class,
             EmployeeVersionSeeder::class,
             EmployeeServiceConfigurationSeeder::class,
+            EmployeeScheduleConfigurationSeeder::class,
             EmployeeImageSeeder::class,
             EmployeeWorkingHourSeeder::class,
             EmployeeBreakSeeder::class,
