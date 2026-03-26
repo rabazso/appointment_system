@@ -15,7 +15,7 @@ class ReviewController extends Controller
      */
     public function index()
     {
-        return ReviewResource::collection(Review::with('user')->latest()->paginate(3));
+        return ReviewResource::collection(Review::with('customer')->latest()->paginate(3));
     }
 
     /**
@@ -23,11 +23,13 @@ class ReviewController extends Controller
      */
     public function store(StoreReviewRequest $request)
     {
+        $customer = $request->user()?->customer;
+
         $review = Review::create(
             array_merge($request->validated(), [
-                "user_id" => $request->user()->id,
+                "customer_id" => $customer?->id,
             ])
-        )->load('user');
+        )->load('customer');
 
         return new ReviewResource($review);
     }

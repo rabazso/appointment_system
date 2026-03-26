@@ -204,13 +204,13 @@ class AppointmentController extends Controller
 
         $reviews = Review::query()
             ->whereHas('appointment', fn ($q) => $q->where('employee_id', $employee->id))
-            ->with(['user:id,name'])
+            ->with(['customer:id,name'])
             ->latest()
             ->limit(3)
             ->get()
             ->map(fn (Review $review) => [
                 'id' => $review->id,
-                'client' => $review->user?->name ?? 'Guest',
+                'client' => $review->customer?->name ?? 'Guest',
                 'rating' => $review->rating,
                 'text' => $review->comment,
             ])

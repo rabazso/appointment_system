@@ -22,7 +22,7 @@ class StoreReviewRequest extends FormRequest
      */
     public function rules(): array
     {
-        $customerId = $this->user()?->id;
+        $customerId = $this->user()?->customer?->id;
 
         return [
             "appointment_id" => [
