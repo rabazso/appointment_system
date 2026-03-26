@@ -16,11 +16,6 @@ class Appointment extends Model
         'end_datetime',
     ];
 
-    protected $casts = [
-        'start_datetime' => 'datetime',
-        'end_datetime' => 'datetime',
-    ];
-
     public function customer()
     {
         return $this->belongsTo(Customer::class);
@@ -29,18 +24,6 @@ class Appointment extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class);
-    }
-
-    public function service()
-    {
-        return $this->hasOneThrough(
-            Service::class,
-            AppointmentService::class,
-            'appointment_id',
-            'id',
-            'id',
-            'service_id'
-        );
     }
 
     public function appointmentServices()

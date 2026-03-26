@@ -1,6 +1,8 @@
 <?php
 namespace App\Models;
 
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
@@ -23,5 +25,17 @@ class Service extends Model
     public function appointmentServices()
     {
         return $this->hasMany(AppointmentService::class);
+    }
+
+    public function resolveVersionAt(?string $at = null): ?ServiceVersion
+    {
+        $at = $at ? Carbon::parse($at) : now();
+
+        return $this->versions()->validAt($at)->first();
+    }
+
+    public function resolveCurrentVersion(): ?ServiceVersion
+    {
+        return $this->resolveVersionAt();
     }
 }

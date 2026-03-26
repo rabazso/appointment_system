@@ -2,8 +2,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class Employee extends Model
 {
@@ -36,11 +34,6 @@ class Employee extends Model
         return $this->hasMany(EmployeeImage::class);
     }
 
-    public function gallery()
-    {
-        return $this->hasMany(EmployeeImage::class);
-    }
-
     public function workingHours()
     {
         return $this->hasMany(EmployeeWorkingHour::class);
@@ -53,35 +46,11 @@ class Employee extends Model
 
     public function timeOffRequests()
     {
-        return $this->hasMany(EmployeeTimeOff::class);
+        return $this->hasMany(EmployeeTimeOffRequest::class);
     }
 
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
-    }
-
-    public function getPhotoUrlAttribute(): ?string
-    {
-        return $this->publicUrlForPath($this->photo_path);
-    }
-
-    private function publicUrlForPath(?string $path): ?string
-    {
-        if (!$path) {
-            return null;
-        }
-
-        $url = Storage::disk('public')->url($path);
-        if (Str::startsWith($url, ['http://', 'https://'])) {
-            return $url;
-        }
-
-        $baseUrl = rtrim((string) config('app.url'), '/');
-        if ($baseUrl !== '' && !preg_match('#^https?://#', $baseUrl)) {
-            $baseUrl = 'http://' . $baseUrl;
-        }
-
-        return $baseUrl === '' ? $url : $baseUrl . $url;
     }
 }

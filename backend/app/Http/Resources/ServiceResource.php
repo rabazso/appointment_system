@@ -16,10 +16,6 @@ class ServiceResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'default_duration' => $this->default_duration,
-            'default_price' => $this->default_price,
-            'duration' => $this->duration,
-            'active' => (bool) $this->active,
         ];
     }
 }
