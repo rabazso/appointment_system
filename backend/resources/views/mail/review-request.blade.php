@@ -24,7 +24,7 @@
       <p style="margin:0 0 14px; font-weight:700; font-size:15px; color:#000000;">{{ $appointment->service?->name }}</p>
 
       <p style="margin:0 0 6px; color:#6b7280; font-size:14px;">Barber</p>
-      <p style="margin:0; font-weight:700; font-size:15px; color:#000000;">{{ $appointment->employee?->user?->name }}</p>
+      <p style="margin:0; font-weight:700; font-size:15px; color:#000000;">{{ $appointment->employee?->name }}</p>
     </td>
   </tr>
 

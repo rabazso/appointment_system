@@ -27,7 +27,7 @@
         </tr>
         <tr style="border-bottom:1px solid rgba(0,0,0,0.1);">
           <td style="color:#6b7280; font-size:14px;">Barber:</td>
-          <td align="right" style="font-weight:700; font-size:14px; color:#000000;">{{ $appointment->employee?->user?->name }}</td>
+          <td align="right" style="font-weight:700; font-size:14px; color:#000000;">{{ $appointment->employee?->name }}</td>
         </tr>
         <tr style="border-bottom:1px solid rgba(0,0,0,0.1);">
           <td style="color:#6b7280; font-size:14px;">Date:</td>

@@ -12,7 +12,7 @@
                     </tr>
                     <tr>
                         <td style="padding:12px 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:15px; color:#667085;">Barber:</td>
-                        <td style="padding:12px 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:15px; font-weight:700; color:#000000;" align="right">{{ $appointment->employee?->user?->name ?? 'Barber' }}</td>
+                        <td style="padding:12px 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:15px; font-weight:700; color:#000000;" align="right">{{ $appointment->employee?->name ?? 'Barber' }}</td>
                     </tr>
                     <tr>
                         <td style="padding:12px 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:15px; color:#667085;">Date:</td>
