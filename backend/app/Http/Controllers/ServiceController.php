@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ServiceVersionAtRequest;
+use App\Http\Requests\IndexServiceVersionsRequest;
+use App\Http\Requests\ShowServiceValidVersionAtRequest;
 use App\Http\Resources\ServiceResource;
 use App\Http\Resources\ServiceVersionResource;
-use Illuminate\Http\Request;
 use App\Models\Service;
 
 class ServiceController extends Controller
@@ -18,55 +18,37 @@ class ServiceController extends Controller
         return ServiceResource::collection(Service::all());
     }
 
-    public function currentVersions(){
+    public function indexServicesWithValidVersion()
+    {
         $services = Service::all();
 
         $payload = $services->map(function (Service $service) {
-                return [
-                    'service' => new ServiceResource($service),
-                    'current_version' => new ServiceVersionResource($service->resolveCurrentVersion()),
-                ];
-            });
+            return [
+                'service' => new ServiceResource($service),
+                'valid_version' => new ServiceVersionResource($service->resolveValidVersion()),
+            ];
+        });
+
         return response()->json($payload);
     }
 
-    public function versionAt(ServiceVersionAtRequest $request, Service $service)
+    public function indexServiceVersions(IndexServiceVersionsRequest $request)
     {
+        $service = Service::findOrFail($request->validated()['service_id']);
+
+        return ServiceVersionResource::collection(
+            $service->versions
+        );
+    }
+
+    public function showServiceValidVersionAt(ShowServiceValidVersionAtRequest $request)
+    {
+        $service = Service::findOrFail($request->validated()['service_id']);
+        $date = $request->validated()['date'];
+
         return response()->json([
             'service' => new ServiceResource($service),
-            'version' => new ServiceVersionResource($service->resolveVersionAt($request->validated()['date'])),
+            'valid_version' => new ServiceVersionResource($service->resolveValidVersionAt($date)),
         ]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

@@ -20,6 +20,10 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
     ->name('verification.verify');
 
 Route::get('/services', [ServiceController::class, 'index']);
+Route::get('/services/versions/valid', [ServiceController::class, 'indexServicesWithValidVersion']);
+Route::get('/service-versions', [ServiceController::class, 'indexServiceVersions']);
+Route::get('/service-versions/valid-at', [ServiceController::class, 'showServiceValidVersionAt']);
+
 Route::get('/employees', [EmployeeController::class, 'index']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
 Route::post('/appointments', [AppointmentController::class, 'store']);
