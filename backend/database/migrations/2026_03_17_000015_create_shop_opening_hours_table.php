@@ -13,8 +13,6 @@ return new class extends Migration
             $table->integer('weekday');
             $table->time('open_time')->nullable();
             $table->time('close_time')->nullable();
-            $table->date('valid_from');
-            $table->date('valid_to')->nullable();
             $table->timestamps();
         });
     }

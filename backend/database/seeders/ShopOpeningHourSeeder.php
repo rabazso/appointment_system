@@ -15,10 +15,8 @@ class ShopOpeningHourSeeder extends Seeder
             ShopOpeningHour::create(
                 [
                     'weekday' => $weekday,
-                    'valid_from' => $today,
                     'open_time' => '10:00:00',
                     'close_time' => '20:00:00',
-                    'valid_to' => null,
                 ]
             );
         }
@@ -27,9 +25,7 @@ class ShopOpeningHourSeeder extends Seeder
             ShopOpeningHour::create(
                 [
                     'weekday' => $weekday,
-                    'valid_from' => $today,
                     'close_time' => null,
-                    'valid_to' => null,
                 ]
             );
         }

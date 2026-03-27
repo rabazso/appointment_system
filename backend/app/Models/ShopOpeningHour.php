@@ -11,7 +11,5 @@ class ShopOpeningHour extends Model
         'is_open',
         'open_time',
         'close_time',
-        'valid_from',
-        'valid_to',
     ];
 }
