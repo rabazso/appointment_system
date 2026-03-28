@@ -16,7 +16,7 @@ class AppointmentSeeder extends Seeder
     {
         $customers = Customer::query()->get();
         $configurations = EmployeeServiceConfiguration::query()
-            ->with(['employee', 'items.service.versions'])
+            ->with(['employee', 'services'])
             ->get();
 
         $statusOptions = ['pending', 'confirmed', 'completed', 'cancelled', 'no_show'];
@@ -32,7 +32,7 @@ class AppointmentSeeder extends Seeder
                 $configuration = $this->resolveConfigurationForDate($employeeConfigurations, $start);
 
 
-                $item = $configuration->items->random();
+                $item = $configuration->services->random();
                 $serviceVersion = $this->resolveServiceVersionForDate($item->service->versions, $start);
 
                 $duration = $item->uses_default_values ? $serviceVersion->default_duration : $item->duration;
