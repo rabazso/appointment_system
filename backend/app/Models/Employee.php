@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
@@ -47,5 +48,12 @@ class Employee extends Model
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    public function resolveValidVersion(): ?EmployeeVersion
+    {
+        $date = now();
+
+        return $this->versions()->validAt($date)->first();
     }
 }

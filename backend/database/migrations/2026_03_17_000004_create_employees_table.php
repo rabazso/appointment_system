@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('name');
-            $table->string('phone')->unique();
+            $table->string('phone');
             $table->text('bio')->nullable();
             $table->string('photo_path')->nullable();
             $table->string('instagram_url')->nullable();

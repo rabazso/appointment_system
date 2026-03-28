@@ -2,101 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use App\Calculations\EmployeeCalculation;
-use App\Http\Resources\BarberProfileResource;
-use App\Http\Resources\EmployeeGalleryResource;
+use App\Http\Requests\StoreEmployeeRequest;
+use App\Http\Requests\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
-use App\Http\Requests\EmployeeRequest;
-use App\Http\Requests\UpdateBarberProfileRequest;
-use App\Http\Requests\UploadBarberGalleryImageRequest;
-use App\Models\EmployeeImage;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\EmployeeVersionResource;
+use App\Models\Employee;
+use Illuminate\Http\JsonResponse;
 
 class EmployeeController extends Controller
 {
-    public function index(EmployeeRequest $request, EmployeeCalculation $calculation)
+    public function index()
     {
-        $employees = $calculation->Employees($request);
-
-        return EmployeeResource::collection($employees);
+        return EmployeeResource::collection(Employee::all());
     }
 
-    public function barberProfile(Request $request)
+    public function store(StoreEmployeeRequest $request): EmployeeResource
     {
-        $employee = $request->user()->employee;
-        if (!$employee) {
-            return response()->json(['message' => 'Barber profile not found'], 404);
-        }
+        $employee = Employee::create($request->validated());
 
-        $employee->load([
-            'gallery' => fn ($query) => $query->select('id', 'employee_id', 'image_path')->orderByDesc('id'),
-        ]);
-
-        return new BarberProfileResource($employee);
+        return new EmployeeResource($employee);
     }
 
-    public function updateBarberProfile(UpdateBarberProfileRequest $request)
+    public function update(UpdateEmployeeRequest $request, Employee $employee): EmployeeResource
     {
-        $employee = $request->user()->employee;
-        if (!$employee) {
-            return response()->json(['message' => 'Barber profile not found'], 404);
-        }
+        $employee->update($request->validated());
 
-        $validated = $request->validated();
-
-        $employee->name = $validated['name'];
-        $employee->bio = $validated['description'] ?? null;
-
-        if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('images/' . $employee->id, 'public');
-            $employee->photo_path = $path;
-            $employee->gallery()->create([
-                'image_path' => $path,
-            ]);
-        }
-
-        $employee->save();
-
-        return $this->barberProfile($request);
+        return new EmployeeResource($employee);
     }
 
-    public function uploadBarberGalleryImage(UploadBarberGalleryImageRequest $request)
+    public function destroy(Employee $employee): JsonResponse
     {
-        $employee = $request->user()->employee;
-        if (!$employee) {
-            return response()->json(['message' => 'Barber profile not found'], 404);
-        }
+        $employee->delete();
 
-        $validated = $request->validated();
-
-        $path = $validated['image']->store('images/' . $employee->id, 'public');
-        $gallery = $employee->gallery()->create([
-            'image_path' => $path,
-        ]);
-
-        return (new EmployeeGalleryResource($gallery))
-            ->response()
-            ->setStatusCode(201);
+        return response()->json(['message' => 'Employee deleted successfully']);
     }
 
-    public function deleteBarberGalleryImage(Request $request, EmployeeImage $gallery)
+    public function indexEmployeesWithValidVersion()
     {
-        $employee = $request->user()->employee;
-        if (!$employee) {
-            return response()->json(['message' => 'Barber profile not found'], 404);
-        }
+        $employees = Employee::all();
 
-        if ($gallery->employee_id !== $employee->id) {
-            return response()->json(['message' => 'You are not allowed to delete this image'], 403);
-        }
+        $payload = $employees->map(function (Employee $employee) {
+            return [
+                'employee' => new EmployeeResource($employee),
+                'valid_version' => new EmployeeVersionResource($employee->resolveValidVersion()),
+            ];
+        });
 
-        if ($gallery->image_path) {
-            Storage::disk('public')->delete($gallery->image_path);
-        }
-
-        $gallery->delete();
-
-        return response()->json(['message' => 'Image deleted']);
+        return response()->json($payload);
     }
 }
