@@ -7,6 +7,7 @@ use App\Http\Controllers\ForgotPasswordController;
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeVersionController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\ResetPasswordTokenController;
 use App\Http\Controllers\ReviewController;
@@ -26,6 +27,9 @@ Route::get('/service-versions', [ServiceVersionController::class, 'index']);
 Route::get('/service-versions/valid-at', [ServiceVersionController::class, 'ShowServiceVersionValidAt']);
 
 Route::get('/employees', [EmployeeController::class, 'index']);
+Route::get('/employees/versions/valid', [EmployeeController::class, 'indexEmployeesWithValidVersion']);
+Route::get('/employee-versions', [EmployeeVersionController::class, 'index']);
+Route::get('/employee-versions/valid-at', [EmployeeVersionController::class, 'ShowEmployeeVersionValidAt']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
 Route::post('/appointments', [AppointmentController::class, 'store']);
 
@@ -40,18 +44,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/services', [ServiceController::class, 'store']);
     Route::patch('/services/{service}', [ServiceController::class, 'update']);
     Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+    Route::post('/employees', [EmployeeController::class, 'store']);
+    Route::patch('/employees/{employee}', [EmployeeController::class, 'update']);
+    Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
+    Route::post('/employee-versions', [EmployeeVersionController::class, 'store']);
+    Route::patch('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'update']);
+    Route::delete('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'destroy']);
     Route::post('/service-versions', [ServiceVersionController::class, 'store']);
     Route::patch('/service-versions/{serviceVersion}', [ServiceVersionController::class, 'update']);
     Route::delete('/service-versions/{serviceVersion}', [ServiceVersionController::class, 'destroy']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/barber/appointments', [AppointmentController::class, 'barberAppointments']);
-    Route::post('/barber/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelBarberAppointment']);
-    Route::post('/barber/appointments/{appointment}/complete', [AppointmentController::class, 'completeBarberAppointment']);
-    Route::get('/barber/reviews', [AppointmentController::class, 'barberReviews']);
-    Route::get('/barber/profile', [EmployeeController::class, 'barberProfile']);
-    Route::post('/barber/profile', [EmployeeController::class, 'updateBarberProfile']);
-    Route::post('/barber/profile/gallery', [EmployeeController::class, 'uploadBarberGalleryImage']);
-    Route::delete('/barber/profile/gallery/{gallery}', [EmployeeController::class, 'deleteBarberGalleryImage']);
     Route::get('/user/appointments', [AppointmentController::class, 'userAppointments']);
     Route::post('/user/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelUserAppointment']);
     Route::post('/email/verification-notification', [AuthController::class, 'resendVerification'])
