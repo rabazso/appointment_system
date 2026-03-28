@@ -26,16 +26,9 @@ class Service extends Model
         return $this->hasMany(AppointmentService::class);
     }
 
-    public function resolveValidVersionAt(?string $date): ?ServiceVersion
-    {
-        $date = $date ? Carbon::parse($date) : now();
-
-        return $this->versions()
-            ->validAt($date)->first();
-    }
-
     public function resolveValidVersion(): ?ServiceVersion
     {
-        return $this->resolveValidVersionAt(null);
+        $date =  now();
+        return $this->versions()->validAt($date)->first();
     }
 }

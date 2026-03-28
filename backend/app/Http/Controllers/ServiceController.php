@@ -2,20 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\IndexServiceVersionsRequest;
-use App\Http\Requests\ShowServiceValidVersionAtRequest;
+use App\Http\Requests\StoreServiceRequest;
+use App\Http\Requests\UpdateServiceRequest;
 use App\Http\Resources\ServiceResource;
 use App\Http\Resources\ServiceVersionResource;
 use App\Models\Service;
+use Illuminate\Http\JsonResponse;
 
 class ServiceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         return ServiceResource::collection(Service::all());
+    }
+
+    public function store(StoreServiceRequest $request)
+    {
+        $service = Service::create($request->validated());
+
+        return new ServiceResource($service);
+    }
+
+
+    public function update(UpdateServiceRequest $request, Service $service): ServiceResource
+    {
+        $service->update($request->validated());
+
+        return new ServiceResource($service);
+    }
+
+    public function destroy(Service $service): JsonResponse
+    {
+        $service->delete();
+
+        return response()->json(['message' => 'Service deleted successfully']);
     }
 
     public function indexServicesWithValidVersion()
@@ -30,25 +50,5 @@ class ServiceController extends Controller
         });
 
         return response()->json($payload);
-    }
-
-    public function indexServiceVersions(IndexServiceVersionsRequest $request)
-    {
-        $service = Service::findOrFail($request->validated()['service_id']);
-
-        return ServiceVersionResource::collection(
-            $service->versions
-        );
-    }
-
-    public function showServiceValidVersionAt(ShowServiceValidVersionAtRequest $request)
-    {
-        $service = Service::findOrFail($request->validated()['service_id']);
-        $date = $request->validated()['date'];
-
-        return response()->json([
-            'service' => new ServiceResource($service),
-            'valid_version' => new ServiceVersionResource($service->resolveValidVersionAt($date)),
-        ]);
     }
 }

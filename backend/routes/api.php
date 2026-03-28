@@ -11,6 +11,7 @@ use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\ResetPasswordTokenController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ServiceVersionController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -21,8 +22,8 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
 
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/versions/valid', [ServiceController::class, 'indexServicesWithValidVersion']);
-Route::get('/service-versions', [ServiceController::class, 'indexServiceVersions']);
-Route::get('/service-versions/valid-at', [ServiceController::class, 'showServiceValidVersionAt']);
+Route::get('/service-versions', [ServiceVersionController::class, 'index']);
+Route::get('/service-versions/valid-at', [ServiceVersionController::class, 'ShowServiceVersionValidAt']);
 
 Route::get('/employees', [EmployeeController::class, 'index']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
@@ -36,6 +37,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::patch('/services/{service}', [ServiceController::class, 'update']);
+    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+    Route::post('/service-versions', [ServiceVersionController::class, 'store']);
+    Route::patch('/service-versions/{serviceVersion}', [ServiceVersionController::class, 'update']);
+    Route::delete('/service-versions/{serviceVersion}', [ServiceVersionController::class, 'destroy']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/barber/appointments', [AppointmentController::class, 'barberAppointments']);
     Route::post('/barber/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelBarberAppointment']);

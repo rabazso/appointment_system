@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class IndexServiceVersionsRequest extends FormRequest
+class ShowServiceVersionValidAtRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,7 +17,8 @@ class IndexServiceVersionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'service_id' => ['integer', 'exists:services,id'],
+            'service_id' => ['required', 'integer', 'exists:services,id'],
+            'date' => ['required', 'date'],
         ];
     }
 }
