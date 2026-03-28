@@ -20,7 +20,6 @@ class ShopSettingSeeder extends Seeder
             'default_booking_interval_minutes' => 15,
             'default_booking_window_days' => 30,
             'cancellation_deadline_hours' => 24,
-            'sync_opening_hours_with_employee_schedule' => false,
             'valid_from' => now()->startOfDay(),
             'valid_to' => null,
         ]);

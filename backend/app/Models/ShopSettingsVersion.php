@@ -11,7 +11,6 @@ class ShopSettingsVersion extends Model
         'default_booking_interval_minutes',
         'default_booking_window_days',
         'cancellation_deadline_hours',
-        'sync_opening_hours_with_employee_schedule',
         'valid_from',
         'valid_to',
     ];

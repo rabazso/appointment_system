@@ -14,7 +14,6 @@ return new class extends Migration
             $table->integer('default_booking_interval_minutes');
             $table->integer('default_booking_window_days');
             $table->integer('cancellation_deadline_hours');
-            $table->boolean('sync_opening_hours_with_employee_schedule')->default(false);
             $table->dateTime('valid_from');
             $table->dateTime('valid_to')->nullable();
             $table->timestamps();
