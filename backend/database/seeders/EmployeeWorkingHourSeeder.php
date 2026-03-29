@@ -11,13 +11,15 @@ class EmployeeWorkingHourSeeder extends Seeder
     public function run(): void
     {
         foreach (EmployeeScheduleConfiguration::all() as $configuration) {
-            for ($weekday = 1; $weekday <= 5; $weekday++) {
+            for ($weekday = 0; $weekday <= 6; $weekday++) {
+                $isWorkingDay = $weekday >= 1 && $weekday <= 5;
+
                 EmployeeWorkingHour::create(
                     [
                         'schedule_configuration_id' => $configuration->id,
                         'weekday' => $weekday,
-                        'start_time' => '09:00:00',
-                        'end_time' => '21:00:00',
+                        'start_time' => $isWorkingDay ? '09:00:00' : null,
+                        'end_time' => $isWorkingDay ? '21:00:00' : null,
                     ]
                 );
             }

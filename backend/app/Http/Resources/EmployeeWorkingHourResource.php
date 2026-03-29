@@ -15,6 +15,7 @@ class EmployeeWorkingHourResource extends JsonResource
             'weekday' => $this->weekday,
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
+            'is_working' => $this->start_time !== null && $this->end_time !== null,
         ];
     }
 }

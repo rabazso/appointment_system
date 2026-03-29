@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('schedule_configuration_id')->constrained('employee_schedule_configurations')->cascadeOnDelete();
             $table->integer('weekday');
-            $table->time('start_time');
-            $table->time('end_time');
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
             $table->timestamps();
         });
     }
