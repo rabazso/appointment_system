@@ -14,6 +14,11 @@ class EmployeeScheduleConfiguration extends Model
         'valid_to',
     ];
 
+    protected $casts = [
+        'valid_from' => 'datetime',
+        'valid_to' => 'datetime',
+    ];
+
     public function employee()
     {
         return $this->belongsTo(Employee::class);
@@ -27,5 +32,16 @@ class EmployeeScheduleConfiguration extends Model
     public function breaks()
     {
         return $this->hasMany(EmployeeBreak::class, 'schedule_configuration_id');
+    }
+
+    public function scopeValidAt(Builder $query, Carbon $at): Builder
+    {
+        return $query
+            ->where('valid_from', '<=', $at)
+            ->where(function ($query) use ($at) {
+                $query
+                    ->whereNull('valid_to')
+                    ->orWhere('valid_to', '>', $at);
+            });
     }
 }

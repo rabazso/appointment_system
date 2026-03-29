@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('employee_breaks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('schedule_configuration_id')->nullable()->constrained('employee_schedule_configurations')->cascadeOnDelete();
+            $table->foreignId('schedule_configuration_id')->constrained('employee_schedule_configurations')->cascadeOnDelete();
             $table->integer('weekday');
             $table->time('start_time');
             $table->time('end_time');
