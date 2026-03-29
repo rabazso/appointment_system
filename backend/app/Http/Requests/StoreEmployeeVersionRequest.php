@@ -20,7 +20,7 @@ class StoreEmployeeVersionRequest extends FormRequest
             'uses_default_booking_window' => ['required', 'boolean'],
             'booking_window_days' => ['nullable', 'integer'],
             'valid_from' => ['required', 'date'],
-            'valid_to' => ['nullable', 'date'],
+            'valid_to' => ['nullable', 'date', 'after:valid_from'],
         ];
     }
 }

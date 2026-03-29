@@ -18,7 +18,7 @@ class StoreServiceVersionRequest extends FormRequest
             'default_duration' => ['required', 'integer'],
             'default_price' => ['required', 'integer'],
             'valid_from' => ['required', 'date'],
-            'valid_to' => [ 'nullable', 'date',],
+            'valid_to' => ['nullable', 'date', 'after:valid_from'],
         ];
     }
 }

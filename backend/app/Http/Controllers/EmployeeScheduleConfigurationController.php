@@ -6,7 +6,9 @@ use App\Http\Requests\IndexEmployeeScheduleConfigurationsRequest;
 use App\Http\Requests\StoreEmployeeScheduleConfigurationRequest;
 use App\Http\Requests\UpdateEmployeeScheduleConfigurationRequest;
 use App\Http\Resources\EmployeeScheduleConfigurationResource;
+use App\Models\Employee;
 use App\Models\EmployeeScheduleConfiguration;
+use App\Services\Timeline\VersionTimelineService;
 use Illuminate\Http\JsonResponse;
 
 class EmployeeScheduleConfigurationController extends Controller
@@ -26,25 +28,28 @@ class EmployeeScheduleConfigurationController extends Controller
         return EmployeeScheduleConfigurationResource::collection($configurations);
     }
 
-    public function store(StoreEmployeeScheduleConfigurationRequest $request): EmployeeScheduleConfigurationResource
+    public function store(StoreEmployeeScheduleConfigurationRequest $request, VersionTimelineService $timelineService): EmployeeScheduleConfigurationResource
     {
-        $configuration = EmployeeScheduleConfiguration::create($request->validated());
+        $validated = $request->validated();
+        $employee = Employee::findOrFail($validated['employee_id']);
+
+        $configuration = $timelineService->createVersion($employee->scheduleConfigurations(), $validated);
 
         return new EmployeeScheduleConfigurationResource($configuration);
     }
 
-    public function update(
-        UpdateEmployeeScheduleConfigurationRequest $request,
-        EmployeeScheduleConfiguration $employeeScheduleConfiguration
-    ): EmployeeScheduleConfigurationResource {
-        $employeeScheduleConfiguration->update($request->validated());
+    public function update(UpdateEmployeeScheduleConfigurationRequest $request, EmployeeScheduleConfiguration $employeeScheduleConfiguration, 
+    VersionTimelineService $timelineService): EmployeeScheduleConfigurationResource
+    {
+        $employeeScheduleConfiguration = $timelineService->updateVersion($employeeScheduleConfiguration->employee->scheduleConfigurations(), 
+        $employeeScheduleConfiguration, $request->validated());
 
         return new EmployeeScheduleConfigurationResource($employeeScheduleConfiguration);
     }
 
-    public function destroy(EmployeeScheduleConfiguration $employeeScheduleConfiguration): JsonResponse
+    public function destroy(EmployeeScheduleConfiguration $employeeScheduleConfiguration, VersionTimelineService $timelineService): JsonResponse
     {
-        $employeeScheduleConfiguration->delete();
+        $timelineService->deleteVersion($employeeScheduleConfiguration->employee->scheduleConfigurations(), $employeeScheduleConfiguration);
 
         return response()->json(['message' => 'Employee schedule configuration deleted successfully']);
     }

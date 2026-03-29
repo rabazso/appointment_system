@@ -19,7 +19,7 @@ class UpdateEmployeeVersionRequest extends FormRequest
             'uses_default_booking_window' => ['boolean'],
             'booking_window_days' => ['nullable', 'integer'],
             'valid_from' => ['date'],
-            'valid_to' => ['nullable','date'],
+            'valid_to' => ['nullable', 'date'],
         ];
     }
 }

@@ -6,7 +6,9 @@ use App\Http\Requests\IndexShopSettingVersionsRequest;
 use App\Http\Requests\StoreShopSettingVersionRequest;
 use App\Http\Requests\UpdateShopSettingVersionRequest;
 use App\Http\Resources\ShopSettingVersionResource;
+use App\Models\ShopSetting;
 use App\Models\ShopSettingVersion;
+use App\Services\Timeline\VersionTimelineService;
 use Illuminate\Http\JsonResponse;
 
 class ShopSettingVersionController extends Controller
@@ -26,25 +28,28 @@ class ShopSettingVersionController extends Controller
         return ShopSettingVersionResource::collection($versions);
     }
 
-    public function store(StoreShopSettingVersionRequest $request): ShopSettingVersionResource
+    public function store(StoreShopSettingVersionRequest $request, VersionTimelineService $timelineService): ShopSettingVersionResource
     {
-        $version = ShopSettingVersion::create($request->validated());
+        $validated = $request->validated();
+        $shopSetting = ShopSetting::findOrFail($validated['shop_setting_id']);
+
+        $version = $timelineService->createVersion($shopSetting->versions(), $validated);
 
         return new ShopSettingVersionResource($version);
     }
 
-    public function update(
-        UpdateShopSettingVersionRequest $request,
-        ShopSettingVersion $shopSettingVersion
-    ): ShopSettingVersionResource {
-        $shopSettingVersion->update($request->validated());
+    public function update(UpdateShopSettingVersionRequest $request, ShopSettingVersion $shopSettingVersion, 
+    VersionTimelineService $timelineService): ShopSettingVersionResource
+    {
+        $shopSettingVersion = $timelineService->updateVersion($shopSettingVersion->shopSetting->versions(), 
+        $shopSettingVersion, $request->validated());
 
         return new ShopSettingVersionResource($shopSettingVersion);
     }
 
-    public function destroy(ShopSettingVersion $shopSettingVersion): JsonResponse
+    public function destroy(ShopSettingVersion $shopSettingVersion, VersionTimelineService $timelineService): JsonResponse
     {
-        $shopSettingVersion->delete();
+        $timelineService->deleteVersion($shopSettingVersion->shopSetting->versions(), $shopSettingVersion);
 
         return response()->json(['message' => 'Shop setting version deleted successfully']);
     }

@@ -14,7 +14,6 @@ class UpdateShopSettingVersionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'shop_setting_id' => ['integer', 'exists:shop_settings,id'],
             'default_booking_interval_minutes' => ['integer'],
             'default_booking_window_days' => ['integer'],
             'cancellation_deadline_hours' => ['integer'],

@@ -6,7 +6,9 @@ use App\Http\Requests\IndexEmployeeVersionsRequest;
 use App\Http\Requests\StoreEmployeeVersionRequest;
 use App\Http\Requests\UpdateEmployeeVersionRequest;
 use App\Http\Resources\EmployeeVersionResource;
+use App\Models\Employee;
 use App\Models\EmployeeVersion;
+use App\Services\Timeline\VersionTimelineService;
 use Illuminate\Http\JsonResponse;
 
 class EmployeeVersionController extends Controller
@@ -24,23 +26,26 @@ class EmployeeVersionController extends Controller
         return EmployeeVersionResource::collection($versions);
     }
 
-    public function store(StoreEmployeeVersionRequest $request): EmployeeVersionResource
+    public function store(StoreEmployeeVersionRequest $request, VersionTimelineService $timelineService): EmployeeVersionResource
     {
-        $version = EmployeeVersion::create($request->validated());
+        $validated = $request->validated();
+        $employee = Employee::findOrFail($validated['employee_id']);
+
+        $version = $timelineService->createVersion($employee->versions(), $validated);
 
         return new EmployeeVersionResource($version);
     }
 
-    public function update(UpdateEmployeeVersionRequest $request, EmployeeVersion $employeeVersion): EmployeeVersionResource
+    public function update(UpdateEmployeeVersionRequest $request, EmployeeVersion $employeeVersion, VersionTimelineService $timelineService): EmployeeVersionResource
     {
-        $employeeVersion->update($request->validated());
+        $employeeVersion = $timelineService->updateVersion($employeeVersion->employee->versions(), $employeeVersion, $request->validated());
 
         return new EmployeeVersionResource($employeeVersion);
     }
 
-    public function destroy(EmployeeVersion $employeeVersion): JsonResponse
+    public function destroy(EmployeeVersion $employeeVersion, VersionTimelineService $timelineService): JsonResponse
     {
-        $employeeVersion->delete();
+        $timelineService->deleteVersion($employeeVersion->employee->versions(), $employeeVersion);
 
         return response()->json(['message' => 'Employee version deleted successfully']);
     }

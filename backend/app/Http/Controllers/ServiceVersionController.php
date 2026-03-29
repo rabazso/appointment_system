@@ -6,7 +6,9 @@ use App\Http\Requests\IndexServiceVersionsRequest;
 use App\Http\Requests\StoreServiceVersionRequest;
 use App\Http\Requests\UpdateServiceVersionRequest;
 use App\Http\Resources\ServiceVersionResource;
+use App\Models\Service;
 use App\Models\ServiceVersion;
+use App\Services\Timeline\VersionTimelineService;
 use Illuminate\Http\JsonResponse;
 
 class ServiceVersionController extends Controller
@@ -25,23 +27,28 @@ class ServiceVersionController extends Controller
         return ServiceVersionResource::collection($versions);
     }
 
-    public function store(StoreServiceVersionRequest $request): JsonResponse
+    public function store(StoreServiceVersionRequest $request, VersionTimelineService $timelineService)
     {
-        $version = ServiceVersion::create($request->validated());
+        $validated = $request->validated();
+        $service = Service::findOrFail($validated['service_id']);
+
+        $version = $timelineService->createVersion($service->versions(), $validated);
 
         return new ServiceVersionResource($version);
     }
 
-    public function update(UpdateServiceVersionRequest $request, ServiceVersion $serviceVersion): ServiceVersionResource
+    public function update(UpdateServiceVersionRequest $request, ServiceVersion $serviceVersion,
+    VersionTimelineService $timelineService): ServiceVersionResource
     {
-        $serviceVersion->update($request->validated());
+        $serviceVersion = $timelineService->updateVersion($serviceVersion->service->versions(), 
+        $serviceVersion, $request->validated());
 
         return new ServiceVersionResource($serviceVersion);
     }
 
-    public function destroy(ServiceVersion $serviceVersion): JsonResponse
+    public function destroy(ServiceVersion $serviceVersion, VersionTimelineService $timelineService): JsonResponse
     {
-        $serviceVersion->delete();
+        $timelineService->deleteVersion($serviceVersion->service->versions(), $serviceVersion);
 
         return response()->json(['message' => 'Service version deleted successfully']);
     }
