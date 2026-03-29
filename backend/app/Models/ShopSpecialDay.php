@@ -9,8 +9,11 @@ class ShopSpecialDay extends Model
     protected $fillable = [
         'date',
         'name',
-        'is_open',
         'open_time',
         'close_time',
+    ];
+
+    protected $casts = [
+        'date' => 'date',
     ];
 }

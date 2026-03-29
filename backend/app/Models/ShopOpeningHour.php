@@ -8,7 +8,6 @@ class ShopOpeningHour extends Model
 {
     protected $fillable = [
         'weekday',
-        'is_open',
         'open_time',
         'close_time',
     ];

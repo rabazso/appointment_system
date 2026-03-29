@@ -19,6 +19,8 @@ use App\Http\Controllers\ResetPasswordTokenController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceVersionController;
+use App\Http\Controllers\ShopOpeningHourController;
+use App\Http\Controllers\ShopSpecialDayController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -44,6 +46,8 @@ Route::get('/employee-time-off-requests', [EmployeeTimeOffRequestController::cla
 Route::get('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'index']);
 Route::get('/employee-service-configurations/valid-at', [EmployeeServiceConfigurationController::class, 'showValidAt']);
 Route::get('/employee-services', [EmployeeServiceController::class, 'index']);
+Route::get('/shop-special-days', [ShopSpecialDayController::class, 'index']);
+Route::get('/shop-opening-hours', [ShopOpeningHourController::class, 'index']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
 Route::post('/appointments', [AppointmentController::class, 'store']);
 
@@ -82,6 +86,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/employee-services', [EmployeeServiceController::class, 'store']);
     Route::patch('/employee-services/{employeeService}', [EmployeeServiceController::class, 'update']);
     Route::delete('/employee-services/{employeeService}', [EmployeeServiceController::class, 'destroy']);
+    Route::post('/shop-special-days', [ShopSpecialDayController::class, 'store']);
+    Route::patch('/shop-special-days/{shopSpecialDay}', [ShopSpecialDayController::class, 'update']);
+    Route::delete('/shop-special-days/{shopSpecialDay}', [ShopSpecialDayController::class, 'destroy']);
+    Route::post('/shop-opening-hours', [ShopOpeningHourController::class, 'store']);
+    Route::patch('/shop-opening-hours/{shopOpeningHour}', [ShopOpeningHourController::class, 'update']);
+    Route::delete('/shop-opening-hours/{shopOpeningHour}', [ShopOpeningHourController::class, 'destroy']);
     Route::post('/service-versions', [ServiceVersionController::class, 'store']);
     Route::patch('/service-versions/{serviceVersion}', [ServiceVersionController::class, 'update']);
     Route::delete('/service-versions/{serviceVersion}', [ServiceVersionController::class, 'destroy']);
