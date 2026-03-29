@@ -9,6 +9,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
 use App\Http\Controllers\EmployeeScheduleConfigurationController;
+use App\Http\Controllers\EmployeeTimeOffRequestController;
 use App\Http\Controllers\EmployeeWorkingHourController;
 use App\Http\Controllers\EmployeeServiceConfigurationController;
 use App\Http\Controllers\EmployeeServiceController;
@@ -39,6 +40,7 @@ Route::get('/employee-schedule-configurations', [EmployeeScheduleConfigurationCo
 Route::get('/employee-schedule-configurations/valid-at', [EmployeeScheduleConfigurationController::class, 'showValidAt']);
 Route::get('/employee-working-hours', [EmployeeWorkingHourController::class, 'index']);
 Route::get('/employee-breaks', [EmployeeBreakController::class, 'index']);
+Route::get('/employee-time-off-requests', [EmployeeTimeOffRequestController::class, 'index']);
 Route::get('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'index']);
 Route::get('/employee-service-configurations/valid-at', [EmployeeServiceConfigurationController::class, 'showValidAt']);
 Route::get('/employee-services', [EmployeeServiceController::class, 'index']);
@@ -71,6 +73,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/employee-breaks', [EmployeeBreakController::class, 'store']);
     Route::patch('/employee-breaks/{employeeBreak}', [EmployeeBreakController::class, 'update']);
     Route::delete('/employee-breaks/{employeeBreak}', [EmployeeBreakController::class, 'destroy']);
+    Route::post('/employee-time-off-requests', [EmployeeTimeOffRequestController::class, 'store']);
+    Route::patch('/employee-time-off-requests/{employeeTimeOffRequest}', [EmployeeTimeOffRequestController::class, 'update']);
+    Route::delete('/employee-time-off-requests/{employeeTimeOffRequest}', [EmployeeTimeOffRequestController::class, 'destroy']);
     Route::post('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'store']);
     Route::patch('/employee-service-configurations/{employeeServiceConfiguration}', [EmployeeServiceConfigurationController::class, 'update']);
     Route::delete('/employee-service-configurations/{employeeServiceConfiguration}', [EmployeeServiceConfigurationController::class, 'destroy']);
