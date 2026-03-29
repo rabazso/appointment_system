@@ -7,6 +7,8 @@ use App\Http\Controllers\ForgotPasswordController;
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeServiceConfigurationController;
+use App\Http\Controllers\EmployeeServiceController;
 use App\Http\Controllers\EmployeeVersionController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\ResetPasswordTokenController;
@@ -30,6 +32,9 @@ Route::get('/employees', [EmployeeController::class, 'index']);
 Route::get('/employees/versions/valid', [EmployeeController::class, 'indexEmployeesWithValidVersion']);
 Route::get('/employee-versions', [EmployeeVersionController::class, 'index']);
 Route::get('/employee-versions/valid-at', [EmployeeVersionController::class, 'ShowEmployeeVersionValidAt']);
+Route::get('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'index']);
+Route::get('/employee-service-configurations/valid-at', [EmployeeServiceConfigurationController::class, 'showValidAt']);
+Route::get('/employee-services', [EmployeeServiceController::class, 'index']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
 Route::post('/appointments', [AppointmentController::class, 'store']);
 
@@ -50,6 +55,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/employee-versions', [EmployeeVersionController::class, 'store']);
     Route::patch('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'update']);
     Route::delete('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'destroy']);
+    Route::post('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'store']);
+    Route::patch('/employee-service-configurations/{employeeServiceConfiguration}', [EmployeeServiceConfigurationController::class, 'update']);
+    Route::delete('/employee-service-configurations/{employeeServiceConfiguration}', [EmployeeServiceConfigurationController::class, 'destroy']);
+    Route::post('/employee-services', [EmployeeServiceController::class, 'store']);
+    Route::patch('/employee-services/{employeeService}', [EmployeeServiceController::class, 'update']);
+    Route::delete('/employee-services/{employeeService}', [EmployeeServiceController::class, 'destroy']);
     Route::post('/service-versions', [ServiceVersionController::class, 'store']);
     Route::patch('/service-versions/{serviceVersion}', [ServiceVersionController::class, 'update']);
     Route::delete('/service-versions/{serviceVersion}', [ServiceVersionController::class, 'destroy']);

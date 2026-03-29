@@ -14,6 +14,10 @@ class EmployeeService extends Model
         'price',
     ];
 
+    protected $casts = [
+        'uses_default_values' => 'boolean',
+    ];
+
     public function configuration()
     {
         return $this->belongsTo(EmployeeServiceConfiguration::class, 'configuration_id');
