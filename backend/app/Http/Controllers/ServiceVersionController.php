@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\IndexServiceVersionsRequest;
-use App\Http\Requests\ShowServiceVersionValidAtRequest;
 use App\Http\Requests\StoreServiceVersionRequest;
 use App\Http\Requests\UpdateServiceVersionRequest;
 use App\Http\Resources\ServiceVersionResource;
@@ -45,19 +44,5 @@ class ServiceVersionController extends Controller
         $serviceVersion->delete();
 
         return response()->json(['message' => 'Service version deleted successfully']);
-    }
-
-    public function ShowServiceVersionValidAt(ShowServiceVersionValidAtRequest $request)
-    {
-        $validated = $request->validated();
-        $serviceId = $validated['service_id'];
-        $date = Carbon::parse($validated['date']);
-
-        $version = ServiceVersion::query()
-            ->validAt($date)
-            ->where('service_id', $serviceId)
-            ->first();
-
-        return new ServiceVersionResource($version);
     }
 }

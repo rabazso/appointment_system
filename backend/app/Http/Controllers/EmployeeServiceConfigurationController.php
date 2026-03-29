@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\IndexEmployeeServiceConfigurationsRequest;
-use App\Http\Requests\ShowEmployeeServiceConfigurationValidAtRequest;
 use App\Http\Requests\StoreEmployeeServiceConfigurationRequest;
 use App\Http\Requests\UpdateEmployeeServiceConfigurationRequest;
 use App\Http\Resources\EmployeeServiceConfigurationResource;
 use App\Models\EmployeeServiceConfiguration;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 
 class EmployeeServiceConfigurationController extends Controller
@@ -26,20 +24,6 @@ class EmployeeServiceConfigurationController extends Controller
             ->get();
 
         return EmployeeServiceConfigurationResource::collection($configurations);
-    }
-
-    public function showValidAt(ShowEmployeeServiceConfigurationValidAtRequest $request): EmployeeServiceConfigurationResource
-    {
-        $validated = $request->validated();
-        $employeeId = $validated['employee_id'];
-        $date = Carbon::parse($validated['date']);
-
-        $configuration = EmployeeServiceConfiguration::query()
-            ->validAt($date)
-            ->where('employee_id', $employeeId)
-            ->firstOrFail();
-
-        return new EmployeeServiceConfigurationResource($configuration);
     }
 
     public function store(StoreEmployeeServiceConfigurationRequest $request): EmployeeServiceConfigurationResource

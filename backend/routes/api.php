@@ -32,19 +32,15 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/versions/valid', [ServiceController::class, 'indexServicesWithValidVersion']);
 Route::get('/service-versions', [ServiceVersionController::class, 'index']);
-Route::get('/service-versions/valid-at', [ServiceVersionController::class, 'ShowServiceVersionValidAt']);
 
 Route::get('/employees', [EmployeeController::class, 'index']);
 Route::get('/employees/versions/valid', [EmployeeController::class, 'indexEmployeesWithValidVersion']);
 Route::get('/employee-versions', [EmployeeVersionController::class, 'index']);
-Route::get('/employee-versions/valid-at', [EmployeeVersionController::class, 'ShowEmployeeVersionValidAt']);
 Route::get('/employee-schedule-configurations', [EmployeeScheduleConfigurationController::class, 'index']);
-Route::get('/employee-schedule-configurations/valid-at', [EmployeeScheduleConfigurationController::class, 'showValidAt']);
 Route::get('/employee-working-hours', [EmployeeWorkingHourController::class, 'index']);
 Route::get('/employee-breaks', [EmployeeBreakController::class, 'index']);
 Route::get('/employee-time-off-requests', [EmployeeTimeOffRequestController::class, 'index']);
 Route::get('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'index']);
-Route::get('/employee-service-configurations/valid-at', [EmployeeServiceConfigurationController::class, 'showValidAt']);
 Route::get('/employee-services', [EmployeeServiceController::class, 'index']);
 Route::get('/shop-special-days', [ShopSpecialDayController::class, 'index']);
 Route::get('/shop-opening-hours', [ShopOpeningHourController::class, 'index']);

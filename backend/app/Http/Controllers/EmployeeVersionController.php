@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ShowEmployeeVersionValidAtRequest;
 use App\Http\Requests\IndexEmployeeVersionsRequest;
 use App\Http\Requests\StoreEmployeeVersionRequest;
 use App\Http\Requests\UpdateEmployeeVersionRequest;
 use App\Http\Resources\EmployeeVersionResource;
 use App\Models\EmployeeVersion;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 
 class EmployeeVersionController extends Controller
@@ -45,19 +43,5 @@ class EmployeeVersionController extends Controller
         $employeeVersion->delete();
 
         return response()->json(['message' => 'Employee version deleted successfully']);
-    }
-
-    public function ShowEmployeeVersionValidAt(ShowEmployeeVersionValidAtRequest $request)
-    {
-        $validated = $request->validated();
-        $employeeId = $validated['employee_id'];
-        $date = Carbon::parse($validated['date']);
-
-        $version = EmployeeVersion::query()
-            ->validAt($date)
-            ->where('employee_id', $employeeId)
-            ->first();
-
-        return new EmployeeVersionResource($version);
     }
 }
