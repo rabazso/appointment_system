@@ -13,6 +13,13 @@ class ShopSetting extends Model
 
     public function versions()
     {
-        return $this->hasMany(ShopSettingsVersion::class);
+        return $this->hasMany(ShopSettingVersion::class);
+    }
+
+    public function resolveValidVersion(): ?ShopSettingVersion
+    {
+        $date = now();
+
+        return $this->versions()->validAt($date)->first();
     }
 }

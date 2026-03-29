@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('shop_settings_versions', function (Blueprint $table) {
+        Schema::create('shop_setting_versions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('shop_setting_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('shop_setting_id')->constrained('shop_settings')->cascadeOnDelete();
             $table->integer('default_booking_interval_minutes');
             $table->integer('default_booking_window_days');
             $table->integer('cancellation_deadline_hours');
@@ -22,6 +22,6 @@ return new class extends Migration
     
     public function down(): void
     {
-        Schema::dropIfExists('shop_settings_versions');
+        Schema::dropIfExists('shop_setting_versions');
     }
 };

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\ShopSetting;
-use App\Models\ShopSettingsVersion;
+use App\Models\ShopSettingVersion;
 use Illuminate\Database\Seeder;
 
 class ShopSettingSeeder extends Seeder
@@ -15,7 +15,7 @@ class ShopSettingSeeder extends Seeder
             'about_us_text' => 'A welcoming neighborhood barbershop focused on precise cuts and friendly service.',
         ]);
 
-        ShopSettingsVersion::create([
+        ShopSettingVersion::create([
             'shop_setting_id' => $shopSetting->id,
             'default_booking_interval_minutes' => 15,
             'default_booking_window_days' => 30,
