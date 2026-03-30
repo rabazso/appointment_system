@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Requests\UpdateServiceRequest;
 use App\Http\Resources\ServiceResource;
-use App\Http\Resources\ServiceVersionResource;
 use App\Models\Service;
 use Illuminate\Http\JsonResponse;
 
@@ -40,15 +39,12 @@ class ServiceController extends Controller
 
     public function indexServicesWithValidVersion()
     {
-        $services = Service::all();
+        $now = now();
 
-        $payload = $services->map(function (Service $service) {
-            return [
-                'service' => new ServiceResource($service),
-                'valid_version' => new ServiceVersionResource($service->resolveValidVersion()),
-            ];
-        });
+        $services = Service::with([
+            'versions' => fn ($query) => $query->validAt($now),
+        ])->get();
 
-        return response()->json($payload);
+        return ServiceResource::collection($services);
     }
 }

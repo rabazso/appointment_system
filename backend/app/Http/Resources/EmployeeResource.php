@@ -16,6 +16,7 @@ class EmployeeResource extends JsonResource
             'bio' => $this->bio,
             'instagram_url' => $this->instagram_url,
             'profile_image' => new EmployeeImageResource($this->whenLoaded('profileImage')),
+            'versions' => EmployeeVersionResource::collection($this->whenLoaded('versions')),
         ];
     }
 }

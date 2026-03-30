@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEmployeeRequest;
 use App\Http\Requests\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
-use App\Http\Resources\EmployeeVersionResource;
 use App\Models\Employee;
 use Illuminate\Http\JsonResponse;
 
@@ -39,15 +38,13 @@ class EmployeeController extends Controller
 
     public function indexEmployeesWithValidVersion()
     {
-        $employees = Employee::with('profileImage')->get();
+        $now = now();
 
-        $payload = $employees->map(function (Employee $employee) {
-            return [
-                'employee' => new EmployeeResource($employee),
-                'valid_version' => new EmployeeVersionResource($employee->resolveValidVersion()),
-            ];
-        });
+        $employees = Employee::with([
+            'profileImage',
+            'versions' => fn ($query) => $query->validAt($now),
+        ])->get();
 
-        return response()->json($payload);
+        return EmployeeResource::collection($employees);
     }
 }

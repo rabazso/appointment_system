@@ -25,10 +25,4 @@ class Service extends Model
     {
         return $this->hasMany(AppointmentService::class);
     }
-
-    public function resolveValidVersion(): ?ServiceVersion
-    {
-        $date =  now();
-        return $this->versions()->validAt($date)->first();
-    }
 }

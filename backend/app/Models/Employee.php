@@ -54,11 +54,4 @@ class Employee extends Model
     {
         return $this->hasMany(Appointment::class);
     }
-
-    public function resolveValidVersion(): ?EmployeeVersion
-    {
-        $date = now();
-
-        return $this->versions()->validAt($date)->first();
-    }
 }

@@ -16,6 +16,7 @@ class ServiceResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
+            'versions' => ServiceVersionResource::collection($this->whenLoaded('versions')),
         ];
     }
 }
