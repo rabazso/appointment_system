@@ -11,8 +11,12 @@ class Employee extends Model
         'name',
         'phone',
         'bio',
-        'instagram_url',
+        'links',
         'profile_image_id',
+    ];
+
+    protected $casts = [
+        'links' => 'array',
     ];
 
     public function versions()

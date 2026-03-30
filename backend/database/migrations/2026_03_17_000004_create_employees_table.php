@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('phone');
             $table->text('bio')->nullable();
-            $table->string('instagram_url')->nullable();
+            $table->json('links')->nullable();
             $table->unsignedBigInteger('profile_image_id')->nullable();
             $table->timestamps();
         });

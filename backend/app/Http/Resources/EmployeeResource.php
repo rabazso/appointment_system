@@ -14,7 +14,7 @@ class EmployeeResource extends JsonResource
             'user_id' => $this->user_id,
             'name' => $this->name,
             'bio' => $this->bio,
-            'instagram_url' => $this->instagram_url,
+            'links' => $this->links,
             'profile_image' => new EmployeeImageResource($this->whenLoaded('profileImage')),
             'versions' => EmployeeVersionResource::collection($this->whenLoaded('versions')),
         ];

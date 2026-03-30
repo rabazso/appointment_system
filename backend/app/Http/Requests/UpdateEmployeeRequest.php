@@ -17,7 +17,9 @@ class UpdateEmployeeRequest extends FormRequest
             'name' => ['string'],
             'phone' => ['string'],
             'bio' => ['nullable', 'string'],
-            'instagram_url' => ['nullable', 'string'],
+            'links' => ['nullable', 'array'],
+            'links.*.label' => ['required_with:links', 'string', 'max:50'],
+            'links.*.url' => ['required_with:links', 'url', 'max:2048'],
             'profile_image_id' => ['nullable', 'integer', 'exists:employee_images,id'],
         ];
     }
