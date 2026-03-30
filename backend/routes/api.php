@@ -8,6 +8,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
+use App\Http\Controllers\EmployeeImageController;
 use App\Http\Controllers\EmployeeScheduleConfigurationController;
 use App\Http\Controllers\EmployeeTimeOffRequestController;
 use App\Http\Controllers\EmployeeWorkingHourController;
@@ -38,6 +39,9 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
     ->name('verification.verify');
 
 Route::get('/employees', [EmployeeController::class, 'index']);
+Route::get('/employee-images', [EmployeeImageController::class, 'index']);
+Route::get('/employee-images/{employeeImage}', [EmployeeImageController::class, 'showOriginal'])->name('employee-images.original');
+Route::get('/employee-images/{employeeImage}/preview', [EmployeeImageController::class, 'showPreview'])->name('employee-images.preview');
 Route::get('/services', [ServiceController::class, 'index']);
 
 Route::get('/shop-opening-hours', [ShopOpeningHourController::class, 'index']);
@@ -93,6 +97,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/employee-services', [EmployeeServiceController::class, 'store']);
         Route::patch('/employee-services/{employeeService}', [EmployeeServiceController::class, 'update']);
         Route::delete('/employee-services/{employeeService}', [EmployeeServiceController::class, 'destroy']);
+        Route::post('/employee-images', [EmployeeImageController::class, 'store']);
+        Route::delete('/employee-images/{employeeImage}', [EmployeeImageController::class, 'destroy']);
         Route::post('/shop-settings', [ShopSettingController::class, 'store']);
         Route::patch('/shop-settings/{shopSetting}', [ShopSettingController::class, 'update']);
         Route::delete('/shop-settings/{shopSetting}', [ShopSettingController::class, 'destroy']);

@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class EmployeeGalleryResource extends JsonResource
+class EmployeeImageResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -15,7 +15,8 @@ class EmployeeGalleryResource extends JsonResource
         return [
             'id' => $this->id,
             'employee_id' => $this->employee_id,
-            'image_url' => $this->image_url,
+            'preview_url' => $this->preview_url,
+            'original_url' => $this->original_url,
         ];
     }
 }

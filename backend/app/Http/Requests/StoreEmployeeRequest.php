@@ -18,8 +18,8 @@ class StoreEmployeeRequest extends FormRequest
             'name' => ['required', 'string'],
             'phone' => ['required', 'string'],
             'bio' => ['nullable', 'string'],
-            'photo_path' => ['nullable', 'string'],
             'instagram_url' => ['nullable', 'string'],
+            'profile_image_id' => ['nullable', 'integer', 'exists:employee_images,id'],
         ];
     }
 }

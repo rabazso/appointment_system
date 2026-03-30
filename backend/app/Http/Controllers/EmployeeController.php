@@ -13,21 +13,21 @@ class EmployeeController extends Controller
 {
     public function index()
     {
-        return EmployeeResource::collection(Employee::all());
+        return EmployeeResource::collection(Employee::with('profileImage')->get());
     }
 
     public function store(StoreEmployeeRequest $request): EmployeeResource
     {
         $employee = Employee::create($request->validated());
 
-        return new EmployeeResource($employee);
+        return new EmployeeResource($employee->load('profileImage'));
     }
 
     public function update(UpdateEmployeeRequest $request, Employee $employee): EmployeeResource
     {
         $employee->update($request->validated());
 
-        return new EmployeeResource($employee);
+        return new EmployeeResource($employee->load('profileImage'));
     }
 
     public function destroy(Employee $employee): JsonResponse
@@ -39,7 +39,7 @@ class EmployeeController extends Controller
 
     public function indexEmployeesWithValidVersion()
     {
-        $employees = Employee::all();
+        $employees = Employee::with('profileImage')->get();
 
         $payload = $employees->map(function (Employee $employee) {
             return [

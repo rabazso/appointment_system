@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateEmployeeRequest extends FormRequest
 {
@@ -13,13 +12,13 @@ class UpdateEmployeeRequest extends FormRequest
     }
 
     public function rules(): array
-{
-    return [
-        'name' => ['string'],
-        'phone' => ['string'],
-        'bio' => ['nullable', 'string'],
-        'photo_path' => ['nullable', 'string'],
-        'instagram_url' => ['nullable', 'string'],
-    ];
-}
+    {
+        return [
+            'name' => ['string'],
+            'phone' => ['string'],
+            'bio' => ['nullable', 'string'],
+            'instagram_url' => ['nullable', 'string'],
+            'profile_image_id' => ['nullable', 'integer', 'exists:employee_images,id'],
+        ];
+    }
 }

@@ -60,7 +60,6 @@ class EmployeeSeeder extends Seeder
                     'name' => $definition['name'],
                     'phone' => $definition['phone'],
                     'bio' => $definition['bio'],
-                    'photo_path' => null,
                     'instagram_url' => null,
                 ]
             );

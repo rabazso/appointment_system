@@ -11,8 +11,8 @@ class Employee extends Model
         'name',
         'phone',
         'bio',
-        'photo_path',
         'instagram_url',
+        'profile_image_id',
     ];
 
     public function versions()
@@ -33,6 +33,11 @@ class Employee extends Model
     public function scheduleConfigurations()
     {
         return $this->hasMany(EmployeeScheduleConfiguration::class);
+    }
+
+    public function profileImage()
+    {
+        return $this->belongsTo(EmployeeImage::class, 'profile_image_id');
     }
 
     public function images()
