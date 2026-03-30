@@ -13,30 +13,22 @@ class ResetPasswordController extends Controller
 {
     public function __invoke(ResetPasswordRequest $request)
     {
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
+        $status = Password::reset($request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->forceFill([
                     'password' => Hash::make($password),
-                ])->setRememberToken(Str::random(60));
+                ])->save();
 
-                $user->save();
+                $user->tokens()->delete();
 
                 event(new PasswordReset($user));
             }
         );
 
         if ($status !== Password::PASSWORD_RESET) {
-            return response()->json([
-                'message' => __($status),
-                'errors' => [
-                    'email' => [__($status)],
-                ],
-            ], 422);
+            return response()->json(['message' => 'Invalid or expired reset link.'], 422);
         }
 
-        return response()->json([
-            'message' => __($status),
-        ]);
+        return response()->json(['message' => 'Password has been reset successfully.']);
     }
 }

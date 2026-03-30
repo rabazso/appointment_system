@@ -24,11 +24,13 @@ use App\Http\Controllers\ShopSettingController;
 use App\Http\Controllers\ShopSettingVersionController;
 use App\Http\Controllers\ShopSpecialDayController;
 
-Route::post('/register', [AuthController::class, 'register'])->middleware('guest');
+Route::post('/register', [AuthController::class, 'register'])->middleware(['guest', 'throttle:4,1']);
 
-Route::post('/login', [AuthController::class, 'customerLogin'])->middleware('guest');
-Route::post('/admin/login', [AuthController::class, 'adminLogin'])->middleware('guest');
-Route::post('/employee/login', [AuthController::class, 'employeeLogin'])->middleware('guest');
+Route::middleware(['guest', 'throttle:5,1'])->group(function () {
+    Route::post('/login', [AuthController::class, 'customerLogin']);
+    Route::post('/admin/login', [AuthController::class, 'adminLogin']);
+    Route::post('/employee/login', [AuthController::class, 'employeeLogin']);
+});
 
 Route::post('/guest', [AuthController::class, 'guest']);
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
@@ -125,8 +127,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:employee')->group(function () { });
 });
 
-
-Route::post('/forgot-password', ForgotPasswordController::class)->middleware('guest')->name('password.email');
+Route::post('/forgot-password', ForgotPasswordController::class)->middleware(['guest', 'throttle:3,1'])->name('password.email');
 
 Route::get('/reset-password/{token}', function (string $token) {
     return view('auth.reset-password', ['token' => $token]);

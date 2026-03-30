@@ -3,25 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ForgotPasswordRequest;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Password;
 
 class ForgotPasswordController extends Controller
 {
-    public function __invoke(ForgotPasswordRequest $request)
+    public function __invoke(ForgotPasswordRequest $request): JsonResponse
     {
-        $status = Password::sendResetLink($request->only('email'));
+        $user = User::where('email', $request->email)->first();
 
-        if ($status !== Password::RESET_LINK_SENT) {
-            return response()->json([
-                'message' => __($status),
-                'errors' => [
-                    'email' => [__($status)],
-                ],
-            ], 422);
+        if ($user) {
+            Password::sendResetLink(['email' => $user->email]);
         }
 
         return response()->json([
-            'message' => __($status),
+            'message' => 'If an account with the provided email exists, a password reset link has been sent.',
         ]);
     }
 }
