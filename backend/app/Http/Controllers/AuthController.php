@@ -31,7 +31,19 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(LoginRequest $request)
+    public function adminLogin(LoginRequest $request){
+        return $this->loginByRole($request, 'admin');
+    }
+
+    public function employeeLogin(LoginRequest $request){
+        return $this->loginByRole($request, 'employee');
+    }
+
+    public function customerLogin(LoginRequest $request){
+        return $this->loginByRole($request, 'customer');
+    }
+
+    private function loginByRole(LoginRequest $request, string $requiredRole)
     {
         $data = $request->validated();
 
@@ -39,6 +51,10 @@ class AuthController extends Controller
 
         if (!$user || !$user->password || !Hash::check($data['password'], $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        if($user->role !== $requiredRole) {
+            return response()->json(['message' => 'Access denied'], 403);
         }
 
         if (!$user->hasVerifiedEmail()) {
@@ -49,7 +65,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $token = $user->createToken('user-token')->plainTextToken;
+        $token = $user->createToken('token')->plainTextToken;
 
         return response()->json([
             'user' => new UserResource($user),
