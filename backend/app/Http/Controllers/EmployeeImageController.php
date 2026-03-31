@@ -6,10 +6,9 @@ use App\Http\Requests\IndexEmployeeImagesRequest;
 use App\Http\Requests\StoreEmployeeImageRequest;
 use App\Http\Resources\EmployeeImageResource;
 use App\Models\EmployeeImage;
+use App\Services\ImagePreviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
 
 class EmployeeImageController extends Controller
 {
@@ -31,12 +30,15 @@ class EmployeeImageController extends Controller
         return EmployeeImageResource::collection($images);
     }
 
-    public function store(StoreEmployeeImageRequest $request): EmployeeImageResource
+    public function store(
+        StoreEmployeeImageRequest $request,
+        ImagePreviewService $imagePreviewService
+    ): EmployeeImageResource
     {
         $validated = $request->validated();
         $employeeId = $validated['employee_id'];
         $file = $request->file('image');
-        $preview = $this->createPreview($file);
+        $preview = $imagePreviewService->createFromFile($file);
 
         $employeeImage = EmployeeImage::create([
             'employee_id' => $employeeId,
@@ -69,14 +71,5 @@ class EmployeeImageController extends Controller
         return response()->json([
             'message' => 'Employee image deleted successfully',
         ]);
-    }
-
-    private function createPreview($file): string
-    {
-        $manager = new ImageManager(new Driver());
-        $image = $manager->read($file->get());
-        $image->scaleDown(width: 300, height: 300);
-
-        return (string) $image->encode();
     }
 }

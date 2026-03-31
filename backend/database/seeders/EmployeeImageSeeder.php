@@ -4,14 +4,13 @@ namespace Database\Seeders;
 
 use App\Models\Employee;
 use App\Models\EmployeeImage;
+use App\Services\ImagePreviewService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
 
 class EmployeeImageSeeder extends Seeder
 {
-    public function run(): void
+    public function run(ImagePreviewService $imagePreviewService): void
     {
         $definitions = [
             'Blowout Ben' => 'blowout_ben.png',
@@ -26,7 +25,7 @@ class EmployeeImageSeeder extends Seeder
             $absolutePath = storage_path('app/public/images/employees/' . $fileName);
 
             $image = File::get($absolutePath);
-            $preview = $this->createPreview($absolutePath);
+            $preview = $imagePreviewService->createFromPath($absolutePath);
 
             $employeeImage = EmployeeImage::create([
                 'employee_id' => $employee->id,
@@ -39,14 +38,5 @@ class EmployeeImageSeeder extends Seeder
                 'profile_image_id' => $employeeImage->id,
             ]);
         }
-    }
-
-    private function createPreview(string $path): string
-    {
-        $manager = new ImageManager(new Driver());
-        $image = $manager->read($path);
-        $image->scaleDown(width: 300, height: 300);
-
-        return (string) $image->encode();
     }
 }
