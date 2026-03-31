@@ -20,6 +20,7 @@ use App\Http\Controllers\ResetPasswordTokenController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceVersionController;
+use App\Http\Controllers\ShopImageController;
 use App\Http\Controllers\ShopOpeningHourController;
 use App\Http\Controllers\ShopSettingController;
 use App\Http\Controllers\ShopSettingVersionController;
@@ -42,6 +43,9 @@ Route::get('/employees', [EmployeeController::class, 'index']);
 Route::get('/employee-images', [EmployeeImageController::class, 'index']);
 Route::get('/employee-images/{employeeImage}', [EmployeeImageController::class, 'showOriginal'])->name('employee-images.original');
 Route::get('/employee-images/{employeeImage}/preview', [EmployeeImageController::class, 'showPreview'])->name('employee-images.preview');
+Route::get('/shop-images', [ShopImageController::class, 'index']);
+Route::get('/shop-images/{shopImage}', [ShopImageController::class, 'showOriginal'])->name('shop-images.original');
+Route::get('/shop-images/{shopImage}/preview', [ShopImageController::class, 'showPreview'])->name('shop-images.preview');
 Route::get('/services', [ServiceController::class, 'index']);
 
 Route::get('/shop-opening-hours', [ShopOpeningHourController::class, 'index']);
@@ -99,6 +103,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/employee-services/{employeeService}', [EmployeeServiceController::class, 'destroy']);
         Route::post('/employee-images', [EmployeeImageController::class, 'store']);
         Route::delete('/employee-images/{employeeImage}', [EmployeeImageController::class, 'destroy']);
+        Route::post('/shop-images', [ShopImageController::class, 'store']);
+        Route::delete('/shop-images/{shopImage}', [ShopImageController::class, 'destroy']);
         Route::post('/shop-settings', [ShopSettingController::class, 'store']);
         Route::patch('/shop-settings/{shopSetting}', [ShopSettingController::class, 'update']);
         Route::delete('/shop-settings/{shopSetting}', [ShopSettingController::class, 'destroy']);
