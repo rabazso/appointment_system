@@ -15,6 +15,7 @@ import Services from '@pages/admin/Services.vue'
 import Employees from '@pages/admin/Employees.vue'
 import Schedule from '@pages/admin/Schedule.vue'
 import VerifyEmail from '@pages/verifyEmail.vue'
+import SignIn from '@pages/admin/SignIn.vue'
 
 const routes = [
   {
@@ -137,7 +138,15 @@ const routes = [
     meta: {
       title: 'Verify Email'
     }
-  }
+  },
+  {
+    path: '/admin/login',
+    name: 'AdminSignIn',
+    component: SignIn,
+    meta: {
+        title: 'Admin Signin'
+    }
+  },
 ]
 
 export const router = createRouter({

@@ -20,7 +20,7 @@ export const register = async (data) => {
     const response = await API.post('/register', data);
     const token = response.data.token;
     const user_id = response.data.user.id;
-    const user_name = response.data.user.name;
+    const user_name = response.data.customer.name;
     const role = response.data.user.role;
 
     const store = useAuthStore();
@@ -38,7 +38,7 @@ export const login = async (data) => {
     const response = await API.post('/login', data);
     const token = response.data.token;
     const user_id = response.data.user.id;
-    const user_name = response.data.user.name;
+    const user_name = response.data.display_name;
     const role = response.data.user.role;
 
     const store = useAuthStore();
@@ -46,6 +46,23 @@ export const login = async (data) => {
     if (token) store.setToken(token);
     if (user_id) store.setUser(user_id);
     if (user_name) store.setName(user_name);
+    if (role) store.setRole(role);
+
+    return response.data;
+};
+
+export const adminLogin = async (data) => {
+
+    const response = await API.post('/admin/login', data);
+    const token = response.data.token;
+    const user_id = response.data.user.id;
+    const role = response.data.user.role;
+
+    const store = useAuthStore();
+
+    if (token) store.setToken(token);
+    if (user_id) store.setUser(user_id);
+    store.setName("Admin");
     if (role) store.setRole(role);
 
     return response.data;

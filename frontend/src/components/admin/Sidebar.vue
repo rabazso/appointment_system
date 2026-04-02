@@ -65,16 +65,30 @@
           <span class="text-base font-medium">Settings</span>
         </router-link>
       </nav>
+
+      <div class="border-t border-black/10 p-4">
+        <button
+          type="button"
+          class="flex w-full items-center gap-3 rounded-md border border-transparent px-3 py-2 text-left text-red-600 transition hover:border-red-200 hover:bg-red-50"
+          @click="handleSignOut"
+        >
+          <LogOut class="w-5 h-5" />
+          <span class="text-base font-medium">Sign out</span>
+        </button>
+      </div>
     </aside>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@stores/AuthStore.js'
 import {
   Calendar,
   Scissors,
   User,
   Clock,
   Settings,
+  LogOut,
   X,
 } from 'lucide-vue-next'
 
@@ -85,7 +99,9 @@ defineProps({
   },
 })
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
+const router = useRouter()
+const auth = useAuthStore()
 
 const menuItems = [
   { id: 1, label: 'Schedule', to: '/admin/schedule', icon: Calendar },
@@ -94,4 +110,10 @@ const menuItems = [
   { id: 4, label: 'Time offs', to: '/admin/time-offs', icon: Clock },
   { id: 5, label: 'Appointments', to: '/admin/appointments', icon: Calendar },
 ]
+
+async function handleSignOut() {
+  emit('close')
+  await auth.logout()
+  router.push('/admin/login')
+}
 </script>

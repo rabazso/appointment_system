@@ -4,6 +4,7 @@
   >
     <div class="flex items-center gap-4">
       <button
+        v-if="showMenu"
         type="button"
         class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-black/10 bg-white md:hidden"
         @click="emit('menu-click')"
@@ -11,20 +12,22 @@
         <Menu class="h-5 w-5" />
       </button>
 
-      <div>
-        <h1 class="whitespace-nowrap text-4xl font-semibold text-black">
+      <div class="min-w-0">
+        <h1 class="text-4xl font-semibold text-black">
           {{ title }}
         </h1>
-        <p class="mt-1 whitespace-nowrap text-xs text-gray-500">
+        <p class="mt-1 text-xs text-gray-500">
           {{ description }}
         </p>
       </div>
     </div>
 
-    <div class="flex justify-end">
-      <Button @click="emit('action-click')">
-        {{ actionLabel }}
-      </Button>
+    <div v-if="showAction && (slots.actions || actionLabel)" class="flex justify-end">
+      <slot name="actions">
+        <Button @click="emit('action-click')">
+          {{ actionLabel }}
+        </Button>
+      </slot>
     </div>
   </header>
 </template>
@@ -32,6 +35,7 @@
 <script setup>
 import { Menu } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
+import { useSlots } from 'vue'
 
 defineProps({
   title: {
@@ -46,7 +50,16 @@ defineProps({
     type: String,
     default: '',
   },
+  showMenu: {
+    type: Boolean,
+    default: true,
+  },
+  showAction: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const emit = defineEmits(['menu-click', 'action-click'])
+const slots = useSlots()
 </script>
