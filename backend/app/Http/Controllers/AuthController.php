@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\GuestRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Resources\CustomerResource;
 use App\Http\Resources\UserResource;
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
@@ -18,15 +20,20 @@ class AuthController extends Controller
         $data = $request->validated();
 
         $user = User::create([
-            'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+        ]);
+        $customer = Customer::create([
+            'user_id' => $user->id,
+            'name' => $data['name'],
+            'email' => $data['email']
         ]);
 
         event(new Registered($user));
 
         return response()->json([
             'user' => new UserResource($user),
+            'customer' => new CustomerResource($customer),
             'message' => 'Registered. Please verify your email address before logging in.',
         ], 201);
     }
@@ -47,7 +54,7 @@ class AuthController extends Controller
     {
         $data = $request->validated();
 
-        $user = User::where('email', $data['email'])->first();
+        $user = User::with(['customer', 'employee'])->where('email', $data['email'])->first();
 
         if (!$user || !$user->password || !Hash::check($data['password'], $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
@@ -70,6 +77,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => new UserResource($user),
             'token' => $token,
+            'display_name' => $user->customer?->name ?? $user->employee?->name,
             'message' => 'Logged in',
         ]);
     }

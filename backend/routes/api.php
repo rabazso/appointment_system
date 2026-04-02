@@ -26,10 +26,10 @@ use App\Http\Controllers\ShopSettingController;
 use App\Http\Controllers\ShopSettingVersionController;
 use App\Http\Controllers\ShopSpecialDayController;
 
-Route::post('/register', [AuthController::class, 'register'])->middleware(['guest', 'throttle:4,1']);
+Route::post('/register', [AuthController::class, 'register'])->middleware(['guest', 'throttle:10,1']);
 
+Route::post('/login', [AuthController::class, 'customerLogin'])->middleware(['guest', 'throttle:10,1']);
 Route::middleware(['guest', 'throttle:5,1'])->group(function () {
-    Route::post('/login', [AuthController::class, 'customerLogin']);
     Route::post('/admin/login', [AuthController::class, 'adminLogin']);
     Route::post('/employee/login', [AuthController::class, 'employeeLogin']);
 });

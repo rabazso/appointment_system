@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
     {
         $faker = Faker::create();
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 2; $i++) {
             User::create([
                 'email' => $faker->unique()->safeEmail,
                 'password' => Hash::make('password'),
@@ -25,5 +25,11 @@ class UserSeeder extends Seeder
                 'email_verified_at' => Carbon::now(),
             ]);
         }
+        User::create([
+                'email' => 'admin@barbershop.com',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'email_verified_at' => Carbon::now(),
+            ]);
     }
 }

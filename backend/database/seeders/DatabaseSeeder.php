@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             ShopSettingSeeder::class,
             AppointmentSeeder::class,
             ReviewSeeder::class,
+            UserSeeder::class,
         ]);
     }
 }
