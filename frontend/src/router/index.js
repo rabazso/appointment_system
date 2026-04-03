@@ -15,7 +15,8 @@ import Services from '@pages/admin/Services.vue'
 import Employees from '@pages/admin/Employees.vue'
 import Schedule from '@pages/admin/Schedule.vue'
 import VerifyEmail from '@pages/verifyEmail.vue'
-import SignIn from '@pages/admin/SignIn.vue'
+import AdminSignIn from '@pages/admin/AdminSignIn.vue'
+import EmployeeSignIn from '@pages/employee/EmployeeSignIn.vue'
 
 const routes = [
   {
@@ -142,9 +143,17 @@ const routes = [
   {
     path: '/admin/login',
     name: 'AdminSignIn',
-    component: SignIn,
+    component: AdminSignIn,
     meta: {
         title: 'Admin Signin'
+    }
+  },
+  {
+    path: '/employee/login',
+    name: 'EmployeeSignIn',
+    component: EmployeeSignIn,
+    meta: {
+        title: 'Employee Signin'
     }
   },
 ]

@@ -77,7 +77,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => new UserResource($user),
             'token' => $token,
-            'display_name' => $user->customer?->name ?? $user->employee?->name,
+            'display_name' => $user->customer?->name ?? $user->employee?->name ?? 'Admin',
             'message' => 'Logged in',
         ]);
     }
