@@ -1,52 +1,114 @@
+
 <template>
   <div class="flex h-dvh overflow-hidden bg-slate-100">
     <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
 
-    <main class="flex-1 w-full overflow-y-auto p-8">
-      <Header title="Schedule" description="Manage your shop closures and special open days"
-        action-label="+ add holiday" @menu-click="sidebarOpen = true" />
+    <main class="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
+      <Header
+        title="Schedule"
+        description="Manage your shop closures and special open days"
+        action-label="+ add holiday"
+        @menu-click="sidebarOpen = true"
+      />
 
-      <div class="mx-auto flex w-7xl flex-col gap-4 xl:flex-row">
-        <div class="flex-1 rounded-2xl bg-white p-4 shadow-sm">
-          <FullCalendar :options="calendarOptions" />
+      <div class="mx-auto mb-4 flex rounded-2xl bg-white p-1 shadow-sm 2xl:hidden">
+        <button
+          type="button"
+          class="rounded-md px-4 py-2 font-semibold transition"
+          :class="viewMode === 'calendar' ? 'bg-secondary' : 'bg-white'"
+          @click="viewMode = 'calendar'"
+        >
+          Calendar
+        </button>
+        <button
+          type="button"
+          class="rounded-md px-4 py-2 font-semibold transition"
+          :class="viewMode === 'weekly' ? 'bg-secondary' : 'bg-white'"
+          @click="viewMode = 'weekly'"
+        >
+          Weekly schedule
+        </button>
+      </div>
+
+      <div class="flex min-h-0 w-full flex-1 rounded-2xl flex-col gap-4 2xl:flex-row 2xl:overflow-hidden">
+        <div
+          :class="[viewMode === 'calendar' ? 'flex' : 'hidden', '2xl:flex']"
+          class="w-full flex-1 flex-col rounded-2xl bg-white p-4"
+        >
+          <div class="mb-4 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="inline-flex h-12 w-12 items-center outline-none justify-center rounded-2xl border border-black/10 bg-white text-gray-500 shadow-sm transition hover:border-black"
+              @click="goPrevMonth"
+            >
+              <ChevronLeft class="h-4 w-4" />
+            </button>
+
+            <div class="inline-flex min-h-11 min-w-[140px] items-center justify-center rounded-2xl border border-black/10 bg-white px-4 font-semibold shadow-sm">
+              {{ monthLabel }}
+            </div>
+
+            <button
+              type="button"
+              class="inline-flex h-11 w-11 outline-none items-center justify-center rounded-2xl border border-black/10 text-gray-500 bg-white shadow-sm transition hover:border-black"
+              @click="goNextMonth"
+            >
+              <ChevronRight class="h-4 w-4" />
+            </button>
+
+          </div>
+
+          <div class="flex min-h-0 flex-1">
+            <CalendarView
+              :month="displayMonth"
+              :cellMap="calendarDayMap"
+            />
+          </div>
         </div>
-        <aside class="flex w-2/5 flex-col rounded-2xl bg-white p-4 shadow-sm">
+
+        <aside
+          :class="[viewMode === 'weekly' ? 'flex' : 'hidden', '2xl:flex']"
+          class="mx-auto w-full h-full flex-col overflow-y-auto rounded-2xl bg-white p-3 2xl:mx-0 2xl:w-7/20"
+        >
           <div class="mb-4">
-            <h2 class="text-xl font-semibold text-black">Weekly schedule</h2>
+            <h2 class="text-xl font-semibold">Weekly schedule</h2>
             <p class="mt-1 text-xs text-gray-500">Default opening hours</p>
           </div>
 
-          <div class="flex justify-around flex-1 flex-col gap-2">
-            <div v-for="day in orderedSchedule" :key="day.day"
-              class="flex h-14 flex justify-between items-center gap-2 rounded-lg border border-black/10 px-4 py-4">
-              <div class="flex items-center gap-4 min-w-0">
-                <ToggleButton v-model="day.isOpen" />
+          <div class="flex min-h-0 flex-1 flex-col gap-3">
+              <div
+                v-for="day in schedule"
+                :key="day.day"
+                class="flex flex-1 flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-black/10 px-4 py-3"
+              >
+                <div class="flex shrink-0 items-center gap-3">
+                  <ToggleButton v-model="day.isOpen" />
+                  <span class="text-black">{{ day.day }}</span>
+                </div>
 
-                <span class="text-black">
-                  {{ day.day }}
-                </span>
+                <div
+                  v-if="day.isOpen"
+                  class="ml-auto flex shrink-0 items-center justify-end gap-2"
+                >
+                  <input
+                    v-model="day.openTime"
+                    type="time"
+                    class="rounded-lg border border-black/10 p-1 text-sm"
+                  />
+                  <span class="text-center text-gray-500">-</span>
+                  <input
+                    v-model="day.closeTime"
+                    type="time"
+                    class="rounded-lg border border-black/10 p-1 text-sm"
+                  />
+                </div>
 
+                <span v-else class="ml-auto text-sm">Closed</span>
               </div>
-              <div v-if="day.isOpen" class="flex items-center justify-end gap-1">
-                <input v-model="day.openTime" type="time" class="p-1 rounded-lg border border-black/10 text-xs" />
-
-                <span class="text-center text-gray-500">-</span>
-
-                <input v-model="day.closeTime" type="time" class="p-1 rounded-lg border border-black/10 text-xs" />
+              <div class="flex justify-end">
+                <Button>Save</Button>
               </div>
-
-              <span v-else class="text-sm">
-                Closed
-              </span>
-
             </div>
-
-            <div class="flex justify-end">
-              <Button class="mt-2">
-                Save
-              </Button>
-            </div>
-          </div>
         </aside>
       </div>
     </main>
@@ -54,129 +116,66 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import FullCalendar from '@fullcalendar/vue3'
-import dayGridPlugin from '@fullcalendar/daygrid'
-import interactionPlugin from '@fullcalendar/interaction'
-
+import { ref, computed } from 'vue'
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import Button from '@/components/admin/Button.vue'
 import ToggleButton from '@/components/admin/ToggleButton.vue'
+import CalendarView from '@/components/admin/calendar/CalendarView.vue'
 import { INITIAL_HOLIDAYS, INITIAL_WEEKLY_SCHEDULE } from '@/data/calenderData'
-import { toISO } from '@/utils/date'
+import { shiftMonth, toISO } from '@/utils/date'
 
 const sidebarOpen = ref(false)
-const currentMonth = ref(new Date())
+const viewMode = ref('calendar')
 
-const holidays = ref(INITIAL_HOLIDAYS.map((item) => ({ ...item })))
-const schedule = ref(INITIAL_WEEKLY_SCHEDULE.map((item) => ({ ...item })))
-const orderedSchedule = computed(() => [...schedule.value.slice(1), schedule.value[0]])
+const displayMonth = ref(new Date())
+const monthLabel = computed(() =>
+  displayMonth.value.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  }),
+)
 
+const schedule = ref(INITIAL_WEEKLY_SCHEDULE.map((x) => ({ ...x })))
 
-const holidaysByDate = computed(() => {
-  const result = {}
+const calendarDayMap = computed(() => {
+  const contentMap = {}
+  const monthStart = new Date(displayMonth.value.getFullYear(), displayMonth.value.getMonth(), 1)
+  const monthEnd = new Date(displayMonth.value.getFullYear(), displayMonth.value.getMonth() + 1, 0)
 
-  for (const holiday of holidays.value) {
-    result[holiday.dateISO] = holiday
+  let current = new Date(monthStart)
+  while (current <= monthEnd) {
+    const iso = toISO(current)
+    const holiday = INITIAL_HOLIDAYS.find((day) => day.dateISO === iso) ?? null
+    const hasSpecialDay = Boolean(holiday)
+    const isOpen = holiday?.status === 'open'
+
+    contentMap[iso] = {
+      content: hasSpecialDay
+        ? isOpen
+          ? `${holiday.openTime} - ${holiday.closeTime}`
+          : 'Closed'
+        : '',
+      dotContent: hasSpecialDay,
+      contentClass: hasSpecialDay
+        ? isOpen
+          ? 'rounded-lg text-center text-sm p-1 bg-emerald-100 text-emerald-900'
+          : 'rounded-lg text-center text-sm p-1 bg-rose-100 text-rose-900'
+        : ''
+    }
+
+    current.setDate(current.getDate() + 1)
   }
 
-  return result
+  return contentMap
 })
 
-function getDates(start, end) {
-  const dates = []
-
-  while (start <= end) {
-    dates.push(new Date(start))
-    start.setDate(start.getDate() + 1)
-  }
-  return dates
+function goPrevMonth() {
+  displayMonth.value = shiftMonth(displayMonth.value, -1)
 }
 
-function getWeeklyScheduleForDate(date) {
-  return schedule.value[date.getDay()]
+function goNextMonth() {
+  displayMonth.value = shiftMonth(displayMonth.value, 1)
 }
-
-const calendarEvents = computed(() => {
-  const monthDate = currentMonth.value
-  const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1)
-  const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0)
-
-  const dates = getDates(monthStart, monthEnd)
-
-  return dates.map((date) => {
-    const iso = toISO(date)
-    const holiday = holidaysByDate.value[iso] || null
-    const weeklySchedule = getWeeklyScheduleForDate(date)
-
-    if (holiday) {
-      if (holiday.status === 'open') {
-        return {
-          id: iso,
-          title: `${holiday.openTime} - ${holiday.closeTime}`,
-          start: iso,
-          allDay: true,
-          backgroundColor: '#dcf5df',
-          borderColor: '#dcf5df',
-          textColor: '#13652b',
-        }
-      }
-
-      return {
-        id: iso,
-        title: 'Closed',
-        start: iso,
-        allDay: true,
-        backgroundColor: '#f8d8d8',
-        borderColor: '#f8d8d8',
-        textColor: '#8f1d1d',
-      }
-    }
-
-    if (weeklySchedule.isOpen) {
-      return {
-        id: iso,
-        title: `${weeklySchedule.openTime} - ${weeklySchedule.closeTime}`,
-        start: iso,
-        allDay: true,
-        backgroundColor: 'transparent',
-        borderColor: 'transparent',
-        textColor: '#000000',
-      }
-    }
-
-    return {
-      id: iso,
-      title: 'Closed',
-      start: iso,
-      allDay: true,
-      backgroundColor: 'transparent',
-      borderColor: 'transparent',
-      textColor: '#000000',
-    }
-  })
-})
-
-function handleDateClick(info) { }
-
-function handleDatesSet(info) {
-  currentMonth.value = new Date(info.view.currentStart)
-}
-
-const calendarOptions = computed(() => ({
-  plugins: [dayGridPlugin, interactionPlugin],
-  initialView: 'dayGridMonth',
-  firstDay: 1,
-  fixedWeekCount: true,
-  events: calendarEvents.value,
-  dateClick: handleDateClick,
-  datesSet: handleDatesSet,
-  headerToolbar: {
-    left: 'prev',
-    center: 'title',
-    right: 'next',
-  },
-}))
-
 </script>
