@@ -17,6 +17,7 @@ import Schedule from '@pages/admin/Schedule.vue'
 import VerifyEmail from '@pages/verifyEmail.vue'
 import AdminSignIn from '@pages/admin/AdminSignIn.vue'
 import EmployeeSignIn from '@pages/employee/EmployeeSignIn.vue'
+import TimeOff from '@pages/admin/TimeOff.vue'
 
 const routes = [
   {
@@ -154,6 +155,14 @@ const routes = [
     component: EmployeeSignIn,
     meta: {
         title: 'Employee Signin'
+    }
+  },
+  {
+    path: '/admin/time-offs',
+    name: 'TimeOff',
+    component: TimeOff,
+    meta: {
+        title: 'TimeOff'
     }
   },
 ]
