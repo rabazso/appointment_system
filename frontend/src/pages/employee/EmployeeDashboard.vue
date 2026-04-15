@@ -2,8 +2,8 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { Pencil, Plus, X } from 'lucide-vue-next'
 import Header from '@/components/admin/Header.vue'
-import AppointmentScheduler from '@/components/admin/AppointmentSchedule.vue'
 import ReviewSidebar from '@/components/admin/AdminSidebar.vue'
+import EmployeeAppointmentsBoard from '@/components/employee/EmployeeAppointmentsBoard.vue'
 import EmployeeSidebar from '@/components/employee/EmployeeSidebar.vue'
 import {
   cancelBarberAppointment,
@@ -50,8 +50,8 @@ const profile = ref({
 
 const sectionMeta = computed(() => ({
   appointments: {
-    title: 'Employee Dashboard',
-    description: 'Manage appointments, profile updates, and availability.',
+    title: 'Your Appointments',
+    description: 'Manage your craft and curate your day\'s gallery.',
   },
   profile: {
     title: 'Profile',
@@ -410,7 +410,7 @@ onMounted(async () => {
 
         <div class="grid gap-4 md:grid-cols-7 lg:grid-cols-7">
           <div class="col-span-4 md:col-span-4 lg:col-span-5">
-            <AppointmentScheduler
+            <EmployeeAppointmentsBoard
               :appointments="appointments"
               :selected-appointment-ids="selectedCancellableAppointmentIds"
               @cancel-appointment="onCancelAppointment"
