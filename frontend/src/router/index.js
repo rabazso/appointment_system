@@ -17,6 +17,7 @@ import Schedule from '@pages/admin/Schedule.vue'
 import VerifyEmail from '@pages/verifyEmail.vue'
 import AdminSignIn from '@pages/admin/AdminSignIn.vue'
 import EmployeeSignIn from '@pages/employee/EmployeeSignIn.vue'
+import EmployeeDashboard from '@pages/employee/EmployeeDashboard.vue'
 import TimeOff from '@pages/admin/TimeOff.vue'
 
 const routes = [
@@ -82,6 +83,15 @@ const routes = [
     component: YourAppointments,
     meta:{
       title: 'YourAppointments'
+    }
+  },
+  {
+    path: '/employee/dashboard',
+    name: 'EmployeeDashboard',
+    component: EmployeeDashboard,
+    meta:{
+      title: 'Employee Dashboard',
+      requiresBarber: true
     }
   },
   {
