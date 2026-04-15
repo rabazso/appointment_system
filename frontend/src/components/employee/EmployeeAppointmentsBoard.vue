@@ -87,9 +87,53 @@ const dailyAppointments = computed(() =>
   filteredAppointments.value.filter((appointment) => appointment._dateKey === selectedDate.value),
 )
 
-const visibleAppointmentCount = computed(() => dailyAppointments.value.length)
+const weekStart = computed(() => {
+  const [year, month, day] = selectedDate.value.split('-').map(Number)
+  const baseDate = new Date(year, month - 1, day)
+  const weekday = baseDate.getDay()
+  const offset = weekday === 0 ? 6 : weekday - 1
+  baseDate.setDate(baseDate.getDate() - offset)
+  baseDate.setHours(0, 0, 0, 0)
+  return baseDate
+})
+
+const weeklyDays = computed(() =>
+  Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(weekStart.value)
+    date.setDate(weekStart.value.getDate() + index)
+    const dateKey = toISO(date)
+
+    return {
+      date,
+      dateKey,
+      shortLabel: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      fullLabel: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      appointments: filteredAppointments.value.filter((appointment) => appointment._dateKey === dateKey),
+    }
+  }),
+)
+
+const visibleAppointmentCount = computed(() =>
+  viewMode.value === 'daily'
+    ? dailyAppointments.value.length
+    : weeklyDays.value.reduce((count, day) => count + day.appointments.length, 0),
+)
 
 const rangeLabel = computed(() => {
+  if (viewMode.value === 'weekly') {
+    const weekEnd = new Date(weekStart.value)
+    weekEnd.setDate(weekStart.value.getDate() + 6)
+
+    return `${weekStart.value.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    })} - ${weekEnd.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })}`
+  }
+
   const [year, month, day] = selectedDate.value.split('-').map(Number)
   return new Date(year, month - 1, day).toLocaleDateString('en-US', {
     weekday: 'long',
@@ -354,8 +398,82 @@ const getStatusClass = (status) => ({
         </div>
       </template>
 
-      <div v-else class="rounded-lg border border-dashed border-black/10 bg-slate-50 px-4 py-10 text-center text-sm text-gray-500">
-        Weekly appointments view will land in the next pass.
+      <div v-else class="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+        <section
+          v-for="day in weeklyDays"
+          :key="day.dateKey"
+          class="rounded-lg border border-black/10 bg-slate-50 p-4"
+        >
+          <div class="mb-4 flex items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-semibold text-black">{{ day.shortLabel }}</p>
+              <p class="text-xs text-gray-500">{{ day.fullLabel }}</p>
+            </div>
+            <span class="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-gray-500">
+              {{ day.appointments.length }}
+            </span>
+          </div>
+
+          <div v-if="day.appointments.length === 0" class="rounded-md border border-dashed border-black/10 bg-white px-3 py-6 text-center text-xs text-gray-500">
+            No appointments
+          </div>
+
+          <div v-else class="space-y-3">
+            <article
+              v-for="appointment in day.appointments"
+              :key="appointment.id"
+              class="rounded-lg border border-black/10 bg-white p-3"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-black">
+                    {{ formatTime(appointment._startDate) }} - {{ formatTime(appointment._endDate || appointment._startDate) }}
+                  </p>
+                  <p class="truncate text-sm text-gray-500">{{ appointment.client }}</p>
+                </div>
+                <span :class="['inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium', getStatusClass(appointment.status)]">
+                  {{ getStatusText(appointment.status) }}
+                </span>
+              </div>
+
+              <div class="mt-3 flex items-center justify-between gap-3">
+                <span class="inline-flex rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                  {{ appointment.service || 'Service' }}
+                </span>
+                <span class="text-xs font-semibold text-black">{{ formatPrice(appointment.price) }}</span>
+              </div>
+
+              <div class="mt-3 flex items-center gap-2">
+                <label v-if="isAppointmentCancellable(appointment.status)" class="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    :checked="selectedAppointmentIdSet.has(appointment.id)"
+                    @change="$emit('toggle-appointment-selection', appointment.id)"
+                  >
+                </label>
+                <button
+                  v-if="appointment.status === 'confirmed'"
+                  type="button"
+                  class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-emerald-200 text-emerald-700 transition hover:bg-emerald-50"
+                  title="Complete appointment"
+                  @click="$emit('complete-appointment', appointment.id)"
+                >
+                  <Check class="h-4 w-4" />
+                </button>
+                <button
+                  v-if="isAppointmentCancellable(appointment.status)"
+                  type="button"
+                  class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-red-200 text-red-600 transition hover:bg-red-50"
+                  title="Cancel appointment"
+                  @click="$emit('cancel-appointment', appointment.id)"
+                >
+                  <X class="h-4 w-4" />
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
       </div>
     </div>
   </section>
