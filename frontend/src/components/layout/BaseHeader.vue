@@ -37,7 +37,7 @@ const isBarberId = computed(() => {
 })
 const isBarberUser = computed(() => ['employee', 'barber', 'admin'].includes(auth.role) || isBarberId.value)
 const accountButtonLabel = computed(() => auth.user_name || 'Account')
-const dashboardPath = computed(() => (isBarberUser.value ? '/barberAdminPage' : '/yourAppointments'))
+const dashboardPath = computed(() => (isBarberUser.value ? '/employee/dashboard' : '/yourAppointments'))
 const isDashboardActive = computed(() => route.path === dashboardPath.value)
 
 let bgcolor = ref(props.variant === 'background' ? 'bg-background' : 'bg-primary')
@@ -112,7 +112,7 @@ function toggleAccountMenu() {
 function goToDashboard() {
   accountMenuOpen.value = false
   if (isBarberUser.value) {
-    router.push('/barberAdminPage')
+    router.push('/employee/dashboard')
     return
   }
   router.push('/yourAppointments')

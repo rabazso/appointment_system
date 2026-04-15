@@ -8,7 +8,6 @@ import Summary from '@pages/summary.vue'
 import Confirm from '@pages/confirm.vue'
 import ConfirmationPending from '@pages/confirmationPending.vue'
 import YourAppointments from '@pages/yourAppointments.vue'
-import BarberAdminPage from '@pages/barberAdminPage.vue'
 import ForgotPassword from '@pages/forgotPassword.vue'
 import ResetPassword from '@pages/resetPassword.vue'
 import Services from '@pages/admin/Services.vue'
@@ -96,12 +95,7 @@ const routes = [
   },
   {
     path: '/barberAdminPage',
-    name: 'BarberAdminPage',
-    component: BarberAdminPage,
-    meta:{
-      title: 'BarberAdminPage',
-      requiresBarber: true
-    }
+    redirect: '/employee/dashboard',
   },
   {
     path: '/forgot-password',

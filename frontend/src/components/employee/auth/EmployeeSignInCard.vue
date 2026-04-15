@@ -17,7 +17,7 @@ async function submitHandler() {
   errorMessage.value = ''
   try {
     await employeeLogin(data.value)
-    router.push('/barberAdminPage')
+    router.push('/employee/dashboard')
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'Something went wrong'
   }
