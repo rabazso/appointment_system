@@ -134,29 +134,6 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function barberAppointments(Request $request)
-    {
-        $employee = $request->user()->employee;
-        if (!$employee) {
-            return response()->json(['message' => 'Barber profile not found'], 404);
-        }
-
-        $appointments = Appointment::query()
-            ->where('employee_id', $employee->id)
-            ->with([
-                'service' => fn ($query) => $query->select('services.id', 'services.name'),
-                'customer:id,name',
-            ])
-            ->orderBy('start_datetime')
-            ->get();
-
-        $payload = $appointments
-            ->map(fn (Appointment $appointment) => (new BarberAppointmentResource($appointment))->toArray($request))
-            ->values();
-
-        return response()->json($payload);
-    }
-
     public function cancelBarberAppointment(Request $request, Appointment $appointment)
     {
         $employee = $request->user()->employee;

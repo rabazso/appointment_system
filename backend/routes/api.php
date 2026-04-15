@@ -8,6 +8,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
+use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\EmployeeImageController;
 use App\Http\Controllers\EmployeeScheduleConfigurationController;
 use App\Http\Controllers\EmployeeTimeOffRequestController;
@@ -136,7 +137,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/service-versions', [ServiceVersionController::class, 'index']);
     });
 
-    Route::middleware('role:employee')->group(function () { });
+    Route::middleware('role:employee')->group(function () { 
+        Route::get("/employee/appointments", [EmployeeDashboardController::class, "index"]);
+     });
 });
 
 Route::post('/forgot-password', ForgotPasswordController::class)->middleware(['guest', 'throttle:3,1'])->name('password.email');
