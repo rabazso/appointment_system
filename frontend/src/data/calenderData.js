@@ -11,8 +11,8 @@ export const INITIAL_WEEKLY_SCHEDULE = [
 ]
 
 export const INITIAL_HOLIDAYS = [
-  { id: '1', dateISO: '2026-03-05', status: 'open', openTime: '08:00', closeTime: '20:00' },
-  { id: '2', dateISO: '2026-03-07', status: 'closed' },
+  { id: '1', name:'karacsony', dateISO: '2026-03-05', status: 'open', openTime: '08:00', closeTime: '20:00' },
+  { id: '2', name:'karacsony', dateISO: '2026-03-07', status: 'closed' },
   { id: '4', dateISO: '2026-03-12', status: 'open', openTime: '10:00', closeTime: '18:00' },
   { id: '5', dateISO: '2026-03-19', status: 'closed' },
   { id: '6', dateISO: '2026-03-27', status: 'open', openTime: '08:00', closeTime: '12:00' },

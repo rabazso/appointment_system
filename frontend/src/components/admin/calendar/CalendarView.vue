@@ -1,7 +1,7 @@
 
 <template>
     <div
-      class="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-black/10 bg-white"
+      class="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-black/10 bg-white"
     >
       <div class="grid shrink-0 grid-cols-7 gap-px border-b bg-black/10">
         <div
@@ -14,7 +14,7 @@
       </div>
 
       <div
-        class="grid h-full min-h-0 flex-1 grid-cols-7 gap-px grid-rows-6 bg-black/10"
+        class="grid min-h-0 flex-1 grid-cols-7 grid-rows-[repeat(6,minmax(0,1fr))] gap-px bg-black/10"
       >
         <CalendarCell
           v-for="day in calendarDays"
@@ -23,7 +23,9 @@
           :content="cellMap[day.dateISO]?.content"
           :contentClass="cellMap[day.dateISO]?.contentClass"
           :dotContent="cellMap[day.dateISO]?.dotContent"
+          :dotContentClass="cellMap[day.dateISO]?.dotContentClass"
           :isInCurrentMonth="day.isInCurrentMonth"
+          @day-click="emit('day-click', $event)"
         />
       </div>
     </div>
@@ -45,6 +47,8 @@ const props = defineProps({
     default: () => ({})
   }
 })
+
+const emit = defineEmits(['day-click'])
 
 const calendarDays = computed(() => {
   const monthStart = new Date(props.month)

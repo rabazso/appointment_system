@@ -7,8 +7,9 @@
       <Header
         title="Schedule"
         description="Manage your shop closures and special open days"
-        action-label="+ add holiday"
+        action-label="+ add special day"
         @menu-click="sidebarOpen = true"
+        @action-click="openAddSpecialDayModal"
       />
 
       <div class="mx-auto mb-4 flex rounded-2xl bg-white p-1 shadow-sm 2xl:hidden">
@@ -33,7 +34,7 @@
       <div class="flex min-h-0 w-full flex-1 rounded-2xl flex-col gap-4 2xl:flex-row 2xl:overflow-hidden">
         <div
           :class="[viewMode === 'calendar' ? 'flex' : 'hidden', '2xl:flex']"
-          class="w-full flex-1 flex-col rounded-2xl bg-white p-4"
+          class="min-h-0 w-full flex-1 flex-col rounded-2xl bg-white p-4"
         >
           <div class="mb-4 flex flex-wrap items-center gap-2">
             <button
@@ -62,13 +63,14 @@
             <CalendarView
               :month="displayMonth"
               :cellMap="calendarDayMap"
+              @day-click="openSpecialDayModalForDate"
             />
           </div>
         </div>
 
         <aside
           :class="[viewMode === 'weekly' ? 'flex' : 'hidden', '2xl:flex']"
-          class="mx-auto w-full h-full flex-col overflow-y-auto rounded-2xl bg-white p-3 2xl:mx-0 2xl:w-7/20"
+          class="mx-auto w-full h-full flex-col overflow-y-auto rounded-2xl bg-white p-4 pb-0 2xl:mx-0 2xl:w-7/20"
         >
           <div class="mb-4">
             <h2 class="text-xl font-semibold">Weekly schedule</h2>
@@ -93,19 +95,19 @@
                   <input
                     v-model="day.openTime"
                     type="time"
-                    class="rounded-lg border border-black/10 p-1 text-sm"
+                    class="rounded-lg border border-black/10 p-1 text-sm [font-variant-numeric:tabular-nums]"
                   />
                   <span class="text-center text-gray-500">-</span>
                   <input
                     v-model="day.closeTime"
                     type="time"
-                    class="rounded-lg border border-black/10 p-1 text-sm"
+                    class="rounded-lg border border-black/10 p-1 text-sm [font-variant-numeric:tabular-nums]"
                   />
                 </div>
 
                 <span v-else class="ml-auto text-sm">Closed</span>
               </div>
-              <div class="flex justify-end">
+              <div class="flex justify-end pb-4">
                 <Button>Save</Button>
               </div>
             </div>
@@ -113,6 +115,14 @@
       </div>
     </main>
   </div>
+  <SpecialDayModal
+    v-if="showSpecialDayModal"
+    :day="selectedDay"
+    :special-days="specialDays"
+    :mode="specialDayModalMode"
+    @close="closeSpecialDayModal"
+    @save="saveSpecialDay"
+  />
 </template>
 
 <script setup>
@@ -123,6 +133,7 @@ import Sidebar from '@/components/admin/Sidebar.vue'
 import Button from '@/components/admin/Button.vue'
 import ToggleButton from '@/components/admin/ToggleButton.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
+import SpecialDayModal from '@/components/admin/SpecialDayModal.vue'
 import { INITIAL_HOLIDAYS, INITIAL_WEEKLY_SCHEDULE } from '@/data/calenderData'
 import { shiftMonth, toISO } from '@/utils/date'
 
@@ -138,6 +149,10 @@ const monthLabel = computed(() =>
 )
 
 const schedule = ref(INITIAL_WEEKLY_SCHEDULE.map((x) => ({ ...x })))
+const specialDays = ref(INITIAL_HOLIDAYS.map((x) => ({ ...x, name: x.name ?? '' })))
+const showSpecialDayModal = ref(false)
+const selectedDay = ref(null)
+const specialDayModalMode = ref('create')
 
 const calendarDayMap = computed(() => {
   const contentMap = {}
@@ -147,21 +162,29 @@ const calendarDayMap = computed(() => {
   let current = new Date(monthStart)
   while (current <= monthEnd) {
     const iso = toISO(current)
-    const holiday = INITIAL_HOLIDAYS.find((day) => day.dateISO === iso) ?? null
-    const hasSpecialDay = Boolean(holiday)
-    const isOpen = holiday?.status === 'open'
+    const specialDay = specialDays.value.find((day) => day.dateISO === iso) ?? null
+    const hasSpecialDay = Boolean(specialDay)
+    const isOpen = specialDay?.status === 'open'
+    const timeRange = `${specialDay?.openTime} - ${specialDay?.closeTime}`
 
     contentMap[iso] = {
       content: hasSpecialDay
         ? isOpen
-          ? `${holiday.openTime} - ${holiday.closeTime}`
-          : 'Closed'
+          ? specialDay.name
+            ? `${specialDay.name}\n${timeRange}`
+            : timeRange
+          : specialDay.name || 'closed'
         : '',
-      dotContent: hasSpecialDay,
       contentClass: hasSpecialDay
         ? isOpen
           ? 'rounded-lg text-center text-sm p-1 bg-emerald-100 text-emerald-900'
           : 'rounded-lg text-center text-sm p-1 bg-rose-100 text-rose-900'
+        : '',
+        dotContent: hasSpecialDay,
+      dotContentClass: hasSpecialDay
+        ? isOpen
+          ? 'bg-emerald-300'
+          : 'bg-rose-300'
         : ''
     }
 
@@ -177,5 +200,52 @@ function goPrevMonth() {
 
 function goNextMonth() {
   displayMonth.value = shiftMonth(displayMonth.value, 1)
+}
+
+function openAddSpecialDayModal() {
+  specialDayModalMode.value = 'create'
+  selectedDay.value = null
+  showSpecialDayModal.value = true
+}
+
+function openSpecialDayModalForDate(dateISO) {
+  const specialDay = specialDays.value.find((day) => day.dateISO === dateISO)
+  specialDayModalMode.value = specialDay ? 'edit' : 'create'
+  selectedDay.value = specialDay
+    ? { ...specialDay, days: [specialDay.dateISO] }
+    : { dateISO, days: [dateISO], isSpecial: false, status: 'closed', openTime: '08:00', closeTime: '16:00', name: '' }
+  showSpecialDayModal.value = true
+}
+
+function closeSpecialDayModal() {
+  showSpecialDayModal.value = false
+  selectedDay.value = null
+}
+
+function saveSpecialDay(payload) {
+  if (!payload.isSpecial) {
+    const removedDates = new Set(payload.days)
+    specialDays.value = specialDays.value.filter((specialDay) => !removedDates.has(specialDay.dateISO))
+    closeSpecialDayModal()
+    return
+  }
+
+  const timestamp = Date.now()
+  const savedDays = payload.days.map((dateISO, index) => ({
+    id: index === 0 && payload.id ? payload.id : `${timestamp}-${dateISO}`,
+    name: payload.name,
+    dateISO,
+    status: payload.status,
+    openTime: payload.openTime,
+    closeTime: payload.closeTime,
+  }))
+
+  if (payload.id) {
+    specialDays.value = specialDays.value.filter((specialDay) => specialDay.id !== payload.id)
+  }
+
+  const savedDates = new Set(savedDays.map((day) => day.dateISO))
+  specialDays.value = specialDays.value.filter((specialDay) => !savedDates.has(specialDay.dateISO)).concat(savedDays)
+  closeSpecialDayModal()
 }
 </script>
