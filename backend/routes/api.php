@@ -57,6 +57,11 @@ Route::get('/appointments/confirm/{appointment}', [AppointmentController::class,
 
 Route::get('/reviews', [ReviewController::class, 'index']);
 
+Route::prefix('/booking')->group(function () {
+    Route::get('/services', [BookingController::class, 'services']);
+    Route::get('/employees', [BookingController::class, 'employees']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
