@@ -6,8 +6,9 @@
       <Header
         title="Time Off"
         description="Manage vacation, sick leave, and personal days"
-        action-label="+ add request"
+        action-label="+ add time off"
         @menu-click="sidebarOpen = true"
+        @action-click="openAddTimeOffModal"
       />
 
       <div class="mx-auto mb-4 flex rounded-2xl bg-white p-1 shadow-sm 2xl:hidden">
@@ -34,32 +35,56 @@
           :class="[viewMode === 'calendar' ? 'flex' : 'hidden', '2xl:flex']"
           class="w-full flex-1 flex-col rounded-2xl bg-white p-4"
         >
-          <div class="mb-4 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              class="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-black/10 bg-white text-gray-500 shadow-sm transition hover:border-black"
-              @click="goPrevMonth"
-            >
-              <ChevronLeft class="h-4 w-4" />
-            </button>
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-black/10 bg-white text-gray-500 shadow-sm transition hover:border-black"
+                @click="goPrevMonth"
+              >
+                <ChevronLeft class="h-4 w-4" />
+              </button>
 
-            <div class="inline-flex min-h-11 min-w-[140px] items-center justify-center rounded-2xl border border-black/10 bg-white px-4 font-semibold shadow-sm">
-              {{ monthLabel }}
+              <div class="inline-flex min-h-11 min-w-[140px] items-center justify-center rounded-2xl border border-black/10 bg-white px-4 font-semibold shadow-sm">
+                {{ monthLabel }}
+              </div>
+
+              <button
+                type="button"
+                class="inline-flex h-11 w-11  items-center justify-center rounded-2xl border border-black/10 bg-white text-gray-500 shadow-sm transition hover:border-black"
+                @click="goNextMonth"
+              >
+                <ChevronRight class="h-4 w-4" />
+              </button>
             </div>
 
-            <button
-              type="button"
-              class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-black/10 bg-white text-gray-500 shadow-sm transition hover:border-black"
-              @click="goNextMonth"
-            >
-              <ChevronRight class="h-4 w-4" />
-            </button>
+            <div class="ml-auto flex flex-wrap items-end justify-end gap-2">
+              <div class="relative">
+                <select v-model="calendarFilterStatus" class="min-h-11 appearance-none rounded-2xl font-medium border border-black/10 bg-white shadow-sm outline-none transition px-4 hover:border-black">
+                  <option value="">All statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div class="relative">
+                <select v-model="calendarFilterEmployee" class="min-h-11 appearance-none rounded-2xl font-medium border border-black/10 bg-white  shadow-sm outline-none transition px-4 hover:border-black">
+                  <option value="">All employees</option>
+                  <option v-for="employee in employees" :key="employee" :value="employee">
+                    {{ employee }}
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div class="flex min-h-0 flex-1">
             <CalendarView
               :month="month"
               :cellMap="dayMap"
+              @day-click="openTimeOffModalForDate"
             />
           </div>
         </div>
@@ -78,59 +103,31 @@
             </span>
           </div>
 
-          <div class="mt-5 flex gap-3">
-            <div class="flex-1 flex flex-col gap-1">
-              <label class="font-semibold text-xs">Status</label>
-              <select v-model="filterStatus" class="rounded-lg border border-black/10 bg-white px-2 py-1.5 text-sm">
-                <option value="">All</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-
-            <div class="flex-1 flex flex-col gap-1">
-              <label class="text-xs font-semibold">Employee</label>
-              <select v-model="filterEmployee" class="rounded-lg border border-black/10 bg-white px-2 py-1.5 text-sm">
-                <option value="">All</option>
-                <option v-for="employee in employees" :key="employee" :value="employee">
-                  {{ employee }}
-                </option>
-              </select>
-            </div>
-
-            <div class="flex-1 flex flex-col gap-1">
-              <label class="text-xs font-semibold">Date</label>
-              <input v-model="filterDate" type="date" class="rounded-lg border border-black/10 bg-white px-2 py-1.5 text-sm" />
-            </div>
-          </div>
-
-          <div v-if="filteredRequests.length > 0" class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div v-if="filteredRequests.length > 0" class="mt-5 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))]">
             <div
               v-for="request in filteredRequests"
               :key="request.id"
-              class="rounded-3xl border border-black/10 bg-white p-4 shadow-sm"
+              class="flex min-h-48 flex-col rounded-3xl border border-black/10 bg-white p-4 shadow-sm"
             >
-              <p class="font-semibold">{{ request.employee }}</p>
-              <p class="mt-1 text-sm font-semibold">
+              <p class="min-h-6 truncate font-semibold">{{ request.employee }}</p>
+              <p class="mt-1 min-h-5 text-sm font-semibold">
                 {{ request.date }}
               </p>
-              <p class="mt-3 line-clamp-3 min-h-10 text-sm">{{ request.note }}</p>
+              <p class="mt-3 line-clamp-2 min-h-[2lh] text-sm leading-5">{{ request.note }}</p>
 
-              <div class="mt-4 flex gap-3">
+              <div class="mt-auto flex gap-3 pt-4">
                 <button
                   type="button"
-                  class="flex-1 rounded-2xl border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold transition hover:brightness-96"
-                  @click=""
+                  class="flex-1 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold transition hover:brightness-96"
+                  @click="changeTimeOffStatus({ id: request.id, status: 'rejected' })"
                 >
-                  Decline
+                  Reject
                 </button>
 
                 <button
                   type="button"
-                  class="flex-1 rounded-2xl bg-secondary px-4 py-2.5 text-sm font-semibold transition hover:brightness-96"
-                  @click=""
+                  class="flex-1 rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold transition hover:brightness-96"
+                  @click="changeTimeOffStatus({ id: request.id, status: 'approved' })"
                 >
                   Approve
                 </button>
@@ -147,6 +144,21 @@
       </div>
     </main>
   </div>
+  <TimeOffDayModal
+    v-if="showTimeOffDayModal"
+    :date="selectedDate"
+    :time-offs="selectedTimeOffs"
+    @close="closeTimeOffModals"
+    @add="openCreateTimeOffForDate"
+    @status-change="changeTimeOffStatus"
+  />
+  <TimeOffCreateModal
+    v-if="showTimeOffCreateModal"
+    :initial-date="selectedDate"
+    :employees="employeeOptions"
+    @close="closeTimeOffModals"
+    @save="saveTimeOff"
+  />
 </template>
 
 <script setup>
@@ -155,16 +167,21 @@ import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
-import { shiftMonth, toISO } from '@/utils/date'
+import TimeOffCreateModal from '@/components/admin/TimeOffCreateModal.vue'
+import TimeOffDayModal from '@/components/admin/TimeOffDayModal.vue'
+import { shiftMonth } from '@/utils/date'
 import { INITIAL_REQUESTS } from '@/data/calenderData'
 
 const sidebarOpen = ref(false)
 const viewMode = ref('calendar')
 const month = ref(new Date())
-const filterStatus = ref('')
-const filterEmployee = ref('')
-const filterDate = ref('')
+const calendarFilterStatus = ref('')
+const calendarFilterEmployee = ref('')
 const requests = ref(INITIAL_REQUESTS.map((x) => ({ ...x })))
+const showTimeOffDayModal = ref(false)
+const showTimeOffCreateModal = ref(false)
+const selectedTimeOffs = ref([])
+const selectedDate = ref('')
 
 const monthLabel = computed(() =>
   month.value.toLocaleDateString('en-US', {
@@ -174,23 +191,29 @@ const monthLabel = computed(() =>
 )
 
 const employees = computed(() => {
-    return new Set(requests.value.map(x => x.employee))
+  return new Set(requests.value.map((x) => x.employee))
+})
+
+const employeeOptions = computed(() => {
+  return Array.from(employees.value)
 })
 
 const filteredRequests = computed(() => {
+  return requests.value.filter((request) => request.status === 'pending')
+})
+
+const calendarRequests = computed(() => {
   return requests.value.filter((request) => {
-    const statusMatch = filterStatus.value === '' || request.status === filterStatus.value
-    const employeeMatch = filterEmployee.value === '' || request.employee === filterEmployee.value
-    const requestDate = request.date
-    const dateMatch = filterDate.value === '' || requestDate === filterDate.value
-    return statusMatch && employeeMatch && dateMatch
+    const statusMatch = calendarFilterStatus.value === '' || request.status === calendarFilterStatus.value
+    const employeeMatch = calendarFilterEmployee.value === '' || request.employee === calendarFilterEmployee.value
+    return statusMatch && employeeMatch
   })
 })
 
 const dayMap = computed(() => {
   const groupByDate = {}
   
-  for (const item of requests.value) {
+  for (const item of calendarRequests.value) {
     const itemDate = item.date
     if (!groupByDate[itemDate]) {
       groupByDate[itemDate] = []
@@ -200,15 +223,39 @@ const dayMap = computed(() => {
 
   const contentMap = {}
   for (const [date, items] of Object.entries(groupByDate)) {
+    const status = items[0]?.status
+    const hasStatusContext = Boolean(calendarFilterEmployee.value || calendarFilterStatus.value)
+
     contentMap[date] = {
       content: `${items.length} request${items.length !== 1 ? 's' : ''}`,
-      contentClass: 'rounded-md bg-black/10 px-2 py-1 text-sm font-semibold',
+      contentClass: hasStatusContext
+        ? getCalendarStatusClass(status)
+        : 'rounded-md bg-white px-2 py-1 text-sm font-semibold',
       dotContent: true,
+      dotContentClass: hasStatusContext ? getCalendarStatusDotClass(status) : undefined,
     }
   }
 
   return contentMap
 })
+
+function getCalendarStatusClass(status) {
+  const baseClass = 'rounded-md px-2 py-1 text-sm font-semibold'
+
+  if (status === 'approved') return `${baseClass} bg-emerald-100 text-emerald-900`
+  if (status === 'pending') return `${baseClass} bg-gray-200 text-gray-800`
+  if (status === 'rejected') return `${baseClass} bg-rose-100 text-rose-900`
+  if (status === 'cancelled') return `${baseClass} border border-black bg-white text-black line-through`
+  return `${baseClass}`
+}
+
+function getCalendarStatusDotClass(status) {
+  if (status === 'approved') return 'bg-emerald-500'
+  if (status === 'pending') return 'bg-gray-500'
+  if (status === 'rejected') return 'bg-rose-500'
+  if (status === 'cancelled') return 'border border-black-500 bg-transparent'
+  return 'bg-black'
+}
 
 function goPrevMonth() {
   month.value = shiftMonth(month.value, -1)
@@ -216,5 +263,85 @@ function goPrevMonth() {
 
 function goNextMonth() {
   month.value = shiftMonth(month.value, 1)
+}
+
+function openAddTimeOffModal() {
+  selectedTimeOffs.value = []
+  selectedDate.value = ''
+  showTimeOffDayModal.value = false
+  showTimeOffCreateModal.value = true
+}
+
+function openTimeOffModalForDate(dateISO) {
+  const timeOffs = calendarRequests.value.filter((request) => request.date === dateISO)
+  const timeOff = timeOffs[0]
+
+  selectedTimeOffs.value = timeOffs.map((item) => ({ ...item }))
+  selectedDate.value = dateISO
+
+  if (timeOff) {
+    showTimeOffCreateModal.value = false
+    showTimeOffDayModal.value = true
+    return
+  }
+
+  showTimeOffDayModal.value = false
+  showTimeOffCreateModal.value = true
+}
+
+function openCreateTimeOffForDate() {
+  showTimeOffDayModal.value = false
+  showTimeOffCreateModal.value = true
+}
+
+function closeTimeOffModals() {
+  showTimeOffDayModal.value = false
+  showTimeOffCreateModal.value = false
+  selectedTimeOffs.value = []
+  selectedDate.value = ''
+}
+
+function saveTimeOff(timeOff) {
+  for (const day of timeOff.days) {
+    for (const employee of timeOff.employees) {
+      requests.value.push(createRequestFromForm(timeOff, day, employee))
+    }
+  }
+
+  closeTimeOffModals()
+}
+
+function changeTimeOffStatus({ id, status }) {
+  const requestIndex = requests.value.findIndex((request) => request.id === id)
+  if (requestIndex !== -1) {
+    requests.value[requestIndex] = {
+      ...requests.value[requestIndex],
+      status,
+    }
+  }
+
+  selectedTimeOffs.value = selectedTimeOffs.value.map((timeOff) => {
+    if (timeOff.id !== id) return timeOff
+    return {
+      ...timeOff,
+      status,
+    }
+  })
+
+}
+
+function createRequestFromForm(timeOff, date, employee, id = getNextRequestId()) {
+  return {
+    id,
+    employee,
+    type: timeOff.type,
+    date,
+    status: timeOff.status,
+    note: timeOff.note,
+  }
+}
+
+function getNextRequestId() {
+  return Math.max(0, ...requests.value.map((request) => Number(request.id) || 0)) + 1
 }
 </script>
