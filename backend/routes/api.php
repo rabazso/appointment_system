@@ -12,6 +12,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
 use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\EmployeeImageController;
+use App\Http\Controllers\EmployeeProfileController;
 use App\Http\Controllers\EmployeeScheduleConfigurationController;
 use App\Http\Controllers\EmployeeTimeOffRequestController;
 use App\Http\Controllers\EmployeeWorkingHourController;
@@ -146,8 +147,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/service-versions', [ServiceVersionController::class, 'index']);
     });
 
-    Route::middleware('role:employee')->group(function () { 
-        Route::get("/employee/appointments", [EmployeeDashboardController::class, "index"]);
+    Route::middleware('role:employee')->prefix('/employee')->group(function () { 
+        Route::get("/appointments", [EmployeeDashboardController::class, "index"]);
+        Route::get("/profile", [EmployeeProfileController::class, 'show']);
+        Route::patch("/profile", [EmployeeProfileController::class, 'update']);
+        Route::post("/profile/avatar", [EmployeeProfileController::class, 'storeProfilePic']);
+        Route::post("/profile/gallery", [EmployeeProfileController::class, 'storeGalleryImg']);
+        Route::delete("/profile/gallery/{imgId}", [EmployeeProfileController::class, 'destroyGalleryImg'])->whereNumber('imgId');
      });
 });
 
