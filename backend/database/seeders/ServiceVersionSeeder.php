@@ -12,19 +12,7 @@ class ServiceVersionSeeder extends Seeder
     {
         $validFrom = now()->startOfDay();
 
-        $definitions = [
-            'Short haircut',
-            'Normal haircut',
-            'Long haircut',
-            'Beard trim',
-            'Fullbox',
-            'Father and son haircut',
-            'Brothers haircut',
-        ];
-
         foreach (Service::all() as $service) {
-            $defaults = $definitions[$service->name];
-
             ServiceVersion::create([
                 'service_id' => $service->id,
                 'is_available' => true,

@@ -4,7 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
-
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\EmployeeBookingRuleConfigurationController;
+use App\Http\Controllers\EmployeeBookingRuleController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
@@ -24,7 +26,6 @@ use App\Http\Controllers\ServiceVersionController;
 use App\Http\Controllers\ShopImageController;
 use App\Http\Controllers\ShopOpeningHourController;
 use App\Http\Controllers\ShopSettingController;
-use App\Http\Controllers\ShopSettingVersionController;
 use App\Http\Controllers\ShopSpecialDayController;
 
 Route::post('/register', [AuthController::class, 'register'])->middleware(['guest', 'throttle:10,1']);
@@ -98,6 +99,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/employee-breaks', [EmployeeBreakController::class, 'store']);
         Route::patch('/employee-breaks/{employeeBreak}', [EmployeeBreakController::class, 'update']);
         Route::delete('/employee-breaks/{employeeBreak}', [EmployeeBreakController::class, 'destroy']);
+        Route::post('/employee-booking-rule-configurations', [EmployeeBookingRuleConfigurationController::class, 'store']);
+        Route::patch('/employee-booking-rule-configurations/{employeeBookingRuleConfiguration}', [EmployeeBookingRuleConfigurationController::class, 'update']);
+        Route::delete('/employee-booking-rule-configurations/{employeeBookingRuleConfiguration}', [EmployeeBookingRuleConfigurationController::class, 'destroy']);
+        Route::post('/employee-booking-rules', [EmployeeBookingRuleController::class, 'store']);
+        Route::patch('/employee-booking-rules/{employeeBookingRule}', [EmployeeBookingRuleController::class, 'update']);
+        Route::delete('/employee-booking-rules/{employeeBookingRule}', [EmployeeBookingRuleController::class, 'destroy']);
+        Route::get('/employee-booking-rule-configurations', [EmployeeBookingRuleConfigurationController::class, 'index']);
+        Route::get('/employee-booking-rules', [EmployeeBookingRuleController::class, 'index']);
         Route::post('/employee-time-off-requests', [EmployeeTimeOffRequestController::class, 'store']);
         Route::patch('/employee-time-off-requests/{employeeTimeOffRequest}', [EmployeeTimeOffRequestController::class, 'update']);
         Route::delete('/employee-time-off-requests/{employeeTimeOffRequest}', [EmployeeTimeOffRequestController::class, 'destroy']);

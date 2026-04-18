@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('employee_versions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
-            $table->boolean('is_available')
+            $table->boolean('is_available');
             $table->dateTime('valid_from');
             $table->dateTime('valid_to')->nullable();
             $table->timestamps();

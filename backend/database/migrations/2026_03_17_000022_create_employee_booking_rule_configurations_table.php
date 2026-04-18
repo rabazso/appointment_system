@@ -8,10 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('service_versions', function (Blueprint $table) {
+        Schema::create('employee_booking_rule_configurations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_id')->constrained()->cascadeOnDelete();
-            $table->boolean('is_available');
+            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
             $table->dateTime('valid_from');
             $table->dateTime('valid_to')->nullable();
             $table->timestamps();
@@ -20,6 +19,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('service_versions');
+        Schema::dropIfExists('employee_booking_rule_configurations');
     }
 };

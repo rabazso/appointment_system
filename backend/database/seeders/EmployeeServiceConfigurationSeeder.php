@@ -32,14 +32,12 @@ class EmployeeServiceConfigurationSeeder extends Seeder
             foreach ($serviceNames as $serviceName) {
                 $service = Service::where('name', $serviceName)->first();
 
-                $usesDefaultValues = (bool) random_int(0, 1);
 
                 EmployeeService::create([
                     'configuration_id' => $configuration->id,
                     'service_id' => $service->id,
-                    'uses_default_values' => $usesDefaultValues,
-                    'duration' => $usesDefaultValues ? null : 30,
-                    'price' => $usesDefaultValues ? null : 5000,
+                    'duration' => 30,
+                    'price' => 5000,
                 ]);
             }
         }
