@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('configuration_id')->constrained('employee_service_configurations')->cascadeOnDelete();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
-            $table->boolean('uses_default_values')->default(true);
             $table->integer('duration')->nullable();
             $table->integer('price')->nullable();
             $table->timestamps();

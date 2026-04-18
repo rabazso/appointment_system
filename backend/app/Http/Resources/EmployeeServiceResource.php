@@ -13,7 +13,6 @@ class EmployeeServiceResource extends JsonResource
             'id' => $this->id,
             'configuration_id' => $this->configuration_id,
             'service_id' => $this->service_id,
-            'uses_default_values' => $this->uses_default_values,
             'duration' => $this->duration,
             'price' => $this->price,
         ];

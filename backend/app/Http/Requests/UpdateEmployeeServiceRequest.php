@@ -16,9 +16,8 @@ class UpdateEmployeeServiceRequest extends FormRequest
         return [
             'configuration_id' => ['integer', 'exists:employee_service_configurations,id'],
             'service_id' => ['integer', 'exists:services,id'],
-            'uses_default_values' => ['boolean'],
-            'duration' => ['nullable', 'integer'],
-            'price' => ['nullable', 'integer'],
+            'duration' => ['integer'],
+            'price' => ['integer'],
         ];
     }
 }

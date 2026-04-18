@@ -114,9 +114,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/shop-settings', [ShopSettingController::class, 'store']);
         Route::patch('/shop-settings/{shopSetting}', [ShopSettingController::class, 'update']);
         Route::delete('/shop-settings/{shopSetting}', [ShopSettingController::class, 'destroy']);
-        Route::post('/shop-settings-versions', [ShopSettingVersionController::class, 'store']);
-        Route::patch('/shop-settings-versions/{shopSettingVersion}', [ShopSettingVersionController::class, 'update']);
-        Route::delete('/shop-settings-versions/{shopSettingVersion}', [ShopSettingVersionController::class, 'destroy']);
         Route::post('/shop-special-days', [ShopSpecialDayController::class, 'store']);
         Route::patch('/shop-special-days/{shopSpecialDay}', [ShopSpecialDayController::class, 'update']);
         Route::delete('/shop-special-days/{shopSpecialDay}', [ShopSpecialDayController::class, 'destroy']);
@@ -135,8 +132,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'index']);
         Route::get('/employee-services', [EmployeeServiceController::class, 'index']);
         Route::get('/shop-settings', [ShopSettingController::class, 'show']);
-        Route::get('/shop-settings/versions/valid', [ShopSettingController::class, 'showWithValidVersion']);
-        Route::get('/shop-settings-versions', [ShopSettingVersionController::class, 'index']);
         Route::get('/shop-special-days', [ShopSpecialDayController::class, 'index']);
         Route::get('/services/versions/valid', [ServiceController::class, 'indexServicesWithValidVersion']);
         Route::get('/service-versions', [ServiceVersionController::class, 'index']);

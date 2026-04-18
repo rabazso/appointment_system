@@ -16,9 +16,8 @@ class StoreEmployeeServiceRequest extends FormRequest
         return [
             'configuration_id' => ['required', 'integer', 'exists:employee_service_configurations,id'],
             'service_id' => ['required', 'integer', 'exists:services,id'],
-            'uses_default_values' => ['required', 'boolean'],
-            'duration' => ['nullable', 'integer'],
-            'price' => ['nullable', 'integer'],
+            'duration' => ['required', 'integer'],
+            'price' => ['required', 'integer'],
         ];
     }
 }

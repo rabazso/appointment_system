@@ -11,8 +11,7 @@ return new class extends Migration
         Schema::create('service_versions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
-            $table->integer('default_duration');
-            $table->integer('default_price');
+            $table->boolean('is_available')
             $table->dateTime('valid_from');
             $table->dateTime('valid_to')->nullable();
             $table->timestamps();

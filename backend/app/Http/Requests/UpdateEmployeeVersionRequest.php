@@ -14,10 +14,6 @@ class UpdateEmployeeVersionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'uses_default_booking_interval' => ['boolean'],
-            'booking_interval_minutes' => ['nullable', 'integer'],
-            'uses_default_booking_window' => ['boolean'],
-            'booking_window_days' => ['nullable', 'integer'],
             'valid_from' => ['date'],
             'valid_to' => ['nullable', 'date'],
         ];

@@ -10,17 +10,12 @@ class EmployeeVersion extends Model
 {
     protected $fillable = [
         'employee_id',
-        'uses_default_booking_interval',
-        'booking_interval_minutes',
-        'uses_default_booking_window',
-        'booking_window_days',
+        'is_available',
         'valid_from',
         'valid_to',
     ];
 
     protected $casts = [
-        'uses_default_booking_interval' => 'boolean',
-        'uses_default_booking_window' => 'boolean',
         'valid_from' => 'datetime',
         'valid_to' => 'datetime',
     ];

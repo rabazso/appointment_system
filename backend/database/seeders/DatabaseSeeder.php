@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             EmployeeImageSeeder::class,
             EmployeeWorkingHourSeeder::class,
             EmployeeBreakSeeder::class,
+            EmployeeBookingRuleSeeder::class,
             EmployeeTimeOffRequestSeeder::class,
             ShopOpeningHourSeeder::class,
             ShopSpecialDaySeeder::class,

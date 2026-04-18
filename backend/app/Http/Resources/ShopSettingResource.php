@@ -13,6 +13,7 @@ class ShopSettingResource extends JsonResource
             'id' => $this->id,
             'logo_path' => $this->logo_path,
             'about_us_text' => $this->about_us_text,
+            'cancellation_deadline_hours' => $this->cancellation_deadline_hours
         ];
     }
 }

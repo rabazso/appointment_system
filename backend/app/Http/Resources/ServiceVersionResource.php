@@ -17,8 +17,7 @@ class ServiceVersionResource extends JsonResource
         return [
             'id' => $this->id,
             'service_id' => $this->service_id,
-            'default_duration' => $this->default_duration,
-            'default_price' => $this->default_price,
+            'is_available' => $this->is_available,
             'valid_from' => $this->valid_from,
             'valid_to' => $this->valid_to,
         ];

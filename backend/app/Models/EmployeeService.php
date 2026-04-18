@@ -9,13 +9,8 @@ class EmployeeService extends Model
     protected $fillable = [
         'configuration_id',
         'service_id',
-        'uses_default_values',
         'duration',
         'price',
-    ];
-
-    protected $casts = [
-        'uses_default_values' => 'boolean',
     ];
 
     public function configuration()

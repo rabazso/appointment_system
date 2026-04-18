@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('logo_path')->nullable();
             $table->text('about_us_text')->nullable();
+            $table->integer('cancellation_deadline_hours');
             $table->timestamps();
         });
     }

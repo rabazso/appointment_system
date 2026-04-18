@@ -16,6 +16,7 @@ class StoreShopSettingRequest extends FormRequest
         return [
             'logo_path' => ['nullable', 'string'],
             'about_us_text' => ['nullable', 'string'],
+            'cancellation_deadline_hours' => ['required', 'integer']
         ];
     }
 }

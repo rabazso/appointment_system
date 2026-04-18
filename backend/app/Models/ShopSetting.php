@@ -9,6 +9,7 @@ class ShopSetting extends Model
     protected $fillable = [
         'logo_path',
         'about_us_text',
+        'cancellation_deadline_hours'
     ];
 
     public function versions()

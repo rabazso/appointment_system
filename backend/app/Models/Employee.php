@@ -39,6 +39,11 @@ class Employee extends Model
         return $this->hasMany(EmployeeScheduleConfiguration::class);
     }
 
+    public function bookingRuleConfigurations()
+    {
+        return $this->hasMany(EmployeeBookingRuleConfiguration::class);
+    }
+
     public function profileImage()
     {
         return $this->belongsTo(EmployeeImage::class, 'profile_image_id');

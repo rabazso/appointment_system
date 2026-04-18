@@ -15,10 +15,7 @@ class StoreEmployeeVersionRequest extends FormRequest
     {
         return [
             'employee_id' => ['required', 'integer', 'exists:employees,id'],
-            'uses_default_booking_interval' => ['required', 'boolean'],
-            'booking_interval_minutes' => ['nullable', 'integer'],
-            'uses_default_booking_window' => ['required', 'boolean'],
-            'booking_window_days' => ['nullable', 'integer'],
+            'is_available' => ['required', 'boolean'],
             'valid_from' => ['required', 'date'],
             'valid_to' => ['nullable', 'date', 'after:valid_from'],
         ];

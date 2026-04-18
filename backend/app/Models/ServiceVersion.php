@@ -11,8 +11,7 @@ class ServiceVersion extends Model
 {
     protected $fillable = [
         'service_id',
-        'default_duration',
-        'default_price',
+        'is_available',
         'valid_from',
         'valid_to',
     ];

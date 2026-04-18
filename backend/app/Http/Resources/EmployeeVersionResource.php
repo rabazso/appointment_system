@@ -12,10 +12,7 @@ class EmployeeVersionResource extends JsonResource
         return [
             'id' => $this->id,
             'employee_id' => $this->employee_id,
-            'uses_default_booking_interval' => $this->uses_default_booking_interval,
-            'booking_interval_minutes' => $this->booking_interval_minutes,
-            'uses_default_booking_window' => $this->uses_default_booking_window,
-            'booking_window_days' => $this->booking_window_days,
+            'is_available' => $this->is_available,
             'valid_from' => $this->valid_from,
             'valid_to' => $this->valid_to,
         ];

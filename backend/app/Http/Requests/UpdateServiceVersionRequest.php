@@ -14,8 +14,6 @@ class UpdateServiceVersionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'default_duration' => ['integer'],
-            'default_price' => ['integer'],
             'valid_from' => ['date'],
             'valid_to' => ['nullable', 'date'],
         ];

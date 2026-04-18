@@ -15,8 +15,7 @@ class StoreServiceVersionRequest extends FormRequest
     {
         return [
             'service_id' => ['required', 'integer', 'exists:services,id'],
-            'default_duration' => ['required', 'integer'],
-            'default_price' => ['required', 'integer'],
+            'is_available' => ['required', 'boolean'],
             'valid_from' => ['required', 'date'],
             'valid_to' => ['nullable', 'date', 'after:valid_from'],
         ];

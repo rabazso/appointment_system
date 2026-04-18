@@ -38,14 +38,4 @@ class ShopSettingController extends Controller
 
         return response()->json(['message' => 'Shop setting deleted successfully']);
     }
-
-    public function showWithValidVersion(): JsonResponse
-    {
-        $shopSetting = ShopSetting::query()->first();
-
-        return response()->json([
-            'shop_setting' => new ShopSettingResource($shopSetting),
-            'valid_version' => new ShopSettingVersionResource($shopSetting->resolveValidVersion()),
-        ]);
-    }
 }
