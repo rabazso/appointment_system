@@ -1,21 +1,15 @@
 <?php
-namespace App\Booking;
+
+namespace App\Services\Booking;
 
 
 class EmployeeCalculation
 {
     public function calculateValidFrom($employee, int $serviceId, $now)
     {
-        $emps = $employee->versions
-            ->filter(fn($v) => $v->valid_to === null || $v->valid_to >= $now)
-            ->sortBy('valid_from')
-            ->values();
+        $emps = $employee->versions;
 
-        $cfgs = $employee->serviceConfigurations
-            ->where('service_id', $serviceId)
-            ->filter(fn($c) => $c->valid_to === null || $c->valid_to >= $now)
-            ->sortBy('valid_from')
-            ->values();
+        $cfgs = $employee->serviceConfigurations;
 
         foreach ($emps as $emp) {
             foreach ($cfgs as $cfg) {
@@ -38,11 +32,17 @@ class EmployeeCalculation
 
         while (true) {
 
-            $emp = $employee->versions->validAt($current);
+            $emp = $employee->versions
+                ->first(fn ($version) =>
+                    $version->valid_from <= $current &&
+                    ($version->valid_to === null || $version->valid_to > $current)
+                );
 
             $cfg = $employee->serviceConfigurations
-                ->where('service_id', $serviceId)
-                ->validAt($current);
+                ->first(fn ($configuration) =>
+                    $configuration->valid_from <= $current &&
+                    ($configuration->valid_to === null || $configuration->valid_to > $current)
+                );
 
             if (!$emp || !$cfg) {
                 return $current;
