@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BookingEmployeesRequest;
 use App\Models\Employee;
 use App\Models\Service;
-use App\Services\Booking\EmployeeCalculation;
+use App\Services\Booking\EmployeeAvailabilityService;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
@@ -53,13 +54,9 @@ class BookingController extends Controller
         return response()->json($services);
     }
 
-    public function employees(Request $request, EmployeeCalculation $ec)
+    public function employees(BookingEmployeesRequest $request, EmployeeAvailabilityService $availability)
     {
-        $validated = $request->validate([
-            'service_id' => ['required', 'integer', 'exists:services,id'],
-        ]);
-
-        $serviceId = (int) $validated['service_id'];
+        $serviceIds = $request->validated('service_ids');
         $now = now();
 
         $employees = Employee::with([
@@ -78,11 +75,16 @@ class BookingController extends Controller
                         ->whereNull('valid_to')
                         ->orWhere('valid_to', '>', $now);
                 })
-                ->whereHas('services', fn ($query) => $query->where('service_id', $serviceId))
+                ->whereHas(
+                    'services',
+                    fn ($query) => $query->whereIn('service_id', $serviceIds),
+                    '=',
+                    count($serviceIds)
+                )
                 ->orderBy('valid_from'),
         ])->get();
 
-        return $employees->map(function ($employee) use ($serviceId, $ec, $now) {
+        return $employees->map(function ($employee) use ($availability, $now) {
             $employeeValidVersion = $employee->versions->first(
                 fn ($version) =>
                     $version->valid_from <= $now &&
@@ -99,22 +101,21 @@ class BookingController extends Controller
                 return [
                     'is_valid'   => true,
                     'valid_from' => null,
-                    'valid_to'   => $ec->calculateValidTo($employee, $serviceId, $now),
+                    'valid_to'   => $availability->calculateValidTo($employee, $now),
                 ];
             }
 
-            $next = $ec->calculateValidFrom($employee, $serviceId, $now);
+            $next = $availability->calculateValidFrom($employee, $now);
 
             return [
                 'is_valid' => false,
                 'valid_from' => $next,
                 'valid_to' => $next
-                    ? $ec->calculateValidTo($employee, $serviceId, $next)
+                    ? $availability->calculateValidTo($employee, $next)
                     : null,
             ];
         });
     }
-
 
     
 }

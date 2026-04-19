@@ -3,9 +3,9 @@
 namespace App\Services\Booking;
 
 
-class EmployeeCalculation
+class EmployeeAvailabilityService
 {
-    public function calculateValidFrom($employee, int $serviceId, $now)
+    public function calculateValidFrom($employee, $now)
     {
         $emps = $employee->versions;
 
@@ -26,7 +26,7 @@ class EmployeeCalculation
         return null;
     }
     
-    public function calculateValidTo($employee, int $serviceId, $start)
+    public function calculateValidTo($employee, $start)
     {
         $current = $start->copy();
 
