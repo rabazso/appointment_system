@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BookingEmployeesRequest;
+use App\Http\Requests\BookingDaysRequest;
+use App\Http\Requests\BookingSlotsRequest;
 use App\Models\Employee;
 use App\Models\Service;
 use App\Services\Booking\EmployeeAvailabilityService;
+use App\Services\Booking\AppointmentAvailabilityService;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
@@ -117,5 +120,13 @@ class BookingController extends Controller
         });
     }
 
-    
+    public function days(BookingDaysRequest $request, AppointmentAvailabilityService $availability)
+    {
+        return response()->json($availability->bookableDaysFromDate($request));
+    }
+
+    public function slots(AppointmentRequest $request, AppointmentAvailabilityService $availability)
+    {
+        return response()->json($availability->bookableSlotsForDate($request););
+    }
 }

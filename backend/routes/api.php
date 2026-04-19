@@ -62,7 +62,9 @@ Route::get('/reviews', [ReviewController::class, 'index']);
 Route::prefix('/booking')->group(function () {
     Route::get('/services', [BookingController::class, 'services']);
     Route::get('/employees', [BookingController::class, 'employees']);
-});
+    Route::get('/days', [BookingController::class, 'days']);
+    Route::get('/slots', [BookingController::class, 'slots']);
+    });
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
