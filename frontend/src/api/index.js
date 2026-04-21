@@ -117,3 +117,10 @@ export const deleteShopSpecialDay = (id) => API.delete(`/shop-special-days/${id}
 export const getShopOpeningHours = () => API.get('/shop-opening-hours');
 export const postShopOpeningHour = (payload) => API.post('/shop-opening-hours', payload);
 export const patchShopOpeningHour = (id, payload) => API.patch(`/shop-opening-hours/${id}`, payload);
+
+export const getEmployeeTimeOffRequestsByMonth = (month) => API.get('/employee-time-off-requests/month', {
+    params: { month },
+});
+export const getEmployeeTimeOffRequests = (params = {}) => API.get('/employee-time-off-requests', { params });
+export const postEmployeeTimeOffRequest = (payload) => API.post('/employee-time-off-requests', payload);
+export const patchEmployeeTimeOffRequest = (id, payload) => API.patch(`/employee-time-off-requests/${id}`, payload);

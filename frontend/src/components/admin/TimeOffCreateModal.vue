@@ -1,7 +1,6 @@
 <template>
   <div
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-    @click.self="emit('close')"
   >
     <div class="relative flex w-96 flex-col rounded-2xl bg-white p-4 pt-12">
       <button class="absolute top-2 right-2" @click="emit('close')">
@@ -25,8 +24,8 @@
                 class="w-full appearance-none rounded-lg border border-black/10 bg-white px-3 py-2 text-base outline-none transition hover:border-black"
               >
                 <option disabled value="">Select employee</option>
-                <option v-for="employee in employees" :key="employee" :value="employee">
-                  {{ employee }}
+                <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                  {{ employee.name }}
                 </option>
               </select>
 
@@ -91,7 +90,7 @@
         </div>
 
         <div>
-          <label class="text-xs font-semibold tracking-wider text-gray-500 leading-none">Reason</label>
+          <label class="text-xs font-semibold tracking-wider text-gray-500 leading-none">Reason (optional)</label>
           <textarea
             v-model="form.note"
             placeholder="Reason for time off"
@@ -137,7 +136,7 @@ function createForm() {
     employees: [''],
     days: [props.initialDate ?? ''],
     note: '',
-    status: 'pending',
+    status: 'approved',
     type: 'vacation',
   }
 }

@@ -140,10 +140,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/employee-schedule-configurations', [EmployeeScheduleConfigurationController::class, 'index']);
         Route::get('/employee-working-hours', [EmployeeWorkingHourController::class, 'index']);
         Route::get('/employee-breaks', [EmployeeBreakController::class, 'index']);
+        Route::get('/employee-time-off-requests/month', [EmployeeTimeOffRequestController::class, 'indexForMonth']);
         Route::get('/employee-time-off-requests', [EmployeeTimeOffRequestController::class, 'index']);
         Route::get('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'index']);
         Route::get('/employee-services', [EmployeeServiceController::class, 'index']);
         Route::get('/shop-settings', [ShopSettingController::class, 'show']);
+        Route::get('/shop-special-days/month', [ShopSpecialDayController::class, 'indexForMonth']);
         Route::get('/shop-special-days', [ShopSpecialDayController::class, 'index']);
         Route::get('/services/versions/valid', [ServiceController::class, 'indexServicesWithValidVersion']);
         Route::get('/service-versions', [ServiceVersionController::class, 'index']);
@@ -166,4 +168,3 @@ Route::get('/reset-password/{token}', function (string $token) {
 })->middleware('guest')->name('password.reset');
 
 Route::post('/reset-password', ResetPasswordController::class)->middleware('guest')->name('password.update');
-        Route::get('/shop-special-days/month', [ShopSpecialDayController::class, 'indexForMonth']);

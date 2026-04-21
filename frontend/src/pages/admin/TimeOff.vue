@@ -72,8 +72,8 @@
               <div class="relative">
                 <select v-model="calendarFilterEmployee" class="min-h-11 appearance-none rounded-2xl font-medium border border-black/10 bg-white  shadow-sm outline-none transition px-4 hover:border-black">
                   <option value="">All employees</option>
-                  <option v-for="employee in employees" :key="employee" :value="employee">
-                    {{ employee }}
+                  <option v-for="employee in employeeOptions" :key="employee.id" :value="employee.name">
+                    {{ employee.name }}
                   </option>
                 </select>
               </div>
@@ -82,7 +82,7 @@
 
           <div class="flex min-h-0 flex-1">
             <CalendarView
-              :month="month"
+              :month="displayMonth"
               :cellMap="dayMap"
               @day-click="openTimeOffModalForDate"
             />
@@ -162,48 +162,49 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
 import TimeOffCreateModal from '@/components/admin/TimeOffCreateModal.vue'
 import TimeOffDayModal from '@/components/admin/TimeOffDayModal.vue'
-import { shiftMonth } from '@/utils/date'
-import { INITIAL_REQUESTS } from '@/data/calenderData'
+import { formatYearMonth, shiftMonth } from '@/utils/date'
+import { useTimeOff } from '@/composables/useTimeOff'
 
 const sidebarOpen = ref(false)
 const viewMode = ref('calendar')
-const month = ref(new Date())
+const displayMonth = ref(new Date())
 const calendarFilterStatus = ref('')
 const calendarFilterEmployee = ref('')
-const requests = ref(INITIAL_REQUESTS.map((x) => ({ ...x })))
+const calendarTimeOffs = ref([])
+const pendingRequests = ref([])
+const employeeOptions = ref([])
 const showTimeOffDayModal = ref(false)
 const showTimeOffCreateModal = ref(false)
 const selectedTimeOffs = ref([])
 const selectedDate = ref('')
+const {
+  fetchEmployees,
+  fetchPendingTimeOffRequests,
+  fetchTimeOffRequests,
+  saveTimeOffRequests,
+  updateTimeOffStatus,
+} = useTimeOff()
 
 const monthLabel = computed(() =>
-  month.value.toLocaleDateString('en-US', {
+  displayMonth.value.toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric',
   }),
 )
 
-const employees = computed(() => {
-  return new Set(requests.value.map((x) => x.employee))
-})
-
-const employeeOptions = computed(() => {
-  return Array.from(employees.value)
-})
-
 const filteredRequests = computed(() => {
-  return requests.value.filter((request) => request.status === 'pending')
+  return pendingRequests.value
 })
 
 const calendarRequests = computed(() => {
-  return requests.value.filter((request) => {
+  return calendarTimeOffs.value.filter((request) => {
     const statusMatch = calendarFilterStatus.value === '' || request.status === calendarFilterStatus.value
     const employeeMatch = calendarFilterEmployee.value === '' || request.employee === calendarFilterEmployee.value
     return statusMatch && employeeMatch
@@ -258,11 +259,11 @@ function getCalendarStatusDotClass(status) {
 }
 
 function goPrevMonth() {
-  month.value = shiftMonth(month.value, -1)
+  displayMonth.value = shiftMonth(displayMonth.value, -1)
 }
 
 function goNextMonth() {
-  month.value = shiftMonth(month.value, 1)
+  displayMonth.value = shiftMonth(displayMonth.value, 1)
 }
 
 function openAddTimeOffModal() {
@@ -301,47 +302,39 @@ function closeTimeOffModals() {
   selectedDate.value = ''
 }
 
-function saveTimeOff(timeOff) {
-  for (const day of timeOff.days) {
-    for (const employee of timeOff.employees) {
-      requests.value.push(createRequestFromForm(timeOff, day, employee))
-    }
-  }
-
+async function saveTimeOff(timeOff) {
+  await saveTimeOffRequests(timeOff)
+  await loadTimeOffRequests()
+  await loadPendingRequests()
   closeTimeOffModals()
 }
 
-function changeTimeOffStatus({ id, status }) {
-  const requestIndex = requests.value.findIndex((request) => request.id === id)
-  if (requestIndex !== -1) {
-    requests.value[requestIndex] = {
-      ...requests.value[requestIndex],
-      status,
-    }
-  }
-
-  selectedTimeOffs.value = selectedTimeOffs.value.map((timeOff) => {
-    if (timeOff.id !== id) return timeOff
-    return {
-      ...timeOff,
-      status,
-    }
-  })
-
+async function changeTimeOffStatus({ id, status }) {
+  await updateTimeOffStatus(id, status)
+  await loadTimeOffRequests()
+  await loadPendingRequests()
+  selectedTimeOffs.value = selectedTimeOffs.value.map((timeOff) => (
+    timeOff.id === id ? { ...timeOff, status } : timeOff
+  ))
 }
 
-function createRequestFromForm(timeOff, date, employee, id = getNextRequestId()) {
-  return {
-    id,
-    employee,
-    type: timeOff.type,
-    date,
-    status: timeOff.status,
-    note: timeOff.note,
-  }
+async function loadEmployees() {
+  employeeOptions.value = await fetchEmployees()
 }
 
-function getNextRequestId() {
-  return Math.max(0, ...requests.value.map((request) => Number(request.id) || 0)) + 1
+async function loadTimeOffRequests() {
+  calendarTimeOffs.value = await fetchTimeOffRequests(formatYearMonth(displayMonth.value))
 }
+
+async function loadPendingRequests() {
+  pendingRequests.value = await fetchPendingTimeOffRequests()
+}
+
+watch(monthLabel, loadTimeOffRequests)
+
+onMounted(() => {
+  loadEmployees()
+  loadTimeOffRequests()
+  loadPendingRequests()
+})
 </script>
