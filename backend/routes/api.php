@@ -154,6 +154,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:employee')->prefix('/employee')->group(function () { 
         Route::get("/appointments", [EmployeeDashboardController::class, "index"]);
         Route::get("/profile", [EmployeeProfileController::class, 'show']);
+        Route::post("/appointments/{appointment}/cancel", [EmployeeDashboardController::class, 'cancelAppointment']);
+        Route::post("/appointments/{appointment}/complete", [EmployeeDashboardController::class, 'completeAppointment']);
         Route::patch("/profile", [EmployeeProfileController::class, 'update']);
         Route::post("/profile/avatar", [EmployeeProfileController::class, 'storeProfilePic']);
         Route::post("/profile/gallery", [EmployeeProfileController::class, 'storeGalleryImg']);

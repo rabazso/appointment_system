@@ -15,6 +15,8 @@ return new class extends Migration
             $table->integer('total_duration');
             $table->integer('total_price');
             $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled', 'no_show']);
+            $table->text('cancellation_reason')->nullable();
+            $table->string('cancelled_by')->nullable();
             $table->text('customer_note')->nullable();
             $table->dateTime('start_datetime');
             $table->dateTime('end_datetime');

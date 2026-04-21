@@ -11,6 +11,8 @@ class Appointment extends Model
         'total_duration',
         'total_price',
         'status',
+        'cancellation_reason',
+        'cancelled_by',
         'customer_note',
         'start_datetime',
         'end_datetime',

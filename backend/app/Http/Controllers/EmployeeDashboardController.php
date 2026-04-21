@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CancelEmployeeAppointmentRequest;
+use App\Http\Resources\AppointmentStatusResource;
 use App\Http\Resources\EmployeeAppointmentResource;
 use App\Models\Appointment;
 use Illuminate\Http\Request;
@@ -21,5 +23,39 @@ class EmployeeDashboardController extends Controller
         }
 
         return EmployeeAppointmentResource::collection($appointments->get());
+    }
+
+    public function cancelAppointment(CancelEmployeeAppointmentRequest $request, Appointment $appointment)
+    {
+        $employee = $request->user()->employee;
+        if ($appointment->employee_id !== $employee->id) {
+            return response()->noContent(403);
+        }
+
+        if ($appointment->status !== 'pending' && $appointment->status !== 'confirmed') {
+            return response()->noContent(409);
+        }
+
+        $reason = trim($request->validated('cancellation_reason'));
+
+        $appointment->update(['status' => 'cancelled', 'cancellation_reason' => $reason ? $reason : null, 'cancelled_by' => 'employee']);
+
+        return new AppointmentStatusResource($appointment);
+    }
+
+    public function completeAppointment(Request $request, Appointment $appointment)
+    {
+        $employee = $request->user()->employee;
+        if (!$employee || $appointment->employee_id !== $employee->id) {
+            return response()->noContent(403);
+        }
+
+        if ($appointment->status !== 'confirmed') {
+            return response()->noContent(409);
+        }
+
+        $appointment->update(['status' => 'completed']);
+
+        return new AppointmentStatusResource($appointment);
     }
 }

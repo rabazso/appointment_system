@@ -15,6 +15,8 @@ class AppointmentStatusResource extends JsonResource
         return [
             'id' => $this->id,
             'status' => $this->status,
+            'cancellation_reason' => $this->cancellation_reason,
+            'cancelled_by' => $this->cancelled_by,
         ];
     }
 }
