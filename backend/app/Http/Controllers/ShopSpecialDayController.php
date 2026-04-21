@@ -7,6 +7,7 @@ use App\Http\Requests\StoreShopSpecialDayRequest;
 use App\Http\Requests\UpdateShopSpecialDayRequest;
 use App\Http\Resources\ShopSpecialDayResource;
 use App\Models\ShopSpecialDay;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 
 class ShopSpecialDayController extends Controller
@@ -26,6 +27,23 @@ class ShopSpecialDayController extends Controller
                 $name,
                 fn ($query) => $query->where('name', 'like', '%' . $name . '%')
             )
+            ->get();
+
+        return ShopSpecialDayResource::collection($specialDays);
+    }
+
+    public function indexForMonth(IndexShopSpecialDaysRequest $request)
+    {
+        $validated = $request->validate([
+            'month' => ['required', 'date_format:Y-m'],
+        ]);
+
+        $startOfMonth = Carbon::createFromFormat('Y-m', $validated['month'])->startOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
+
+        $specialDays = ShopSpecialDay::query()
+            ->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->orderBy('date')
             ->get();
 
         return ShopSpecialDayResource::collection($specialDays);

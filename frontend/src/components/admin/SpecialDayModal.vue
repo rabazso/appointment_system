@@ -1,10 +1,8 @@
 <template>
   <div
-    class="fixed inset-0 z-50 overflow-y-auto bg-black/50 px-4 py-4"
-    @click.self="emit('close')"
+    class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-4"
   >
-    <div class="flex min-h-full items-center justify-center">
-      <div class="relative flex w-96 flex-col rounded-2xl bg-white p-4 pt-12">
+    <div class="relative flex w-96 flex-col rounded-2xl bg-white p-4 pt-12">
         <button class="absolute top-2 right-2" @click="emit('close')">
           <X class="w-8 h-8" />
         </button>
@@ -17,7 +15,7 @@
             v-model="form.name"
             type="text"
             placeholder="Enter name"
-            class="w-full rounded-lg border border-black/10 outline-none bg-white py-2 px-3"
+            class="hover:border-black transition w-full rounded-lg border border-black/10 outline-none bg-white py-2 px-3"
           />
         </div>
 
@@ -32,13 +30,13 @@
               <input
                 v-model="form.days[index]"
                 type="date"
-                class="min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 py-2 outline-none [font-variant-numeric:tabular-nums]"
+                class="hover:border-black transition min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 py-2 outline-none [font-variant-numeric:tabular-nums]"
               />
 
               <button
                 v-if="form.days.length > 1"
                 type="button"
-                class="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[6px] border border-[#d1d5db] bg-white p-0 text-[12px] font-medium leading-none text-[#475569]"
+                class="hover:border-black transition inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[6px] border border-[#d1d5db] bg-white p-0 text-[12px] font-medium leading-none text-[#475569]"
                 aria-label="Remove day"
                 @click="removeDay(index)"
               >
@@ -49,7 +47,7 @@
             <div class="flex justify-end">
               <button
                 type="button"
-                class="p-2 rounded-lg border border-black/10 bg-white text-sm font-medium"
+                class="hover:border-black transition p-2 rounded-lg border border-black/10 bg-white text-sm font-medium"
                 @click="addDay"
               >
                 + Add day
@@ -94,7 +92,6 @@
         <div v-if="showSaveButton" class="mt-4 flex justify-end">
           <Button @click="saveDay">Save</Button>
         </div>
-      </div>
     </div>
   </div>
 </template>
@@ -151,14 +148,16 @@ watch(
 )
 
 function createForm(day) {
+  const isOpen = Boolean(day?.openTime && day?.closeTime)
+
   return {
     id: day?.id ?? null,
     name: day?.name ?? '',
     days: [day?.dateISO ?? ''],
-    isSpecial: day ? day.isSpecial ?? true : false,
-    status: day?.status ?? 'closed',
-    openTime: day?.openTime ?? '08:00',
-    closeTime: day?.closeTime ?? '16:00',
+    isSpecial: day?.isSpecial ?? Boolean(day?.id),
+    status: day?.status ?? (isOpen ? 'open' : 'closed'),
+    openTime: day?.openTime?.slice(0, 5) ?? '08:00',
+    closeTime: day?.closeTime?.slice(0, 5) ?? '16:00',
   }
 }
 

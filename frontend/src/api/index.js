@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '@stores/AuthStore.js'
 
-const API = axios.create({
+export const API = axios.create({
     baseURL: 'http://backend.vm1.test/api',
     
 });
@@ -106,3 +106,14 @@ export const postService = (payload) => API.post('/services', payload);
 export const putService = (id, payload) => API.put(`/services/${id}`, payload);
 export const patchService = (id, payload) => API.patch(`/services/${id}`, payload)
 export const deleteService = (id) => API.delete(`/services/${id}`);
+
+export const getShopSpecialDaysByMonth = (month) => API.get('/shop-special-days/month', {
+    params: { month },
+});
+export const postShopSpecialDay = (payload) => API.post('/shop-special-days', payload);
+export const patchShopSpecialDay = (id, payload) => API.patch(`/shop-special-days/${id}`, payload);
+export const deleteShopSpecialDay = (id) => API.delete(`/shop-special-days/${id}`);
+
+export const getShopOpeningHours = () => API.get('/shop-opening-hours');
+export const postShopOpeningHour = (payload) => API.post('/shop-opening-hours', payload);
+export const patchShopOpeningHour = (id, payload) => API.patch(`/shop-opening-hours/${id}`, payload);

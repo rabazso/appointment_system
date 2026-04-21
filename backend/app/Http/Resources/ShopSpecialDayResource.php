@@ -11,7 +11,7 @@ class ShopSpecialDayResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'date' => $this->date,
+            'date' => $this->date?->toDateString(),
             'name' => $this->name,
             'open_time' => $this->open_time,
             'close_time' => $this->close_time,

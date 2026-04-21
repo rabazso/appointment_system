@@ -5,11 +5,11 @@
     >
       <div class="grid shrink-0 grid-cols-7 gap-px border-b bg-black/10">
         <div
-          v-for="day in weekDays"
+          v-for="day in WEEKDAYS"
           :key="day"
           class="flex h-10 items-center justify-center bg-white text-sm font-semibold uppercase tracking-wide text-black"
         >
-          {{ day }}
+          {{ day.label.slice(0, 3) }}
         </div>
       </div>
 
@@ -25,7 +25,7 @@
           :dotContent="cellMap[day.dateISO]?.dotContent"
           :dotContentClass="cellMap[day.dateISO]?.dotContentClass"
           :isInCurrentMonth="day.isInCurrentMonth"
-          @day-click="emit('day-click', $event)"
+          @day-click="emit('day-click', day.dateISO)"
         />
       </div>
     </div>
@@ -35,7 +35,7 @@
 import { computed } from 'vue'
 import CalendarCell from './CalendarCell.vue'
 import { getDay, toISO } from '@/utils/date'
-import { weekDays } from '@/data/calenderData'
+import { WEEKDAYS } from '@/data/calenderData'
 
 const props = defineProps({
   month: {

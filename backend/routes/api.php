@@ -166,3 +166,4 @@ Route::get('/reset-password/{token}', function (string $token) {
 })->middleware('guest')->name('password.reset');
 
 Route::post('/reset-password', ResetPasswordController::class)->middleware('guest')->name('password.update');
+        Route::get('/shop-special-days/month', [ShopSpecialDayController::class, 'indexForMonth']);

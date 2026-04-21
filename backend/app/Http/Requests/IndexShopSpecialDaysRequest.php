@@ -15,6 +15,7 @@ class IndexShopSpecialDaysRequest extends FormRequest
     {
         return [
             'date' => ['date'],
+            'month' => ['date_format:Y-m'],
             'name' => ['string'],
         ];
     }

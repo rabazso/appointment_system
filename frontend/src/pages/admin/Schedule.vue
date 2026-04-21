@@ -70,22 +70,22 @@
 
         <aside
           :class="[viewMode === 'weekly' ? 'flex' : 'hidden', '2xl:flex']"
-          class="mx-auto w-full h-full flex-col overflow-y-auto rounded-2xl bg-white p-4 pb-0 2xl:mx-0 2xl:w-7/20"
+          class="mx-auto w-full h-full flex-col overflow-y-auto rounded-2xl bg-white p-4 pb-4 2xl:mx-0 2xl:w-7/20"
         >
           <div class="mb-4">
             <h2 class="text-xl font-semibold">Weekly schedule</h2>
             <p class="mt-1 text-xs text-gray-500">Default opening hours</p>
           </div>
 
-          <div class="flex min-h-0 flex-1 flex-col gap-3">
+          <div class="flex flex-1 flex-col gap-3">
               <div
-                v-for="day in schedule"
-                :key="day.day"
+                v-for="day in openingHours"
+                :key="day.weekday"
                 class="flex flex-1 flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-black/10 px-4 py-3"
               >
                 <div class="flex shrink-0 items-center gap-3">
                   <ToggleButton v-model="day.isOpen" />
-                  <span class="text-black">{{ day.day }}</span>
+                  <span class="text-black">{{ WEEKDAYS[day.weekday].label }}</span>
                 </div>
 
                 <div
@@ -107,8 +107,10 @@
 
                 <span v-else class="ml-auto text-sm">Closed</span>
               </div>
-              <div class="flex justify-end pb-4">
-                <Button>Save</Button>
+              <div v-if="hasOpeningHoursChanges" class="flex justify-end">
+                <Button @click="saveOpeningHours">
+                  Save
+                </Button>
               </div>
             </div>
         </aside>
@@ -126,7 +128,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
@@ -134,8 +136,9 @@ import Button from '@/components/admin/Button.vue'
 import ToggleButton from '@/components/admin/ToggleButton.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
 import SpecialDayModal from '@/components/admin/SpecialDayModal.vue'
-import { INITIAL_HOLIDAYS, INITIAL_WEEKLY_SCHEDULE } from '@/data/calenderData'
-import { shiftMonth, toISO } from '@/utils/date'
+import { INITIAL_WEEKLY_SCHEDULE } from '@/data/calenderData'
+import { shiftMonth, toISO, formatYearMonth } from '@/utils/date'
+import { useShopSchedule } from '@/composables/useShopSchedule'
 
 const sidebarOpen = ref(false)
 const viewMode = ref('calendar')
@@ -148,11 +151,32 @@ const monthLabel = computed(() =>
   }),
 )
 
-const schedule = ref(INITIAL_WEEKLY_SCHEDULE.map((x) => ({ ...x })))
-const specialDays = ref(INITIAL_HOLIDAYS.map((x) => ({ ...x, name: x.name ?? '' })))
+const WEEKDAYS = [
+  { label: 'Sunday' },
+  { label: 'Monday' },
+  { label: 'Tuesday' },
+  { label: 'Wednesday' },
+  { label: 'Thursday' },
+  { label: 'Friday' },
+  { label: 'Saturday' },
+]
+
+const openingHours = ref(INITIAL_WEEKLY_SCHEDULE.map((day, weekday) => ({ ...day, weekday })))
+const savedOpeningHoursSnapshot = ref(normalizeOpeningHours(openingHours.value))
+const specialDays = ref([])
 const showSpecialDayModal = ref(false)
 const selectedDay = ref(null)
 const specialDayModalMode = ref('create')
+const {
+  fetchSpecialDays,
+  saveSpecialDays,
+  fetchOpeningHours,
+  saveOpeningHours: persistOpeningHours,
+} = useShopSchedule()
+
+const hasOpeningHoursChanges = computed(() => {
+  return normalizeOpeningHours(openingHours.value) !== savedOpeningHoursSnapshot.value
+})
 
 const calendarDayMap = computed(() => {
   const contentMap = {}
@@ -164,8 +188,8 @@ const calendarDayMap = computed(() => {
     const iso = toISO(current)
     const specialDay = specialDays.value.find((day) => day.dateISO === iso) ?? null
     const hasSpecialDay = Boolean(specialDay)
-    const isOpen = specialDay?.status === 'open'
-    const timeRange = `${specialDay?.openTime} - ${specialDay?.closeTime}`
+    const isOpen = Boolean(specialDay?.openTime && specialDay?.closeTime)
+    const timeRange = `${specialDay?.openTime?.slice(0, 5)} - ${specialDay?.closeTime?.slice(0, 5)}`
 
     contentMap[iso] = {
       content: hasSpecialDay
@@ -210,10 +234,9 @@ function openAddSpecialDayModal() {
 
 function openSpecialDayModalForDate(dateISO) {
   const specialDay = specialDays.value.find((day) => day.dateISO === dateISO)
+
   specialDayModalMode.value = specialDay ? 'edit' : 'create'
-  selectedDay.value = specialDay
-    ? { ...specialDay, days: [specialDay.dateISO] }
-    : { dateISO, days: [dateISO], isSpecial: false, status: 'closed', openTime: '08:00', closeTime: '16:00', name: '' }
+  selectedDay.value = specialDay ?? { dateISO }
   showSpecialDayModal.value = true
 }
 
@@ -222,30 +245,39 @@ function closeSpecialDayModal() {
   selectedDay.value = null
 }
 
-function saveSpecialDay(payload) {
-  if (!payload.isSpecial) {
-    const removedDates = new Set(payload.days)
-    specialDays.value = specialDays.value.filter((specialDay) => !removedDates.has(specialDay.dateISO))
-    closeSpecialDayModal()
-    return
-  }
-
-  const timestamp = Date.now()
-  const savedDays = payload.days.map((dateISO, index) => ({
-    id: index === 0 && payload.id ? payload.id : `${timestamp}-${dateISO}`,
-    name: payload.name,
-    dateISO,
-    status: payload.status,
-    openTime: payload.openTime,
-    closeTime: payload.closeTime,
-  }))
-
-  if (payload.id) {
-    specialDays.value = specialDays.value.filter((specialDay) => specialDay.id !== payload.id)
-  }
-
-  const savedDates = new Set(savedDays.map((day) => day.dateISO))
-  specialDays.value = specialDays.value.filter((specialDay) => !savedDates.has(specialDay.dateISO)).concat(savedDays)
+async function saveSpecialDay(payload) {
+  await saveSpecialDays(payload, specialDays.value)
+  await loadSpecialDays()
   closeSpecialDayModal()
 }
+
+async function loadSpecialDays() {
+  specialDays.value = await fetchSpecialDays(formatYearMonth(displayMonth.value))
+}
+
+async function loadOpeningHours() {
+  openingHours.value = await fetchOpeningHours()
+  savedOpeningHoursSnapshot.value = normalizeOpeningHours(openingHours.value)
+}
+
+async function saveOpeningHours() {
+  await persistOpeningHours(openingHours.value)
+  await loadOpeningHours()
+}
+
+function normalizeOpeningHours(days) {
+  return JSON.stringify(days.map((day) => ({
+    weekday: day.weekday,
+    isOpen: day.isOpen,
+    openTime: day.openTime,
+    closeTime: day.closeTime,
+  })))
+}
+
+watch(monthLabel, loadSpecialDays)
+
+onMounted(() => {
+  loadSpecialDays()
+  loadOpeningHours()
+})
 </script>

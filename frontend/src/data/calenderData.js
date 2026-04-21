@@ -1,4 +1,12 @@
-export const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+export const WEEKDAYS = [
+  { id: 0, label: "Sunday" },
+  { id: 1, label: "Monday" },
+  { id: 2, label: "Tuesday" },
+  { id: 3, label: "Wednesday" },
+  { id: 4, label: "Thursday" },
+  { id: 5, label: "Friday" },
+  { id: 6, label: "Saturday" },
+]
 
 export const INITIAL_WEEKLY_SCHEDULE = [
   { day: 'Sunday', isOpen: false, openTime: '08:00', closeTime: '16:00' },

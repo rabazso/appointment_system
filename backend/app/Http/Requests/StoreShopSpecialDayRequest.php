@@ -15,7 +15,7 @@ class StoreShopSpecialDayRequest extends FormRequest
     {
         return [
             'date' => ['required', 'date'],
-            'name' => ['required', 'string'],
+            'name' => ['nullable', 'string'],
             'open_time' => ['nullable', 'date_format:H:i:s'],
             'close_time' => ['nullable', 'date_format:H:i:s'],
         ];

@@ -1,7 +1,8 @@
 <template>
   <div
     class="relative flex h-full flex-col overflow-hidden bg-white transition duration-200 border border-transparent hover:border-black hover:rounded-sm"
-    @click="$emit('day-click', date)"
+    :class="{ 'opacity-75': !isInCurrentMonth }"
+    @click="$emit('day-click')"
   >
     <div class="relative z-10 flex shrink-0 items-start justify-end leading-none text-sm font-semibold text-black">
       <span class="bg-white px-0.5">
@@ -12,7 +13,7 @@
     <div class="absolute inset-0 flex items-center justify-center">
       <span
         v-if="dotContent"
-        class="mx-auto h-1 w-1 rounded-full bg-black leading-none sm:hidden"
+        class="mx-auto h-1.5 w-1.5 rounded-full bg-black leading-none sm:hidden"
         :class="dotContentClasses"
       ></span>
 
@@ -47,13 +48,11 @@ const dayNumber = computed(() => {
 })
 
 const contentClasses = computed(() => {
-  if (!props.isInCurrentMonth) return ''
   if (props.contentClass) return props.contentClass
   return ''
 })
 
 const dotContentClasses = computed(() => {
-  if (!props.isInCurrentMonth) return ''
   if (props.dotContentClass) return props.dotContentClass
   return 'bg-black'
 })
