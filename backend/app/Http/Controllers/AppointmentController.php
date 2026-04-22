@@ -17,6 +17,7 @@ use App\Mail\BookingSummary;
 use App\Mail\ReviewRequest;
 use App\Models\Appointment;
 use App\Models\Review;
+use App\Services\Booking\AppointmentCreationService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
@@ -31,18 +32,18 @@ class AppointmentController extends Controller
         );
     }
 
-    public function store(AppointmentStoreRequest $request, CreateAppointment $create)
+    public function store(AppointmentStoreRequest $request, AppointmentCreationService $appointments)
     {
-        $appointment = $create->Create($request);
+        $appointment = $appointments->create($request);
         $appointment->loadMissing([
-            'service' => fn ($query) => $query->select('services.id', 'services.name'),
+            'appointmentServices.service:id,name',
             'employee:id,name',
             'customer:id,name,email',
         ]);
 
         $confirmationLink = $this->buildConfirmationLink($appointment);
         
-        $recipientEmail = $appointment->customer?->email ?? $appointment->guest_email;
+        $recipientEmail = $appointment->customer?->email;
         if ($recipientEmail) {
             Mail::to($recipientEmail)->send(new Booking($appointment, $confirmationLink));
         }

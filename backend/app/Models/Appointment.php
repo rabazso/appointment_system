@@ -18,6 +18,11 @@ class Appointment extends Model
         'end_datetime',
     ];
 
+    protected $casts = [
+        'start_datetime' => 'datetime',
+        'end_datetime' => 'datetime',
+    ];
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);

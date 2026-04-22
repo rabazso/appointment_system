@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
             ServiceSeeder::class,
             ServiceVersionSeeder::class,
             EmployeeSeeder::class,
+            EmployeeBookingRuleConfigurationSeeder::class,
+            EmployeeBookingRuleSeeder::class,
             EmployeeVersionSeeder::class,
             EmployeeServiceConfigurationSeeder::class,
             EmployeeScheduleConfigurationSeeder::class,

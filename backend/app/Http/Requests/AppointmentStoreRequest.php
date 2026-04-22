@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AppointmentStoreRequest extends FormRequest
 {
@@ -21,21 +22,25 @@ class AppointmentStoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'service_id' => 'required|integer|exists:services,id',
-            'employee_id' => 'required|integer|exists:employees,id',
-            'appointment_start' => 'required|date_format:Y-m-d H:i',
-            'customer_id' => 'nullable|integer|exists:users,id|required_without:guest_email',
-            'guest_name' => 'nullable|string|max:255|required_without:customer_id',
-            'guest_email' => 'nullable|email|max:255|unique:users,email|required_without:customer_id',
-        ];
-    }
+        $isGuest = !$this->user();
 
-    public function messages(): array
-    {
         return [
-            'guest_email.unique' => 'This email is already registered. Please log in to book an appointment.',
-            'customer_id.required_without' => 'Please log in or provide guest details.',
+            'service_ids' => ['required', 'array', 'min:1'],
+            'service_ids.*' => ['required', 'integer', 'distinct', 'exists:services,id'],
+
+            'employee_id' => ['required', 'integer', 'exists:employees,id'],
+            'appointment_start' => ['required', 'date_format:Y-m-d H:i'],
+
+            'guest_name' => [$isGuest ? 'required' : 'nullable', 'string', 'max:255'],
+
+            'guest_email' => [
+                $isGuest ? 'required' : 'nullable',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email'),
+            ],
+
+            'guest_phone' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

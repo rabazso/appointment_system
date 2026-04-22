@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BookingEmployeesRequest;
 use App\Http\Requests\BookingDaysRequest;
 use App\Http\Requests\BookingSlotsRequest;
+use App\Http\Resources\BookingDayResource;
+use App\Http\Resources\BookingEmployeeResource;
+use App\Http\Resources\BookingServiceResource;
+use App\Http\Resources\BookingSlotResource;
 use App\Models\Employee;
 use App\Models\Service;
 use App\Services\Booking\EmployeeAvailabilityService;
@@ -42,19 +46,17 @@ class BookingController extends Controller
                 $nextValidVersion = $service->versions->first();
             }
 
-            return [
-                'id' => $service->id,
-                'name' => $service->name,
-                'is_valid' => $validVersion !== null,
-                'valid_from' => $nextValidVersion?->valid_from,
-                'valid_to' => $validVersion
-                    ? $validVersion->valid_to
-                    : $nextValidVersion?->valid_to,
-            ];
+            $service->is_valid = $validVersion !== null;
+            $service->valid_from = $nextValidVersion?->valid_from;
+            $service->valid_to = $validVersion
+                ? $validVersion->valid_to
+                : $nextValidVersion?->valid_to;
+
+            return $service;
         })
         ->values();
 
-        return response()->json($services);
+        return BookingServiceResource::collection($services);
     }
 
     public function employees(BookingEmployeesRequest $request, EmployeeAvailabilityService $availability)
@@ -85,9 +87,11 @@ class BookingController extends Controller
                     count($serviceIds)
                 )
                 ->orderBy('valid_from'),
+
+            'profileImage',
         ])->get();
 
-        return $employees->map(function ($employee) use ($availability, $now) {
+        $employees = $employees->map(function ($employee) use ($availability, $now) {
             $employeeValidVersion = $employee->versions->first(
                 fn ($version) =>
                     $version->valid_from <= $now &&
@@ -101,32 +105,41 @@ class BookingController extends Controller
             );
 
             if ($employeeValidVersion && $configurationValidVersion) {
-                return [
-                    'is_valid'   => true,
-                    'valid_from' => null,
-                    'valid_to'   => $availability->calculateValidTo($employee, $now),
-                ];
+                $employee->is_valid = true;
+                $employee->valid_from = null;
+                $employee->valid_to = $availability->calculateValidTo($employee, $now);
+
+                return $employee;
             }
 
             $next = $availability->calculateValidFrom($employee, $now);
 
-            return [
-                'is_valid' => false,
-                'valid_from' => $next,
-                'valid_to' => $next
-                    ? $availability->calculateValidTo($employee, $next)
-                    : null,
-            ];
+            $employee->is_valid = false;
+            $employee->valid_from = $next;
+            $employee->valid_to = $next
+                ? $availability->calculateValidTo($employee, $next)
+                : null;
+
+            return $employee;
         });
+
+        return BookingEmployeeResource::collection($employees);
     }
 
     public function days(BookingDaysRequest $request, AppointmentAvailabilityService $availability)
     {
-        return response()->json($availability->bookableDaysFromDate($request));
+        return BookingDayResource::collection($availability->bookableDaysFromDate($request));
     }
 
-    public function slots(AppointmentRequest $request, AppointmentAvailabilityService $availability)
+    public function slots(BookingSlotsRequest $request, AppointmentAvailabilityService $availability)
     {
-        return response()->json($availability->bookableSlotsForDate($request););
+        $slots = collect($availability->bookableSlotsForDate($request))
+            ->map(fn (array $slots, string $date) => [
+                'date' => $date,
+                'slots' => $slots,
+            ])
+            ->values();
+
+        return BookingSlotResource::collection($slots);
     }
 }

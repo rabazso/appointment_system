@@ -38,7 +38,7 @@ class AppointmentAvailabilityService
         $monthEnd = $startDate->copy()->endOfMonth()->startOfDay();
         $bookingWindowEnd = Carbon::today()->addDays($bookingWindowDays)->startOfDay();
         
-        $endDate = Carbon::min($monthEnd, $bookingWindowEnd);
+        $endDate = $monthEnd->lt($bookingWindowEnd) ? $monthEnd : $bookingWindowEnd;
 
         if ($startDate->gt($endDate)) {
             return [];
@@ -63,7 +63,7 @@ class AppointmentAvailabilityService
 
     public function bookableSlotsForDate(Request $request): array
     {
-        $serviceIds = $request->validated('service_ids');
+        $serviceIds = $request->input('service_ids', []);
         $employeeId = (int) $request->get('employee_id');
         $selectedDate = Carbon::parse($request->get('selected_date'))->startOfDay();
         $emptySlots = [$selectedDate->toDateString() => []];
@@ -171,6 +171,19 @@ class AppointmentAvailabilityService
                 $interval
             ),
         ];
+    }
+
+    public function isSlotBookable(array $serviceIds, int $employeeId, string $appointmentStart): bool
+    {
+        [$selectedDate, $selectedTime] = explode(' ', $appointmentStart);
+
+        $slots = $this->bookableSlotsForDate(new Request([
+            'service_ids' => $serviceIds,
+            'employee_id' => $employeeId,
+            'selected_date' => $selectedDate,
+        ]));
+
+        return in_array($selectedTime, $slots[$selectedDate] ?? [], true);
     }
 
     private function blockedIntervals(
