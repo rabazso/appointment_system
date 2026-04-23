@@ -124,6 +124,10 @@ export const postService = (payload) => API.post('/services', payload);
 export const putService = (id, payload) => API.put(`/services/${id}`, payload);
 export const patchService = (id, payload) => API.patch(`/services/${id}`, payload)
 export const deleteService = (id) => API.delete(`/services/${id}`);
+export const getServiceAvailability = (serviceId) => API.get(`/services/${serviceId}/availability`);
+export const createServiceAvailability = (serviceId, payload) => API.post(`/services/${serviceId}/availability`, payload);
+export const updateServiceAvailability = (id, payload) => API.put(`/service-availability/${id}`, payload);
+export const deleteServiceAvailability = (id) => API.delete(`/service-availability/${id}`);
 
 export const getShopSpecialDaysByMonth = (month) => API.get('/shop-special-days/month', {
     params: { month },

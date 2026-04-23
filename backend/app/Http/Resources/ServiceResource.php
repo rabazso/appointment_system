@@ -16,6 +16,7 @@ class ServiceResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
+            'is_available' => $this->whenLoaded('versions', fn () => $this->versions->first()?->is_available ?? false),
             'versions' => ServiceVersionResource::collection($this->whenLoaded('versions')),
         ];
     }

@@ -27,6 +27,7 @@ use App\Http\Controllers\EmployeeVersionController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\ResetPasswordTokenController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ServiceAvailabilityController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceVersionController;
 use App\Http\Controllers\ShopImageController;
@@ -92,6 +93,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/services', [ServiceController::class, 'store']);
         Route::patch('/services/{service}', [ServiceController::class, 'update']);
         Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+        Route::get('/services/{service}/availability', [ServiceAvailabilityController::class, 'index']);
+        Route::post('/services/{service}/availability', [ServiceAvailabilityController::class, 'store']);
+        Route::put('/service-availability/{availability}', [ServiceAvailabilityController::class, 'update']);
+        Route::delete('/service-availability/{availability}', [ServiceAvailabilityController::class, 'destroy']);
         Route::post('/employees', [EmployeeController::class, 'store']);
         Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
         Route::get('/employees/{employee}/schedules', [EmployeeScheduleController::class, 'index']);

@@ -1,200 +1,160 @@
-  <template>
-    <div class="flex bg-slate-100 h-dvh overflow-hidden">
+<template>
+  <div class="flex h-dvh overflow-hidden bg-slate-100">
+    <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
 
-      <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false"/>
+    <main class="flex-1 w-full overflow-y-auto p-8">
+      <Header
+        title="Services"
+        description="Manage your business services"
+        @menu-click="sidebarOpen = true"
+      >
+        <template #actions>
+          <Button @click="showServiceCreateModal = true">
+            + new service
+          </Button>
+        </template>
+      </Header>
 
-      <main class="flex-1 w-full p-8 overflow-y-auto">
-        <Header
-          title="Services"
-          description="Manage your business services"
-          action-label="+ new service"
-          @action-click="openAddModal"
-          @menu-click="sidebarOpen = true"
-        />
+      <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <article
+          v-for="service in services"
+          :key="service.id"
+          class="flex min-h-64 flex-col rounded-2xl bg-white p-4 shadow-lg transition hover:shadow-xl"
+        >
+          <div class="mb-3 flex items-center justify-between">
+            <span
+              class="rounded-full px-2 py-1 text-xs font-semibold"
+              :class="service.is_available ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'"
+            >
+              {{ service.is_available ? 'Available' : 'Unavailable' }}
+            </span>
 
-        <div class="max-w-7xl mx-auto gap-6 grid grid-cols-1 xl:grid-cols-3 md:grid-cols-2 w-full">
-          <article v-for="service in services" :key="service.id"
-            class=" flex flex-col min-h-64 rounded-2xl bg-white p-4 shadow-lg">
-            <div class="mb-3 flex items-center justify-between">
-              <span class=" rounded-full px-2 py-1 text-xs font-semibold" :class="service.active
-                ? 'bg-emerald-100 text-emerald-900'
-                : 'bg-rose-100 text-rose-900'
-                ">
-                {{ service.active ? 'Active' : 'Inactive' }}
-              </span>
-
-              <div class="flex items-center gap-2">
-                <button
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-gray-500 transition hover:bg-slate-50"
-                  @click="openEditModal(service)">
-                  <Pencil class="h-5 w-5" />
-                </button>
-
-                <button
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-gray-500 transition hover:bg-slate-50"
-                  @click="openDeleteModal(service)">
-                  <Trash class="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            <div class="mb-2">
-              <h3 class="text-xl font-semibold text-black">
-                {{ service.name }}
-              </h3>
-            </div>
-
-            <p class="text-sm text-black">
-              {{ service.description }}
-            </p>
-
-            <div class="mt-auto flex justify-end pt-3">
-              <ToggleButton v-model="service.active"/>
-            </div>
-          </article>
-        </div>
-
-        <div v-if="showAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center pl-64" @click.self="showAddModal = false">
-        <div class="bg-white rounded-2xl p-6 pt-12 w-96 relative">
-          <button class="absolute top-2 right-2" @click="showAddModal = false">
-            <X class="w-8 h-8" />
-          </button>
-
-          <div>
-            <h2 class="text-2xl font-semibold mb-6">
-              {{ isEditingService ? 'Edit service' : 'New service' }}
-            </h2>
-
-            <div class="mb-3 rounded-lg border border-black/10 p-2 transition-all duration-250 focus-within:border-black">
-              <input
-                v-model="serviceForm.name"
-                type="text"
-                placeholder="Service name"
-                class="w-full outline-none"
-              />
-            </div>
-
-            <div class="mb-3 h-25 rounded-lg border border-black/10 p-2 transition-all duration-250 focus-within:border-black">
-              <textarea
-                v-model="serviceForm.description"
-                type="text"
-                placeholder="Service description"
-                class="h-full w-full resize-none text-sm outline-none"
-              />
-            </div>
-
-            <div class="flex justify-end">
-              <Button @click="saveService">
-                Save
-              </Button>
-            </div>
+            <button
+              type="button"
+              class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-gray-500 transition hover:bg-slate-50"
+              @click.stop="openServiceDeleteModal(service)"
+            >
+              <Trash class="h-5 w-5" />
+            </button>
           </div>
-        </div>
-      </div>
 
-      <div v-if="showDeleteModal" class="fixed inset-0 bg-black/50 flex items-center justify-center pl-64" @click.self="showDeleteModal = false">
-        <div class="bg-white rounded-2xl p-6 pt-12 w-64 relative">
-          <button class="absolute top-2 right-2" @click="showDeleteModal = false">
-            <X class="w-8 h-8" />
-          </button>
-
-          <p class="text-center mb-6">Are you sure you want to delete the service</p>
-          
-          <div class="flex justify-center">
-            <Button @click="removeService">Confirm</Button>
+          <div class="mb-2">
+            <h3 class="text-xl font-semibold text-black">
+              {{ service.name }}
+            </h3>
           </div>
-        </div>
+
+          <p class="text-sm text-black">
+            {{ service.description }}
+          </p>
+
+          <div class="mt-auto flex justify-end pt-3">
+            <button
+              type="button"
+              class="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              @click.stop="openServiceConfigModal(service)"
+            >
+              <Settings class="h-4 w-4" />
+              Configure
+            </button>
+          </div>
+        </article>
       </div>
+    </main>
+  </div>
 
-      </main>
-    </div>
-  </template>
+  <ServiceCreateModal
+    v-if="showServiceCreateModal"
+    :saving="savingService"
+    @close="closeServiceCreateModal"
+    @save="saveService"
+  />
 
-  <script setup>
-  import { ref, onMounted} from 'vue'
-  import Button from '@/components/admin/Button.vue'
-  import Header from '@/components/admin/Header.vue'
-  import Sidebar from '@/components/admin/Sidebar.vue'
-  import ToggleButton from '@/components/admin/ToggleButton.vue'
-  import { Pencil, Trash, X } from 'lucide-vue-next'
-  import {
-    getServices,
-    postService,
-    putService,
-    patchService,
-    deleteService
-  } from '@/api/index'
+  <ServiceDeleteModal
+    v-if="showServiceDeleteModal && selectedService"
+    :service="selectedService"
+    @close="closeServiceDeleteModal"
+    @confirm="removeSelectedService"
+  />
 
-  const services = ref([])
+  <ServiceConfigureModal
+    v-if="showServiceConfigModal && selectedService"
+    :service="selectedService"
+    @close="closeServiceConfigModal"
+  />
+</template>
 
-  onMounted(async () => {
-    services.value = (await getServices()).data
-  })
+<script setup>
+import { nextTick, onMounted, ref } from 'vue'
+import { Settings, Trash } from 'lucide-vue-next'
+import { deleteService, getServices, postService } from '@/api/index'
+import Button from '@/components/admin/Button.vue'
+import Header from '@/components/admin/Header.vue'
+import Sidebar from '@/components/admin/Sidebar.vue'
+import ServiceCreateModal from '@/components/admin/service/ServiceCreateModal.vue'
+import ServiceConfigureModal from '@/components/admin/service/ServiceConfigureModal.vue'
+import ServiceDeleteModal from '@/components/admin/service/ServiceDeleteModal.vue'
 
-  const showAddModal = ref(false)
-  const showDeleteModal = ref(false)
-  const selectedService = ref(null)
-  const isEditingService = ref(false)
-  const serviceForm = ref({
-    name: '',
-    description: '',
-  })
-
+const services = ref([])
 const sidebarOpen = ref(false)
+const selectedService = ref(null)
+const showServiceCreateModal = ref(false)
+const showServiceDeleteModal = ref(false)
+const showServiceConfigModal = ref(false)
+const savingService = ref(false)
 
-  function openAddModal() {
-    selectedService.value = null
-    isEditingService.value = false
-    serviceForm.value = {
-      name: '',
-      description: '',
-    }
-    showAddModal.value = true
+onMounted(async () => {
+  await fetchServices()
+})
+
+async function fetchServices() {
+  services.value = (await getServices()).data.data
+}
+
+function closeServiceCreateModal() {
+  showServiceCreateModal.value = false
+}
+
+function openServiceDeleteModal(service) {
+  selectedService.value = service
+  showServiceDeleteModal.value = true
+}
+
+async function closeServiceDeleteModal() {
+  showServiceDeleteModal.value = false
+  await nextTick()
+  selectedService.value = null
+}
+
+function openServiceConfigModal(service) {
+  selectedService.value = service
+  showServiceConfigModal.value = true
+}
+
+async function closeServiceConfigModal() {
+  showServiceConfigModal.value = false
+  await fetchServices()
+  await nextTick()
+  selectedService.value = null
+}
+
+async function saveService(payload) {
+  savingService.value = true
+
+  try {
+    await postService(payload)
+    await fetchServices()
+    closeServiceCreateModal()
+  } finally {
+    savingService.value = false
   }
+}
 
-  function openEditModal(service) {
-    selectedService.value = service
-    isEditingService.value = true
-    serviceForm.value = {
-      name: service.name,
-      description: service.description,
-    }
-    showAddModal.value = true
-  }
+async function removeSelectedService() {
+  if (!selectedService.value) return
 
-  function openDeleteModal(service){
-    selectedService.value = service
-    showDeleteModal.value = true
-  }
-
-  async function saveService() {
-
-    if (!isEditingService.value) {
-      const newService = {
-        name: serviceForm.value.name,
-        description: serviceForm.value.description,
-        active: true,
-      }
-        await postService(newService);
-    }
-  else {
-      selectedService.value.name = serviceForm.value.name
-      selectedService.value.description = serviceForm.value.description
-
-      await putService(selectedService.value.id, {
-        name: serviceForm.value.name,
-        description: serviceForm.value.description});
-    }
-
-      services.value = (await getServices()).data 
-
-    showAddModal.value = false
-  }
-
-  async function removeService() {
-
-    await deleteService(selectedService.value.id)
-    services.value = (await getServices()).data
-    showDeleteModal.value = false
-  }
-  </script>
+  await deleteService(selectedService.value.id)
+  await fetchServices()
+  await closeServiceDeleteModal()
+}
+</script>

@@ -12,7 +12,11 @@ class ServiceController extends Controller
 {
     public function index()
     {
-        return ServiceResource::collection(Service::all());
+        $services = Service::with([
+            'versions' => fn ($query) => $query->validAt(now())->orderBy('valid_from'),
+        ])->get();
+
+        return ServiceResource::collection($services);
     }
 
     public function store(StoreServiceRequest $request)
@@ -42,7 +46,7 @@ class ServiceController extends Controller
         $now = now();
 
         $services = Service::with([
-            'versions' => fn ($query) => $query->validAt($now),
+            'versions' => fn ($query) => $query->validAt($now)->orderBy('valid_from'),
         ])->get();
 
         return ServiceResource::collection($services);
