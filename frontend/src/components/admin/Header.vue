@@ -6,7 +6,7 @@
       <button
         v-if="showMenu"
         type="button"
-        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-black/10 bg-white md:hidden"
+        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-black/10 bg-white lg:hidden"
         @click="emit('menu-click')"
       >
         <Menu class="h-5 w-5" />

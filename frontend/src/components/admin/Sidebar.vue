@@ -1,7 +1,7 @@
 <template>
     <div
       v-if="isOpen"
-      class="fixed inset-0 bg-black/50 md:hidden z-1"
+      class="fixed inset-0 bg-black/50 lg:hidden z-1"
       @click="$emit('close')"
     />
 
@@ -12,7 +12,7 @@
         'lg:sticky lg:translate-x-0'
       ]"
     >
-      <div class="flex justify-end p-4 md:hidden">
+      <div class="flex justify-end p-4 lg:hidden">
         <button @click="$emit('close')">
           <X class="w-6 h-6" />
         </button>
