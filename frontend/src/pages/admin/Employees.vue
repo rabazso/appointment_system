@@ -9,7 +9,7 @@
         @menu-click="sidebarOpen = true"
       >
         <template #actions>
-          <Button>
+          <Button @click="showCreateEmployeeModal = true">
             + new employee
           </Button>
         </template>
@@ -88,27 +88,39 @@
     @close="closeEmployeeConfigModal"
   />
 
+  <EmployeeCreateModal
+    v-if="showCreateEmployeeModal"
+    :saving="savingEmployee"
+    @close="closeCreateEmployeeModal"
+    @save="saveEmployee"
+  />
+
 </template>
 
 <script setup>
 import { nextTick, ref, onMounted } from 'vue'
 import { Settings, Trash, User } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
+import EmployeeCreateModal from '@/components/admin/employee/EmployeeCreateModal.vue'
 import EmployeeConfigurationsModal from '@/components/admin/employee/EmployeeConfigureModal.vue'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
-import { getEmployees } from '@/api'
+import { createEmployee, getEmployees } from '@/api'
 
 const employees = ref([])
 const sidebarOpen = ref(false)
 const selectedEmployee = ref(null)
 const showEmployeeConfigModal = ref(false)
+const showCreateEmployeeModal = ref(false)
+const savingEmployee = ref(false)
 
 onMounted(async () => {
-  const data = (await getEmployees()).data.data
-
-  employees.value = data
+  await fetchEmployees()
 })
+
+async function fetchEmployees() {
+  employees.value = (await getEmployees()).data.data
+}
 
 function openEmployeeConfigModal(employee) {
   selectedEmployee.value = employee
@@ -119,6 +131,22 @@ async function closeEmployeeConfigModal() {
   showEmployeeConfigModal.value = false
   await nextTick()
   selectedEmployee.value = null
+}
+
+function closeCreateEmployeeModal() {
+  showCreateEmployeeModal.value = false
+}
+
+async function saveEmployee(payload) {
+  savingEmployee.value = true
+
+  try {
+    await createEmployee(payload)
+    await fetchEmployees()
+    closeCreateEmployeeModal()
+  } finally {
+    savingEmployee.value = false
+  }
 }
 
 </script>

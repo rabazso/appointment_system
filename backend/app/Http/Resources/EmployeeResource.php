@@ -12,7 +12,9 @@ class EmployeeResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
+            'email' => $this->whenLoaded('user', fn () => $this->user?->email),
             'name' => $this->name,
+            'phone' => $this->phone,
             'bio' => $this->bio,
             'links' => $this->links,
             'profile_image' => new EmployeeImageResource($this->whenLoaded('profileImage')),

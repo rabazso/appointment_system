@@ -14,14 +14,9 @@ class StoreEmployeeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id', 'unique:employees,user_id'],
             'name' => ['required', 'string'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['required', 'string'],
-            'bio' => ['nullable', 'string'],
-            'links' => ['nullable', 'array'],
-            'links.*.label' => ['required_with:links', 'string', 'max:50'],
-            'links.*.url' => ['required_with:links', 'url', 'max:2048'],
-            'profile_image_id' => ['nullable', 'integer', 'exists:employee_images,id'],
         ];
     }
 }

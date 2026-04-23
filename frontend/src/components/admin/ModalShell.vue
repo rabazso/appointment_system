@@ -4,7 +4,8 @@
     @click.self="$emit('close')"
   >
     <div
-      class="relative flex max-h-[calc(100vh-3rem)] w-full max-w-[500px] flex-col overflow-hidden rounded-2xl bg-white p-4"
+      class="relative flex max-h-[calc(100vh-3rem)] w-full flex-col overflow-hidden rounded-2xl bg-white p-4"
+      :class="contentClass"
     >
       <button
         v-if="showBack"
@@ -46,6 +47,10 @@ defineProps({
   showBack: {
     type: Boolean,
     default: false,
+  },
+  contentClass: {
+    type: String,
+    default: 'max-w-lg',
   },
 })
 </script>

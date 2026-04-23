@@ -93,7 +93,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/services/{service}', [ServiceController::class, 'update']);
         Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
         Route::post('/employees', [EmployeeController::class, 'store']);
-        Route::patch('/employees/{employee}', [EmployeeController::class, 'update']);
         Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
         Route::get('/employees/{employee}/schedules', [EmployeeScheduleController::class, 'index']);
         Route::post('/employees/{employee}/schedules', [EmployeeScheduleController::class, 'store']);

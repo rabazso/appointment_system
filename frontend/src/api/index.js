@@ -85,6 +85,7 @@ export const deleteBarberGalleryImage = (galleryId) => API.delete(`/barber/profi
 
 export const getServices = () => API.get('/services');
 export const getEmployees = () => API.get('/employees');
+export const createEmployee = (payload) => API.post('/employees', payload);
 export const getEmployeeSchedules = (employeeId) => API.get(`/employees/${employeeId}/schedules`);
 export const createEmployeeSchedule = (employeeId, payload) => API.post(`/employees/${employeeId}/schedules`, payload);
 export const updateEmployeeSchedule = (id, payload) => API.put(`/employee-schedules/${id}`, payload);
