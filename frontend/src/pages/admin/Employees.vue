@@ -34,7 +34,7 @@
             <button
               type="button"
               class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-gray-500 transition hover:bg-slate-50"
-              @click.stop=""
+              @click.stop="openEmployeeDeleteModal(employee)"
             >
               <Trash class="h-5 w-5" />
             </button>
@@ -95,6 +95,13 @@
     @save="saveEmployee"
   />
 
+  <EmployeeDeleteModal
+    v-if="showEmployeeDeleteModal && selectedEmployee"
+    :employee="selectedEmployee"
+    @close="closeEmployeeDeleteModal"
+    @confirm="removeSelectedEmployee"
+  />
+
 </template>
 
 <script setup>
@@ -102,16 +109,18 @@ import { nextTick, ref, onMounted } from 'vue'
 import { Settings, Trash, User } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
 import EmployeeCreateModal from '@/components/admin/employee/EmployeeCreateModal.vue'
+import EmployeeDeleteModal from '@/components/admin/employee/EmployeeDeleteModal.vue'
 import EmployeeConfigurationsModal from '@/components/admin/employee/EmployeeConfigureModal.vue'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
-import { createEmployee, getEmployees } from '@/api'
+import { createEmployee, deleteEmployee, getEmployees } from '@/api'
 
 const employees = ref([])
 const sidebarOpen = ref(false)
 const selectedEmployee = ref(null)
 const showEmployeeConfigModal = ref(false)
 const showCreateEmployeeModal = ref(false)
+const showEmployeeDeleteModal = ref(false)
 const savingEmployee = ref(false)
 
 onMounted(async () => {
@@ -133,6 +142,17 @@ async function closeEmployeeConfigModal() {
   selectedEmployee.value = null
 }
 
+function openEmployeeDeleteModal(employee) {
+  selectedEmployee.value = employee
+  showEmployeeDeleteModal.value = true
+}
+
+async function closeEmployeeDeleteModal() {
+  showEmployeeDeleteModal.value = false
+  await nextTick()
+  selectedEmployee.value = null
+}
+
 function closeCreateEmployeeModal() {
   showCreateEmployeeModal.value = false
 }
@@ -147,6 +167,14 @@ async function saveEmployee(payload) {
   } finally {
     savingEmployee.value = false
   }
+}
+
+async function removeSelectedEmployee() {
+  if (!selectedEmployee.value) return
+
+  await deleteEmployee(selectedEmployee.value.id)
+  await fetchEmployees()
+  await closeEmployeeDeleteModal()
 }
 
 </script>

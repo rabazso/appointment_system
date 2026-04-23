@@ -52,7 +52,7 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee): JsonResponse
     {
-        $employee->delete();
+        $employee->user()?->delete();
 
         return response()->json(['message' => 'Employee deleted successfully']);
     }
