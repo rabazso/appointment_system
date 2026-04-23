@@ -20,7 +20,7 @@
           <component
             :is="item.icon"
             v-if="item.icon"
-            class="h-4.5 w-4.5"
+            class="h-6 w-6"
           />
         </div>
         <div>
@@ -51,14 +51,22 @@
       @back="showMenu"
       @close="$emit('close')"
     />
+
+    <EmployeeBookingRulesModal
+      v-else
+      :employee="employee"
+      @back="showMenu"
+      @close="$emit('close')"
+    />
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { CalendarCheck, Clock, Scissors } from 'lucide-vue-next'
+import { CalendarCheck, Clock, Scissors, CalendarCog } from 'lucide-vue-next'
 import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeAvailabilityModal from './EmployeeAvailabilityModal.vue'
+import EmployeeBookingRulesModal from './EmployeeBookingRulesModal.vue'
 import EmployeeScheduleModal from './EmployeeScheduleModal.vue'
 import EmployeeServicesModal from './EmployeeServicesModal.vue'
 
@@ -91,6 +99,12 @@ const menuItems = [
     title: 'Services',
     description: 'Manage assigned services for this employee.',
     icon: Scissors,
+  },
+  {
+    section: 'bookingRules',
+    title: 'Booking rules',
+    description: 'Manage booking limits and appointment rules.',
+    icon: CalendarCog,
   },
 ]
 

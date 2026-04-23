@@ -97,6 +97,10 @@ export const getEmployeeAvailability = (employeeId) => API.get(`/employees/${emp
 export const createEmployeeAvailability = (employeeId, payload) => API.post(`/employees/${employeeId}/availability`, payload);
 export const updateEmployeeAvailability = (id, payload) => API.put(`/employee-availability/${id}`, payload);
 export const deleteEmployeeAvailability = (id) => API.delete(`/employee-availability/${id}`);
+export const getEmployeeBookingRules = (employeeId) => API.get(`/employees/${employeeId}/booking-rules`);
+export const createEmployeeBookingRules = (employeeId, payload) => API.post(`/employees/${employeeId}/booking-rules`, payload);
+export const updateEmployeeBookingRules = (id, payload) => API.put(`/employee-booking-rules/${id}`, payload);
+export const deleteEmployeeBookingRules = (id) => API.delete(`/employee-booking-rules/${id}`);
 export const getAppointmentByServiceAndDate = (serviceId, selectedDate) => API.get(`/appointments?service_id=${serviceId}&selected_date=${selectedDate}`);
 export const getAppointmentsByServiceAndDateAndEmployee = (serviceId, selectedDate, employeeId) => API.get(`/appointments?service_id=${serviceId}&selected_date=${selectedDate}&employee_id=${employeeId}`);
 export const getEmployeesByService = (serviceId) => API.get(`/employees?service_id=${serviceId}`);
