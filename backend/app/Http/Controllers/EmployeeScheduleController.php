@@ -1,0 +1,99 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\EmployeeScheduleRequest;
+use App\Http\Resources\EmployeeScheduleResource;
+use App\Models\Employee;
+use App\Models\EmployeeScheduleConfiguration;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+
+class EmployeeScheduleController extends Controller
+{
+    public function index(Employee $employee)
+    {
+        $schedules = $employee->scheduleConfigurations()
+            ->with(['workingHours', 'breaks'])
+            ->orderBy('valid_from')
+            ->get();
+
+        return EmployeeScheduleResource::collection($schedules);
+    }
+
+    public function store(EmployeeScheduleRequest $request, Employee $employee): EmployeeScheduleResource
+    {
+        $schedule = DB::transaction(function () use ($request, $employee) {
+            $schedule = $employee->scheduleConfigurations()->create($request->only('valid_from', 'valid_to'));
+            $this->createScheduleDetails(
+                $schedule,
+                $request->validated('weeklyHours'),
+                $request->validated('breaks', [])
+            );
+
+            return $schedule->load(['workingHours', 'breaks']);
+        });
+
+        return new EmployeeScheduleResource($schedule);
+    }
+
+    public function update(
+        EmployeeScheduleRequest $request,
+        EmployeeScheduleConfiguration $schedule
+    ): EmployeeScheduleResource {
+        $schedule = DB::transaction(function () use ($request, $schedule) {
+            $schedule->update($request->only('valid_from', 'valid_to'));
+            $this->replaceScheduleDetails(
+                $schedule,
+                $request->validated('weeklyHours'),
+                $request->validated('breaks', [])
+            );
+
+            return $schedule->refresh()->load(['workingHours', 'breaks']);
+        });
+
+        return new EmployeeScheduleResource($schedule);
+    }
+
+    public function destroy(EmployeeScheduleConfiguration $schedule): JsonResponse
+    {
+        $schedule->delete();
+
+        return response()->json(['message' => 'Employee schedule deleted successfully']);
+    }
+
+    private function replaceScheduleDetails(EmployeeScheduleConfiguration $schedule, array $weeklyHours, array $breaks): void
+    {
+        $schedule->workingHours()->delete();
+        $schedule->breaks()->delete();
+
+        $this->createScheduleDetails($schedule, $weeklyHours, $breaks);
+    }
+
+    private function createScheduleDetails(EmployeeScheduleConfiguration $schedule, array $weeklyHours, array $breaks): void
+    {
+        foreach ($weeklyHours as $day) {
+            $isOpen = (bool) $day['isOpen'];
+
+            $schedule->workingHours()->create([
+                'weekday' => $day['weekday'],
+                'start_time' => $isOpen ? $this->toStoredTime($day['start']) : null,
+                'end_time' => $isOpen ? $this->toStoredTime($day['end']) : null,
+            ]);
+
+        }
+
+        foreach ($breaks as $break) {
+            $schedule->breaks()->create([
+                'weekday' => $break['weekday'],
+                'start_time' => $this->toStoredTime($break['start']),
+                'end_time' => $this->toStoredTime($break['end']),
+            ]);
+        }
+    }
+
+    private function toStoredTime(?string $time): ?string
+    {
+        return $time ? "{$time}:00" : null;
+    }
+}

@@ -21,18 +21,21 @@
         <article
           v-for="employee in employees"
           :key="employee.id"
-          class="flex min-h-64 flex-col rounded-2xl bg-white p-4 shadow-lg"
+          class="flex min-h-64 cursor-pointer flex-col rounded-2xl bg-white p-4 shadow-lg transition hover:shadow-xl"
         >
           <div class="mb-3 flex items-center justify-between">
             <span
               class="rounded-full px-2 py-1 text-xs font-semibold"
               :class="employee.active ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'"
             >
-              {{ employee.active ? 'Active' : 'Inactive' }}
+              {{ employee.active ? 'Available' : 'Unavailable' }}
             </span>
 
             <button
-              class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-gray-500 transition hover:bg-slate-50">
+              type="button"
+              class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-gray-500 transition hover:bg-slate-50"
+              @click.stop=""
+            >
               <Trash class="h-5 w-5" />
             </button>
           </div>
@@ -40,8 +43,8 @@
           <div class="mb-4 flex justify-center">
             <div class="h-24 w-24 overflow-hidden rounded-full">
               <img
-                v-if="employee.avatar"
-                :src="employee.avatar"
+                v-if="employee.avatar || employee.photo_url"
+                :src="employee.avatar || employee.photo_url"
                 :alt="employee.name"
                 class="h-full w-full object-cover"
               />
@@ -54,8 +57,8 @@
             </div>
           </div>
 
-          <div class="mb-2">
-            <h3 class="text-center text-xl font-semibold text-black">
+          <div class="mb-2 text-center">
+            <h3 class="text-xl font-semibold text-black">
               {{ employee.name }}
             </h3>
           </div>
@@ -65,32 +68,57 @@
           </p>
 
           <div class="mt-auto flex justify-end pt-3">
-            <ToggleButton v-model="employee.active" />
+            <button
+              type="button"
+              class="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              @click.stop="openEmployeeConfigModal(employee)"
+            >
+              <Settings class="h-4 w-4" />
+              Configure
+            </button>
           </div>
         </article>
       </div>
     </main>
   </div>
+
+  <EmployeeConfigurationsModal
+    v-if="showEmployeeConfigModal"
+    :employee="selectedEmployee"
+    @close="closeEmployeeConfigModal"
+  />
+
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { Trash, User } from 'lucide-vue-next'
+import { nextTick, ref, onMounted } from 'vue'
+import { Settings, Trash, User } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
+import EmployeeConfigurationsModal from '@/components/admin/employee/EmployeeConfigureModal.vue'
 import Header from '@/components/admin/Header.vue'
-import ToggleButton from '@/components/admin/ToggleButton.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
-import { getEmployees } from '@/api/index'
+import { getEmployees } from '@/api'
 
 const employees = ref([])
 const sidebarOpen = ref(false)
+const selectedEmployee = ref(null)
+const showEmployeeConfigModal = ref(false)
 
 onMounted(async () => {
-  const data = (await getEmployees()).data
+  const data = (await getEmployees()).data.data
 
-  employees.value = data.map((employee) => ({
-    ...employee,
-    rating: (Math.random() * 5).toFixed(1),
-  }))
+  employees.value = data
 })
+
+function openEmployeeConfigModal(employee) {
+  selectedEmployee.value = employee
+  showEmployeeConfigModal.value = true
+}
+
+async function closeEmployeeConfigModal() {
+  showEmployeeConfigModal.value = false
+  await nextTick()
+  selectedEmployee.value = null
+}
+
 </script>

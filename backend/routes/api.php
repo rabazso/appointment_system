@@ -15,6 +15,7 @@ use App\Http\Controllers\EmployeeImageController;
 use App\Http\Controllers\EmployeeOwnTimeOffRequestController;
 use App\Http\Controllers\EmployeeProfileController;
 use App\Http\Controllers\EmployeeScheduleConfigurationController;
+use App\Http\Controllers\EmployeeScheduleController;
 use App\Http\Controllers\EmployeeTimeOffRequestController;
 use App\Http\Controllers\EmployeeWorkingHourController;
 use App\Http\Controllers\EmployeeServiceConfigurationController;
@@ -91,6 +92,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/employees', [EmployeeController::class, 'store']);
         Route::patch('/employees/{employee}', [EmployeeController::class, 'update']);
         Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
+        Route::get('/employees/{employee}/schedules', [EmployeeScheduleController::class, 'index']);
+        Route::post('/employees/{employee}/schedules', [EmployeeScheduleController::class, 'store']);
+        Route::put('/employee-schedules/{schedule}', [EmployeeScheduleController::class, 'update']);
+        Route::delete('/employee-schedules/{schedule}', [EmployeeScheduleController::class, 'destroy']);
         Route::post('/employee-versions', [EmployeeVersionController::class, 'store']);
         Route::patch('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'update']);
         Route::delete('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'destroy']);
