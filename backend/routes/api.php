@@ -12,6 +12,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
 use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\EmployeeImageController;
+use App\Http\Controllers\EmployeeOwnTimeOffRequestController;
 use App\Http\Controllers\EmployeeProfileController;
 use App\Http\Controllers\EmployeeScheduleConfigurationController;
 use App\Http\Controllers\EmployeeTimeOffRequestController;
@@ -160,6 +161,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post("/profile/avatar", [EmployeeProfileController::class, 'storeProfilePic']);
         Route::post("/profile/gallery", [EmployeeProfileController::class, 'storeGalleryImg']);
         Route::delete("/profile/gallery/{imgId}", [EmployeeProfileController::class, 'destroyGalleryImg'])->whereNumber('imgId');
+        Route::get('/time-off-requests', [EmployeeOwnTimeOffRequestController::class, 'index']);
+        Route::post('/time-off-requests', [EmployeeOwnTimeOffRequestController::class, 'store']);
+        Route::delete('/time-off-requests/{employeeTimeOffRequest}', [EmployeeOwnTimeOffRequestController::class, 'destroy']);
+        Route::get('/current-weekly-schedule', );
+        Route::get('/regular-breaks', );
+        Route::get('/upcoming-approved-time-off', );
      });
 });
 
