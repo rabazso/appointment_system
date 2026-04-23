@@ -31,6 +31,13 @@
     </div>
   </ModalShell>
 
+  <EmployeeAvailabilityModal
+      v-else-if="activeSection === 'availability'"
+      :employee="employee"
+      @back="showMenu"
+      @close="$emit('close')"
+    />
+
     <EmployeeScheduleModal
       v-else-if="activeSection === 'schedule'"
       :employee="employee"
@@ -44,14 +51,14 @@
       @back="showMenu"
       @close="$emit('close')"
     />
-
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { Clock, Scissors } from 'lucide-vue-next'
+import { CalendarCheck, Clock, Scissors } from 'lucide-vue-next'
 import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
+import EmployeeAvailabilityModal from './EmployeeAvailabilityModal.vue'
 import EmployeeScheduleModal from './EmployeeScheduleModal.vue'
 import EmployeeServicesModal from './EmployeeServicesModal.vue'
 
@@ -68,6 +75,12 @@ const activeSection = ref('menu')
 
 const menuItems = [
   {
+    section: 'availability',
+    title: 'Availability',
+    description: 'Manage when this employee can be booked.',
+    icon: CalendarCheck,
+  },
+  {
     section: 'schedule',
     title: 'Schedule',
     description: 'Review schedule changes and working hours.',
@@ -78,8 +91,7 @@ const menuItems = [
     title: 'Services',
     description: 'Manage assigned services for this employee.',
     icon: Scissors,
-  }
-
+  },
 ]
 
 function showMenu() {

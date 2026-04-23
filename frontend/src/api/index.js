@@ -93,6 +93,10 @@ export const getEmployeeServices = (employeeId) => API.get(`/employees/${employe
 export const createEmployeeServices = (employeeId, payload) => API.post(`/employees/${employeeId}/services`, payload);
 export const updateEmployeeServices = (id, payload) => API.put(`/employee-services/${id}`, payload);
 export const deleteEmployeeServices = (id) => API.delete(`/employee-services/${id}`);
+export const getEmployeeAvailability = (employeeId) => API.get(`/employees/${employeeId}/availability`);
+export const createEmployeeAvailability = (employeeId, payload) => API.post(`/employees/${employeeId}/availability`, payload);
+export const updateEmployeeAvailability = (id, payload) => API.put(`/employee-availability/${id}`, payload);
+export const deleteEmployeeAvailability = (id) => API.delete(`/employee-availability/${id}`);
 export const getAppointmentByServiceAndDate = (serviceId, selectedDate) => API.get(`/appointments?service_id=${serviceId}&selected_date=${selectedDate}`);
 export const getAppointmentsByServiceAndDateAndEmployee = (serviceId, selectedDate, employeeId) => API.get(`/appointments?service_id=${serviceId}&selected_date=${selectedDate}&employee_id=${employeeId}`);
 export const getEmployeesByService = (serviceId) => API.get(`/employees?service_id=${serviceId}`);

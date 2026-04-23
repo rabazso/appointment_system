@@ -7,6 +7,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\EmployeeBookingRuleConfigurationController;
 use App\Http\Controllers\EmployeeBookingRuleController;
+use App\Http\Controllers\EmployeeAvailabilityController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
@@ -101,6 +102,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/employees/{employee}/services', [EmployeeServicesController::class, 'store']);
         Route::put('/employee-services/{serviceConfiguration}', [EmployeeServicesController::class, 'update']);
         Route::delete('/employee-services/{serviceConfiguration}', [EmployeeServicesController::class, 'destroy']);
+        Route::get('/employees/{employee}/availability', [EmployeeAvailabilityController::class, 'index']);
+        Route::post('/employees/{employee}/availability', [EmployeeAvailabilityController::class, 'store']);
+        Route::put('/employee-availability/{availability}', [EmployeeAvailabilityController::class, 'update']);
+        Route::delete('/employee-availability/{availability}', [EmployeeAvailabilityController::class, 'destroy']);
         Route::post('/employee-versions', [EmployeeVersionController::class, 'store']);
         Route::patch('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'update']);
         Route::delete('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'destroy']);
