@@ -38,14 +38,22 @@
       @close="$emit('close')"
     />
 
+    <EmployeeServicesModal
+      v-else-if="activeSection === 'services'"
+      :employee="employee"
+      @back="showMenu"
+      @close="$emit('close')"
+    />
+
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { Clock } from 'lucide-vue-next'
+import { Clock, Scissors } from 'lucide-vue-next'
 import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeScheduleModal from './EmployeeScheduleModal.vue'
+import EmployeeServicesModal from './EmployeeServicesModal.vue'
 
 defineEmits(['close'])
 
@@ -64,7 +72,14 @@ const menuItems = [
     title: 'Schedule',
     description: 'Review schedule changes and working hours.',
     icon: Clock,
+  },
+  {
+    section: 'services',
+    title: 'Services',
+    description: 'Manage assigned services for this employee.',
+    icon: Scissors,
   }
+
 ]
 
 function showMenu() {

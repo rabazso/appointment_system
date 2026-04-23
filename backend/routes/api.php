@@ -19,6 +19,7 @@ use App\Http\Controllers\EmployeeScheduleController;
 use App\Http\Controllers\EmployeeTimeOffRequestController;
 use App\Http\Controllers\EmployeeWorkingHourController;
 use App\Http\Controllers\EmployeeServiceConfigurationController;
+use App\Http\Controllers\EmployeeServicesController;
 use App\Http\Controllers\EmployeeServiceController;
 use App\Http\Controllers\EmployeeVersionController;
 use App\Http\Controllers\ResetPasswordController;
@@ -96,6 +97,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/employees/{employee}/schedules', [EmployeeScheduleController::class, 'store']);
         Route::put('/employee-schedules/{schedule}', [EmployeeScheduleController::class, 'update']);
         Route::delete('/employee-schedules/{schedule}', [EmployeeScheduleController::class, 'destroy']);
+        Route::get('/employees/{employee}/services', [EmployeeServicesController::class, 'index']);
+        Route::post('/employees/{employee}/services', [EmployeeServicesController::class, 'store']);
+        Route::put('/employee-services/{serviceConfiguration}', [EmployeeServicesController::class, 'update']);
+        Route::delete('/employee-services/{serviceConfiguration}', [EmployeeServicesController::class, 'destroy']);
         Route::post('/employee-versions', [EmployeeVersionController::class, 'store']);
         Route::patch('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'update']);
         Route::delete('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'destroy']);
@@ -124,7 +129,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/employee-service-configurations/{employeeServiceConfiguration}', [EmployeeServiceConfigurationController::class, 'destroy']);
         Route::post('/employee-services', [EmployeeServiceController::class, 'store']);
         Route::patch('/employee-services/{employeeService}', [EmployeeServiceController::class, 'update']);
-        Route::delete('/employee-services/{employeeService}', [EmployeeServiceController::class, 'destroy']);
         Route::post('/employee-images', [EmployeeImageController::class, 'store']);
         Route::delete('/employee-images/{employeeImage}', [EmployeeImageController::class, 'destroy']);
         Route::post('/shop-images', [ShopImageController::class, 'store']);

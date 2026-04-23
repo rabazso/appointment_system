@@ -13,6 +13,7 @@ class EmployeeServiceResource extends JsonResource
             'id' => $this->id,
             'configuration_id' => $this->configuration_id,
             'service_id' => $this->service_id,
+            'name' => $this->whenLoaded('service', fn () => $this->service->name),
             'duration' => $this->duration,
             'price' => $this->price,
         ];
