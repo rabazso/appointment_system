@@ -30,9 +30,9 @@
             <div>
               <span
                 class="inline-flex rounded-full px-4 py-1.5 text-sm font-semibold leading-none"
-                :class="version.active ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
+                :class="version.is_available ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
               >
-                {{ version.active ? 'Available' : 'Unavailable' }}
+                {{ version.is_available ? 'Available' : 'Unavailable' }}
               </span>
 
               <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-700">

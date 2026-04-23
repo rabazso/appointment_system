@@ -21,7 +21,13 @@ class EmployeeController extends Controller
 {
     public function index()
     {
-        return EmployeeResource::collection(Employee::with(['profileImage', 'user'])->get());
+        $now = now();
+
+        return EmployeeResource::collection(Employee::with([
+            'profileImage',
+            'user',
+            'versions' => fn ($query) => $query->validAt($now),
+        ])->get());
     }
 
     public function store(StoreEmployeeRequest $request): EmployeeResource
@@ -47,7 +53,11 @@ class EmployeeController extends Controller
             return $employee;
         });
 
-        return new EmployeeResource($employee->load(['profileImage', 'user']));
+        return new EmployeeResource($employee->load([
+            'profileImage',
+            'user',
+            'versions' => fn ($query) => $query->validAt(now()),
+        ]));
     }
 
     public function destroy(Employee $employee): JsonResponse

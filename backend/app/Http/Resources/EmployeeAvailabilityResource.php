@@ -12,7 +12,7 @@ class EmployeeAvailabilityResource extends JsonResource
         return [
             'id' => $this->id,
             'employee_id' => $this->employee_id,
-            'active' => $this->is_available,
+            'is_available' => $this->is_available,
             'valid_from' => $this->valid_from?->toDateString(),
             'valid_to' => $this->valid_to?->toDateString(),
         ];

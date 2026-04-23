@@ -26,9 +26,9 @@
           <div class="mb-3 flex items-center justify-between">
             <span
               class="rounded-full px-2 py-1 text-xs font-semibold"
-              :class="employee.active ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'"
+              :class="employee.is_available ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'"
             >
-              {{ employee.active ? 'Available' : 'Unavailable' }}
+              {{ employee.is_available ? 'Available' : 'Unavailable' }}
             </span>
 
             <button

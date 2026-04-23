@@ -57,7 +57,7 @@ class EmployeeAvailabilityController extends Controller
     private function toVersionData(array $data): array
     {
         return [
-            'is_available' => $data['active'],
+            'is_available' => $data['is_available'],
             'valid_from' => $data['valid_from'],
             'valid_to' => $data['valid_to'] ?? null,
         ];

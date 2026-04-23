@@ -15,16 +15,16 @@
         <button
           type="button"
           class="flex h-10 items-center justify-center rounded-md text-sm font-semibold transition"
-          :class="form.active ? 'bg-emerald-100 text-emerald-900' : 'text-slate-500 hover:bg-slate-50'"
-          @click="form.active = true"
+          :class="form.is_available ? 'bg-emerald-100 text-emerald-900' : 'text-slate-500 hover:bg-slate-50'"
+          @click="form.is_available = true"
         >
           Available
         </button>
         <button
           type="button"
           class="flex h-10 items-center justify-center rounded-md text-sm font-semibold transition"
-          :class="!form.active ? 'bg-rose-100 text-rose-900' : 'text-slate-500 hover:bg-slate-50'"
-          @click="form.active = false"
+          :class="!form.is_available ? 'bg-rose-100 text-rose-900' : 'text-slate-500 hover:bg-slate-50'"
+          @click="form.is_available = false"
         >
           Unavailable
         </button>
@@ -69,7 +69,7 @@ watch(
 
 function createForm(availability) {
   return {
-    active: availability?.active ?? true,
+    is_available: availability?.is_available ?? true,
     valid_from: toInputDate(availability?.valid_from) || toInputDate(new Date().toISOString()),
     valid_to: availability?.valid_to ?? null,
   }

@@ -9,10 +9,13 @@ class EmployeeResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $currentVersion = $this->whenLoaded('versions', fn () => $this->versions->first());
+
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
             'email' => $this->whenLoaded('user', fn () => $this->user?->email),
+            'is_available' => $currentVersion?->is_available ?? false,
             'name' => $this->name,
             'phone' => $this->phone,
             'bio' => $this->bio,
