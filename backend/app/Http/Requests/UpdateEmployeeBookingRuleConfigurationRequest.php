@@ -15,7 +15,6 @@ class UpdateEmployeeBookingRuleConfigurationRequest extends FormRequest
     {
         return [
             'valid_from' => ['date'],
-            'valid_to' => ['nullable', 'date'],
         ];
     }
 }

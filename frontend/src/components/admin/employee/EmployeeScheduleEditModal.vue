@@ -219,7 +219,6 @@ function getDayLabel(index) {
 function toPayload() {
   return {
     valid_from: form.value.valid_from,
-    valid_to: form.value.valid_to || null,
     weeklyHours: form.value.weeklyHours,
     breaks: form.value.breaks
       .filter((breakItem) => enabledWorkingDays.value.some(({ index }) => index === breakItem.weekday)),

@@ -15,8 +15,8 @@ class StoreShopOpeningHourRequest extends FormRequest
     {
         return [
             'weekday' => ['required', 'integer', 'between:0,6'],
-            'open_time' => ['nullable', 'date_format:H:i:s'],
-            'close_time' => ['nullable', 'date_format:H:i:s'],
+            'open_time' => ['nullable', 'date_format:H:i'],
+            'close_time' => ['nullable', 'date_format:H:i'],
         ];
     }
 }

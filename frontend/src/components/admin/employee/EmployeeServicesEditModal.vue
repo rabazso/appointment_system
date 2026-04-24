@@ -136,7 +136,6 @@ watch(
 function createForm(services) {
   return {
     valid_from: toInputDate(services?.valid_from) || toInputDate(new Date().toISOString()),
-    valid_to: services?.valid_to ?? null,
     services: (services?.services ?? []).map((service) => ({ ...service })),
   }
 }

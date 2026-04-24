@@ -71,7 +71,6 @@ function createForm(availability) {
   return {
     is_available: availability?.is_available ?? true,
     valid_from: toInputDate(availability?.valid_from) || toInputDate(new Date().toISOString()),
-    valid_to: availability?.valid_to ?? null,
   }
 }
 

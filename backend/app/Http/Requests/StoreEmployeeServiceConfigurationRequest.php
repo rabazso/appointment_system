@@ -16,7 +16,6 @@ class StoreEmployeeServiceConfigurationRequest extends FormRequest
         return [
             'employee_id' => ['required', 'integer', 'exists:employees,id'],
             'valid_from' => ['required', 'date'],
-            'valid_to' => ['nullable', 'date', 'after:valid_from'],
         ];
     }
 }

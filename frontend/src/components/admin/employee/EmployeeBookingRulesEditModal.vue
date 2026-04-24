@@ -78,7 +78,6 @@ watch(
 function getDefaultBookingRules() {
   return {
     valid_from: new Date().toISOString().slice(0, 10),
-    valid_to: null,
     max_advance_days: 14,
     slot_interval_minutes: 30,
   }
@@ -87,7 +86,6 @@ function getDefaultBookingRules() {
 function toPayload() {
   return {
     valid_from: form.value.valid_from,
-    valid_to: form.value.valid_to || null,
     slot_interval_minutes: form.value.slot_interval_minutes,
     max_advance_days: form.value.max_advance_days,
   }

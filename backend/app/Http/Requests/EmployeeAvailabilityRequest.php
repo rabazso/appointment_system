@@ -15,8 +15,7 @@ class EmployeeAvailabilityRequest extends FormRequest
     {
         return [
             'is_available' => ['required', 'boolean'],
-            'valid_from' => ['required', 'date'],
-            'valid_to' => ['nullable', 'date', 'after:valid_from'],
+            'valid_from' => [$this->isMethod('post') ? 'required' : 'sometimes', 'date'],
         ];
     }
 }

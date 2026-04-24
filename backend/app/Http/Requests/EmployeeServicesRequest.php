@@ -14,8 +14,7 @@ class EmployeeServicesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'valid_from' => ['required', 'date'],
-            'valid_to' => ['nullable', 'date', 'after:valid_from'],
+            'valid_from' => [$this->isMethod('post') ? 'required' : 'sometimes', 'date'],
             'services' => ['array'],
             'services.*.service_id' => ['required', 'integer', 'exists:services,id'],
             'services.*.duration' => ['required', 'integer'],

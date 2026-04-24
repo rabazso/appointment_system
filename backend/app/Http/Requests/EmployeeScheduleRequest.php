@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class EmployeeScheduleRequest extends FormRequest
 {
@@ -14,8 +15,7 @@ class EmployeeScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'valid_from' => ['required', 'date'],
-            'valid_to' => ['nullable', 'date', 'after:valid_from'],
+            'valid_from' => [$this->isMethod('post') ? 'required' : 'sometimes', 'date'],
             'weeklyHours' => ['required', 'array', 'size:7'],
             'weeklyHours.*.weekday' => ['required', 'integer', 'between:0,6'],
             'weeklyHours.*.isOpen' => ['required', 'boolean'],
