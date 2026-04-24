@@ -6,6 +6,7 @@ use App\Http\Requests\EmployeeScheduleRequest;
 use App\Http\Resources\EmployeeScheduleResource;
 use App\Models\Employee;
 use App\Models\EmployeeScheduleConfiguration;
+use App\Services\Timeline\VersionTimelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -21,14 +22,21 @@ class EmployeeScheduleController extends Controller
         return EmployeeScheduleResource::collection($schedules);
     }
 
-    public function store(EmployeeScheduleRequest $request, Employee $employee): EmployeeScheduleResource
+    public function store(
+        EmployeeScheduleRequest $request,
+        Employee $employee,
+        VersionTimelineService $timelineService
+    ): EmployeeScheduleResource
     {
-        $schedule = DB::transaction(function () use ($request, $employee) {
-            $schedule = $employee->scheduleConfigurations()->create($request->only('valid_from', 'valid_to'));
+        $schedule = DB::transaction(function () use ($request, $employee, $timelineService) {
+            $schedule = $timelineService->createVersion(
+                $employee->scheduleConfigurations(),
+                ['valid_from' => $request->validated('valid_from')]
+            );
             $this->createScheduleDetails(
                 $schedule,
                 $request->validated('weeklyHours'),
-                $request->validated('breaks', [])
+                $request->validated('breaks')
             );
 
             return $schedule->load(['workingHours', 'breaks']);
@@ -39,14 +47,19 @@ class EmployeeScheduleController extends Controller
 
     public function update(
         EmployeeScheduleRequest $request,
-        EmployeeScheduleConfiguration $schedule
+        EmployeeScheduleConfiguration $schedule,
+        VersionTimelineService $timelineService
     ): EmployeeScheduleResource {
-        $schedule = DB::transaction(function () use ($request, $schedule) {
-            $schedule->update($request->only('valid_from', 'valid_to'));
+        $schedule = DB::transaction(function () use ($request, $schedule, $timelineService) {
+            $schedule = $timelineService->updateVersion(
+                $schedule->employee->scheduleConfigurations(),
+                $schedule,
+                ['valid_from' => $request->validated('valid_from')]
+            );
             $this->replaceScheduleDetails(
                 $schedule,
                 $request->validated('weeklyHours'),
-                $request->validated('breaks', [])
+                $request->validated('breaks')
             );
 
             return $schedule->refresh()->load(['workingHours', 'breaks']);
@@ -55,9 +68,12 @@ class EmployeeScheduleController extends Controller
         return new EmployeeScheduleResource($schedule);
     }
 
-    public function destroy(EmployeeScheduleConfiguration $schedule): JsonResponse
+    public function destroy(
+        EmployeeScheduleConfiguration $schedule,
+        VersionTimelineService $timelineService
+    ): JsonResponse
     {
-        $schedule->delete();
+        $timelineService->deleteVersion($schedule->employee->scheduleConfigurations(), $schedule);
 
         return response()->json(['message' => 'Employee schedule deleted successfully']);
     }
@@ -77,8 +93,8 @@ class EmployeeScheduleController extends Controller
 
             $schedule->workingHours()->create([
                 'weekday' => $day['weekday'],
-                'start_time' => $isOpen ? $this->toStoredTime($day['start']) : null,
-                'end_time' => $isOpen ? $this->toStoredTime($day['end']) : null,
+                'start_time' => $isOpen ? $day['start'] : null,
+                'end_time' => $isOpen ? $day['end'] : null,
             ]);
 
         }
@@ -86,14 +102,9 @@ class EmployeeScheduleController extends Controller
         foreach ($breaks as $break) {
             $schedule->breaks()->create([
                 'weekday' => $break['weekday'],
-                'start_time' => $this->toStoredTime($break['start']),
-                'end_time' => $this->toStoredTime($break['end']),
+                'start_time' => $break['start'],
+                'end_time' => $break['end'],
             ]);
         }
-    }
-
-    private function toStoredTime(?string $time): ?string
-    {
-        return $time ? "{$time}:00" : null;
     }
 }

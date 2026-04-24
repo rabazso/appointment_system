@@ -6,6 +6,7 @@ use App\Http\Requests\EmployeeBookingRulesRequest;
 use App\Http\Resources\EmployeeBookingRulesResource;
 use App\Models\Employee;
 use App\Models\EmployeeBookingRuleConfiguration;
+use App\Services\Timeline\VersionTimelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -21,10 +22,17 @@ class EmployeeBookingRulesController extends Controller
         return EmployeeBookingRulesResource::collection($bookingRules);
     }
 
-    public function store(EmployeeBookingRulesRequest $request, Employee $employee): EmployeeBookingRulesResource
+    public function store(
+        EmployeeBookingRulesRequest $request,
+        Employee $employee,
+        VersionTimelineService $timelineService
+    ): EmployeeBookingRulesResource
     {
-        $bookingRules = DB::transaction(function () use ($request, $employee) {
-            $bookingRules = $employee->bookingRuleConfigurations()->create($request->only('valid_from', 'valid_to'));
+        $bookingRules = DB::transaction(function () use ($request, $employee, $timelineService) {
+            $bookingRules = $timelineService->createVersion(
+                $employee->bookingRuleConfigurations(),
+                ['valid_from' => $request->validated('valid_from')]
+            );
             $this->createRule($bookingRules, $request->validated());
 
             return $bookingRules->load('rules');
@@ -35,10 +43,16 @@ class EmployeeBookingRulesController extends Controller
 
     public function update(
         EmployeeBookingRulesRequest $request,
-        EmployeeBookingRuleConfiguration $bookingRules
+        EmployeeBookingRuleConfiguration $bookingRules,
+        VersionTimelineService $timelineService
     ): EmployeeBookingRulesResource {
-        $bookingRules = DB::transaction(function () use ($request, $bookingRules) {
-            $bookingRules->update($request->only('valid_from', 'valid_to'));
+        $bookingRules = DB::transaction(function () use ($request, $bookingRules, $timelineService) {
+            $bookingRules = $timelineService->updateVersion(
+                $bookingRules->employee->bookingRuleConfigurations(),
+                $bookingRules,
+                ['valid_from' => $request->validated('valid_from')]
+
+            );
             $bookingRules->rules()->delete();
             $this->createRule($bookingRules, $request->validated());
 
@@ -48,9 +62,12 @@ class EmployeeBookingRulesController extends Controller
         return new EmployeeBookingRulesResource($bookingRules);
     }
 
-    public function destroy(EmployeeBookingRuleConfiguration $bookingRules): JsonResponse
+    public function destroy(
+        EmployeeBookingRuleConfiguration $bookingRules,
+        VersionTimelineService $timelineService
+    ): JsonResponse
     {
-        $bookingRules->delete();
+        $timelineService->deleteVersion($bookingRules->employee->bookingRuleConfigurations(), $bookingRules);
 
         return response()->json(['message' => 'Employee booking rules deleted successfully']);
     }
@@ -62,4 +79,5 @@ class EmployeeBookingRulesController extends Controller
             'booking_window_days' => $data['max_advance_days'],
         ]);
     }
+
 }

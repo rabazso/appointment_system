@@ -27,7 +27,7 @@ class ServiceAvailabilityController extends Controller
     ): ServiceAvailabilityResource {
         $availability = $timelineService->createVersion(
             $service->versions(),
-            $this->toVersionData($request->validated())
+            $request->validated()
         );
 
         return new ServiceAvailabilityResource($availability);
@@ -41,7 +41,7 @@ class ServiceAvailabilityController extends Controller
         $availability = $timelineService->updateVersion(
             $availability->service->versions(),
             $availability,
-            $this->toVersionData($request->validated())
+            $request->validated()
         );
 
         return new ServiceAvailabilityResource($availability);
@@ -54,12 +54,4 @@ class ServiceAvailabilityController extends Controller
         return response()->json(['message' => 'Service availability deleted successfully']);
     }
 
-    private function toVersionData(array $data): array
-    {
-        return [
-            'is_available' => $data['is_available'],
-            'valid_from' => $data['valid_from'],
-            'valid_to' => $data['valid_to'] ?? null,
-        ];
-    }
 }

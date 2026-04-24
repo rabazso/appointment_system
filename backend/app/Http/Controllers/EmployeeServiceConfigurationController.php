@@ -33,7 +33,10 @@ class EmployeeServiceConfigurationController extends Controller
         $validated = $request->validated();
         $employee = Employee::findOrFail($validated['employee_id']);
 
-        $configuration = $timelineService->createVersion($employee->serviceConfigurations(), $validated);
+        $configuration = $timelineService->createVersion(
+            $employee->serviceConfigurations(),
+            ['valid_from' => $request->validated('valid_from')]
+        );
 
         return new EmployeeServiceConfigurationResource($configuration);
     }
@@ -41,8 +44,11 @@ class EmployeeServiceConfigurationController extends Controller
     public function update(UpdateEmployeeServiceConfigurationRequest $request, EmployeeServiceConfiguration $employeeServiceConfiguration,
     VersionTimelineService $timelineService): EmployeeServiceConfigurationResource
     {
-        $employeeServiceConfiguration = $timelineService->updateVersion($employeeServiceConfiguration->employee->serviceConfigurations(),
-        $employeeServiceConfiguration, $request->validated());
+        $employeeServiceConfiguration = $timelineService->updateVersion(
+            $employeeServiceConfiguration->employee->serviceConfigurations(),
+            $employeeServiceConfiguration,
+            ['valid_from' => $request->validated('valid_from')]
+        );
 
         return new EmployeeServiceConfigurationResource($employeeServiceConfiguration);
     }

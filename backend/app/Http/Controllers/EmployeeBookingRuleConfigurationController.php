@@ -35,7 +35,10 @@ class EmployeeBookingRuleConfigurationController extends Controller
         $validated = $request->validated();
         $employee = Employee::findOrFail($validated['employee_id']);
 
-        $configuration = $timelineService->createVersion($employee->bookingRuleConfigurations(), $validated);
+        $configuration = $timelineService->createVersion(
+            $employee->bookingRuleConfigurations(),
+            ['valid_from' => $request->validated('valid_from')]
+        );
 
         return new EmployeeBookingRuleConfigurationResource($configuration);
     }
@@ -48,7 +51,8 @@ class EmployeeBookingRuleConfigurationController extends Controller
         $employeeBookingRuleConfiguration = $timelineService->updateVersion(
             $employeeBookingRuleConfiguration->employee->bookingRuleConfigurations(),
             $employeeBookingRuleConfiguration,
-            $request->validated()
+            ['valid_from' => $request->validated('valid_from')]
+
         );
 
         return new EmployeeBookingRuleConfigurationResource($employeeBookingRuleConfiguration);

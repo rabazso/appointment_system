@@ -11,91 +11,53 @@ class VersionTimelineService
 {
     public function createVersion(HasMany $timeline, array $data): Model
     {
-        $validFrom = Carbon::parse($data['valid_from']);
-        $validTo = array_key_exists('valid_to', $data) && $data['valid_to'] ? Carbon::parse($data['valid_to']) : null;
+        $validFrom = Carbon::parse($data['valid_from'])->startOfDay();
 
-        if ($timeline->where('valid_from', $validFrom)->exists()) {
+        $this->ensureUniqueValidFrom($timeline, $validFrom);
+
+        $previousVersion = $timeline->orderByDesc('valid_from')->first();
+
+        if ($previousVersion && $validFrom->lt($previousVersion->valid_from->copy()->addDay()->startOfDay())) {
             throw ValidationException::withMessages([
-                'valid_from' => 'A version with this start date already exists.',
+                'valid_from' => 'The start date must be at least one day after the latest version start date.',
             ]);
         }
 
-        $currentVersion = $timeline->validAt($validFrom)->first();
-
-        $nextVersion = $timeline->where('valid_from', '>', $validFrom)->orderBy('valid_from')->first();
-
-        if ($validTo !== null && ! $validTo->isAfter($validFrom)) {
-            throw ValidationException::withMessages([
-                'valid_to' => 'The end date must be later than the start date.',
-            ]);
-        }
-
-        if ($nextVersion && ($validTo === null || $validTo->isAfter($nextVersion->valid_from))) {
-            $validTo = $nextVersion->valid_from;
-        }
-
-        if ($currentVersion) {
-            $currentVersion->update([
-                'valid_to' => $validFrom,
-            ]);
+        if ($previousVersion) {
+            $previousVersion->update(['valid_to' => $validFrom]);
         }
 
         return $timeline->create([
             ...$data,
             'valid_from' => $validFrom,
-            'valid_to' => $validTo,
+            'valid_to' => null,
         ]);
     }
 
     public function updateVersion(HasMany $timeline, Model $version, array $data): Model
     {
-        $validFrom = $version->valid_from;
-        $validTo = $version->valid_to;
+        if (blank($data['valid_from'] ?? null)) {
+            unset($data['valid_from']);
 
-        if (array_key_exists('valid_from', $data)) {
-            $validFrom = Carbon::parse($data['valid_from']);
+            $version->update($data);
+
+            return $version->refresh();
         }
 
-        if (array_key_exists('valid_to', $data)) {
-            $validTo = $data['valid_to'] ? Carbon::parse($data['valid_to']) : null;
-        }
+        $validFrom = Carbon::parse($data['valid_from'])->startOfDay();
+        $this->validateValidFromUpdate($timeline, $version, $validFrom);
 
-        $previousVersion = $timeline->where('valid_from', '<', $version->valid_from)->orderByDesc('valid_from')->first();
+        $previousVersion = $this->previousBefore($timeline, $validFrom, $version);
+        $nextVersion = $this->nextAfter($timeline, $validFrom, $version);
 
-        $nextVersion = $timeline->where('valid_from', '>', $version->valid_from)->orderBy('valid_from')->first();
-
-        if ($previousVersion && ! $validFrom->isAfter($previousVersion->valid_from)) {
-            throw ValidationException::withMessages([
-                'valid_from' => 'The start date must be later than the previous version start date.',
-            ]);
-        }
-
-        if ($nextVersion && ! $nextVersion->valid_from->isAfter($validFrom)) {
-            throw ValidationException::withMessages([
-                'valid_from' => 'The start date must be earlier than the next version start date.',
-            ]);
-        }
-
-        if ($validTo !== null && ! $validTo->isAfter($validFrom)) {
-            throw ValidationException::withMessages([
-                'valid_to' => 'The end date must be later than the start date.',
-            ]);
-        }
-
-        if ($nextVersion && ($validTo === null || $validTo->isAfter($nextVersion->valid_from))) {
-            $validTo = $nextVersion->valid_from;
-        }
-
-        if ($previousVersion && ($previousVersion->valid_to === null || $previousVersion->valid_to->equalTo($version->valid_from) || $previousVersion->valid_to->isAfter($validFrom))) {
-            $previousVersion->update([
-                'valid_to' => $validFrom,
-            ]);
+        if ($previousVersion) {
+            $previousVersion->update(['valid_to' => $validFrom]);
         }
 
         $version->update([
             ...$data,
             'valid_from' => $validFrom,
-            'valid_to' => $validTo,
+            'valid_to' => $nextVersion?->valid_from,
         ]);
 
         return $version->refresh();
@@ -103,25 +65,77 @@ class VersionTimelineService
 
     public function deleteVersion(HasMany $timeline, Model $version): void
     {
-        $previousVersion = $timeline
-            ->where('valid_from', '<', $version->valid_from)
-            ->orderByDesc('valid_from')
-            ->first();
+        $previousVersion = $this->previousBefore($timeline, $version->valid_from);
+        $nextVersion = $this->nextAfter($timeline, $version->valid_from);
 
-        $nextVersion = $timeline
-            ->where('valid_from', '>', $version->valid_from)
-            ->orderBy('valid_from')
-            ->first();
-
-        if (
-            $previousVersion &&
-            ($previousVersion->valid_to === null || $previousVersion->valid_to->equalTo($version->valid_from))
-        ) {
-            $previousVersion->update([
-                'valid_to' => $nextVersion?->valid_from,
-            ]);
+        if ($previousVersion) {
+            $previousVersion->update(['valid_to' => $nextVersion?->valid_from]);
         }
 
         $version->delete();
+    }
+
+    public function previousBefore(HasMany $timeline, Carbon $validFrom, ?Model $excluding = null): ?Model
+    {
+        return $timeline
+            ->when($excluding, fn ($query) => $query->whereKeyNot($excluding->getKey()))
+            ->where('valid_from', '<', $validFrom)
+            ->orderByDesc('valid_from')
+            ->first();
+    }
+
+    public function nextAfter(HasMany $timeline, Carbon $validFrom, ?Model $excluding = null): ?Model
+    {
+        return $timeline
+            ->when($excluding, fn ($query) => $query->whereKeyNot($excluding->getKey()))
+            ->where('valid_from', '>', $validFrom)
+            ->orderBy('valid_from')
+            ->first();
+    }
+
+    private function validateValidFromUpdate(HasMany $timeline, Model $version, Carbon $validFrom): void
+    {
+        if (! $version->valid_from->gt(now()->startOfDay())) {
+            throw ValidationException::withMessages([
+                'valid_from' => 'The start date can only be changed for upcoming versions.',
+            ]);
+        }
+
+        if (! $validFrom->gt(now()->startOfDay())) {
+            throw ValidationException::withMessages([
+                'valid_from' => 'The start date must stay in the future.',
+            ]);
+        }
+
+        $this->ensureUniqueValidFrom($timeline, $validFrom, $version);
+
+        $previousVersion = $this->previousBefore($timeline, $validFrom, $version);
+        $nextVersion = $this->nextAfter($timeline, $validFrom, $version);
+
+        if ($previousVersion && $validFrom->lt($previousVersion->valid_from->copy()->addDay()->startOfDay())) {
+            throw ValidationException::withMessages([
+                'valid_from' => 'The start date must be at least one day after the previous version start date.',
+            ]);
+        }
+
+        if ($nextVersion && $validFrom->gt($nextVersion->valid_from->copy()->subDay()->startOfDay())) {
+            throw ValidationException::withMessages([
+                'valid_from' => 'The start date must be at least one day before the next version start date.',
+            ]);
+        }
+    }
+
+    private function ensureUniqueValidFrom(HasMany $timeline, Carbon $validFrom, ?Model $excluding = null): void
+    {
+        $exists = $timeline
+            ->when($excluding, fn ($query) => $query->whereKeyNot($excluding->getKey()))
+            ->whereDate('valid_from', $validFrom->toDateString())
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'valid_from' => 'A version with this start date already exists.',
+            ]);
+        }
     }
 }

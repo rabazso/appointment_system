@@ -6,6 +6,7 @@ use App\Http\Requests\EmployeeServicesRequest;
 use App\Http\Resources\EmployeeServicesResource;
 use App\Models\Employee;
 use App\Models\EmployeeServiceConfiguration;
+use App\Services\Timeline\VersionTimelineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -21,13 +22,20 @@ class EmployeeServicesController extends Controller
         return EmployeeServicesResource::collection($serviceConfigurations);
     }
 
-    public function store(EmployeeServicesRequest $request, Employee $employee): EmployeeServicesResource
+    public function store(
+        EmployeeServicesRequest $request,
+        Employee $employee,
+        VersionTimelineService $timelineService
+    ): EmployeeServicesResource
     {
-        $serviceConfiguration = DB::transaction(function () use ($request, $employee) {
-            $serviceConfiguration = $employee->serviceConfigurations()->create($request->only('valid_from', 'valid_to'));
-            $this->createServiceDetails(
+        $serviceConfiguration = DB::transaction(function () use ($request, $employee, $timelineService) {
+            $serviceConfiguration = $timelineService->createVersion(
+                $employee->serviceConfigurations(),
+                ['valid_from' => $request->validated('valid_from')]
+            );
+            $this->createServices(
                 $serviceConfiguration,
-                $request->validated('services', [])
+                $request->validated('services')
             );
 
             return $serviceConfiguration->load('services.service');
@@ -38,13 +46,18 @@ class EmployeeServicesController extends Controller
 
     public function update(
         EmployeeServicesRequest $request,
-        EmployeeServiceConfiguration $serviceConfiguration
+        EmployeeServiceConfiguration $serviceConfiguration,
+        VersionTimelineService $timelineService
     ): EmployeeServicesResource {
-        $serviceConfiguration = DB::transaction(function () use ($request, $serviceConfiguration) {
-            $serviceConfiguration->update($request->only('valid_from', 'valid_to'));
-            $this->replaceServiceDetails(
+        $serviceConfiguration = DB::transaction(function () use ($request, $serviceConfiguration, $timelineService) {
+            $serviceConfiguration = $timelineService->updateVersion(
+                $serviceConfiguration->employee->serviceConfigurations(),
                 $serviceConfiguration,
-                $request->validated('services', [])
+                ['valid_from' => $request->validated('valid_from')]
+            );
+            $this->replaceServices(
+                $serviceConfiguration,
+                $request->validated('services')
             );
 
             return $serviceConfiguration->refresh()->load('services.service');
@@ -53,21 +66,24 @@ class EmployeeServicesController extends Controller
         return new EmployeeServicesResource($serviceConfiguration);
     }
 
-    public function destroy(EmployeeServiceConfiguration $serviceConfiguration): JsonResponse
+    public function destroy(
+        EmployeeServiceConfiguration $serviceConfiguration,
+        VersionTimelineService $timelineService
+    ): JsonResponse
     {
-        $serviceConfiguration->delete();
+        $timelineService->deleteVersion($serviceConfiguration->employee->serviceConfigurations(), $serviceConfiguration);
 
         return response()->json(['message' => 'Employee service configuration deleted successfully']);
     }
 
-    private function replaceServiceDetails(EmployeeServiceConfiguration $serviceConfiguration, array $services): void
+    private function replaceServices(EmployeeServiceConfiguration $serviceConfiguration, array $services): void
     {
         $serviceConfiguration->services()->delete();
 
-        $this->createServiceDetails($serviceConfiguration, $services);
+        $this->createServices($serviceConfiguration, $services);
     }
 
-    private function createServiceDetails(EmployeeServiceConfiguration $serviceConfiguration, array $services): void
+    private function createServices(EmployeeServiceConfiguration $serviceConfiguration, array $services): void
     {
         foreach ($services as $service) {
             $serviceConfiguration->services()->create([
@@ -77,4 +93,5 @@ class EmployeeServicesController extends Controller
             ]);
         }
     }
+
 }

@@ -27,7 +27,7 @@ class EmployeeAvailabilityController extends Controller
     ): EmployeeAvailabilityResource {
         $availability = $timelineService->createVersion(
             $employee->versions(),
-            $this->toVersionData($request->validated())
+            $request->validated()
         );
 
         return new EmployeeAvailabilityResource($availability);
@@ -41,7 +41,7 @@ class EmployeeAvailabilityController extends Controller
         $availability = $timelineService->updateVersion(
             $availability->employee->versions(),
             $availability,
-            $this->toVersionData($request->validated())
+            $request->validated()
         );
 
         return new EmployeeAvailabilityResource($availability);
@@ -54,12 +54,4 @@ class EmployeeAvailabilityController extends Controller
         return response()->json(['message' => 'Employee availability deleted successfully']);
     }
 
-    private function toVersionData(array $data): array
-    {
-        return [
-            'is_available' => $data['is_available'],
-            'valid_from' => $data['valid_from'],
-            'valid_to' => $data['valid_to'] ?? null,
-        ];
-    }
 }
