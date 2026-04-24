@@ -2,6 +2,7 @@
   <EmployeeBookingRulesEditModal
     v-if="isEditorOpen"
     :booking-rules="editingBookingRules"
+    :valid-from-policy="createValidFromPolicy"
     @back="closeEditor"
     @close="$emit('close')"
     @cancel="closeEditor"
@@ -32,14 +33,14 @@
                 <div class="rounded-lg bg-slate-50 px-3 py-2">
                   <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Slot interval</p>
                   <p class="mt-1 text-base font-semibold text-slate-900">
-                    {{ version.slot_interval_minutes }} min
+                    {{ version.booking_interval_minutes }} min
                   </p>
                 </div>
 
                 <div class="rounded-lg bg-slate-50 px-3 py-2">
                   <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Booking window</p>
                   <p class="mt-1 text-base font-semibold text-slate-900">
-                    {{ version.max_advance_days }} days
+                    {{ version.booking_window_days }} days
                   </p>
                 </div>
               </div>
@@ -88,6 +89,7 @@ import { useEmployeeBookingRuleConfigurations } from '@/composables/useEmployeeB
 import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeBookingRulesEditModal from './EmployeeBookingRulesEditModal.vue'
+import { addDays, maxDate, parseISODate, toISO } from '@utils/date'
 
 defineEmits(['back', 'close'])
 
@@ -116,6 +118,7 @@ const activeTitle = computed(() => {
 const activeDescription = computed(() => {
   return 'Manage booking limits and appointment rules.'
 })
+const createValidFromPolicy = computed(() => getCreateValidFromPolicy(bookingRuleVersions.value))
 
 onMounted(fetchBookingRules)
 
@@ -147,4 +150,24 @@ async function saveSelectedBookingRules(payload) {
 async function deleteSelectedBookingRules(bookingRules) {
   await deleteBookingRules(bookingRules.id)
 }
+
+function getCreateValidFromPolicy(versions) {
+  const tomorrow = addDays(new Date(), 1)
+  const latestValidFrom = versions
+    .map((version) => version.valid_from)
+    .filter(Boolean)
+    .sort()
+    .at(-1)
+
+  const min = latestValidFrom
+    ? maxDate(tomorrow, addDays(parseISODate(latestValidFrom), 1))
+    : tomorrow
+
+  return {
+    editable: true,
+    min: toISO(min),
+    max: null,
+  }
+}
+
 </script>

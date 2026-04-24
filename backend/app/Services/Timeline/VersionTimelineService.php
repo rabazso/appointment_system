@@ -16,10 +16,15 @@ class VersionTimelineService
         $this->ensureUniqueValidFrom($timeline, $validFrom);
 
         $previousVersion = $timeline->orderByDesc('valid_from')->first();
+        $minimumValidFrom = now()->startOfDay()->addDay();
 
-        if ($previousVersion && $validFrom->lt($previousVersion->valid_from->copy()->addDay()->startOfDay())) {
+        if ($previousVersion && $previousVersion->valid_from->copy()->addDay()->startOfDay()->gt($minimumValidFrom)) {
+            $minimumValidFrom = $previousVersion->valid_from->copy()->addDay()->startOfDay();
+        }
+
+        if ($validFrom->lt($minimumValidFrom)) {
             throw ValidationException::withMessages([
-                'valid_from' => 'The start date must be at least one day after the latest version start date.',
+                'valid_from' => 'The start date must be at least the next allowed day.',
             ]);
         }
 

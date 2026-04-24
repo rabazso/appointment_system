@@ -155,6 +155,10 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  validFromPolicy: {
+    type: Object,
+    default: null,
+  },
   saving: {
     type: Boolean,
     default: false,
@@ -165,7 +169,7 @@ const props = defineProps({
 const currentView = ref('hours')
 const form = ref(props.schedule ? cloneSchedule(props.schedule) : getDefaultSchedule())
 const title = computed(() => (props.schedule ? 'Edit schedule' : 'Create schedule'))
-const validFromPolicy = computed(() => props.schedule?.valid_from_policy ?? null)
+const validFromPolicy = computed(() => props.schedule?.valid_from_policy ?? props.validFromPolicy)
 const dateDisabled = computed(() => validFromPolicy.value?.editable === false)
 
 const enabledWorkingDays = computed(() => {
@@ -188,7 +192,7 @@ function cloneSchedule(schedule) {
 
 function getDefaultSchedule() {
   return {
-    valid_from: new Date().toISOString().slice(0, 10),
+    valid_from: props.validFromPolicy?.min ?? new Date().toISOString().slice(0, 10),
     valid_to: null,
     weeklyHours: WEEKDAYS.map((_, weekday) => ({
       weekday,

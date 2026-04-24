@@ -75,8 +75,8 @@ class EmployeeBookingRulesController extends Controller
     private function createRule(EmployeeBookingRuleConfiguration $bookingRules, array $data): void
     {
         $bookingRules->rules()->create([
-            'booking_interval_minutes' => $data['slot_interval_minutes'],
-            'booking_window_days' => $data['max_advance_days'],
+            'booking_interval_minutes' => $data['booking_interval_minutes'],
+            'booking_window_days' => $data['booking_window_days'],
         ]);
     }
 

@@ -18,8 +18,8 @@ class EmployeeBookingRulesResource extends JsonResource
             'valid_from' => $this->valid_from?->toDateString(),
             'valid_to' => $this->valid_to?->toDateString(),
             'valid_from_policy' => ValidFromPolicy::for($this->resource),
-            'slot_interval_minutes' => $rule?->booking_interval_minutes,
-            'max_advance_days' => $rule?->booking_window_days,
+            'booking_interval_minutes' => $rule->booking_interval_minutes,
+            'booking_window_days' => $rule->booking_window_days,
         ];
     }
 }

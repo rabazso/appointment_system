@@ -62,7 +62,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { CalendarCheck, Clock, Scissors, CalendarCog } from 'lucide-vue-next'
+import { CircleCheck, Clock, Scissors, CalendarCog } from 'lucide-vue-next'
 import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeAvailabilityModal from './EmployeeAvailabilityModal.vue'
@@ -86,7 +86,7 @@ const menuItems = [
     section: 'availability',
     title: 'Availability',
     description: 'Manage when this employee can be booked.',
-    icon: CalendarCheck,
+    icon: CircleCheck,
   },
   {
     section: 'schedule',

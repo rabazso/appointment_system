@@ -2,6 +2,7 @@
   <EmployeeAvailabilityEditModal
     v-if="isEditorOpen"
     :availability="editingAvailability"
+    :valid-from-policy="createValidFromPolicy"
     @back="closeEditor"
     @close="$emit('close')"
     @cancel="closeEditor"
@@ -79,6 +80,7 @@ import { useEmployeeAvailabilityConfigurations } from '@/composables/useEmployee
 import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeAvailabilityEditModal from './EmployeeAvailabilityEditModal.vue'
+import { addDays, maxDate, parseISODate, toISO } from '@utils/date'
 
 defineEmits(['back', 'close'])
 
@@ -107,6 +109,7 @@ const activeTitle = computed(() => {
 const activeDescription = computed(() => {
   return 'Manage when this employee can be booked.'
 })
+const createValidFromPolicy = computed(() => getCreateValidFromPolicy(availabilityVersions.value))
 
 onMounted(fetchAvailability)
 
@@ -137,5 +140,24 @@ async function saveSelectedAvailability(payload) {
 
 async function deleteSelectedAvailability(availability) {
   await deleteAvailability(availability.id)
+}
+
+function getCreateValidFromPolicy(versions) {
+  const tomorrow = addDays(new Date(), 1)
+  const latestValidFrom = versions
+    .map((version) => version.valid_from)
+    .filter(Boolean)
+    .sort()
+    .at(-1)
+
+  const min = latestValidFrom
+    ? maxDate(tomorrow, addDays(parseISODate(latestValidFrom), 1))
+    : tomorrow
+
+  return {
+    editable: true,
+    min: toISO(min),
+    max: null,
+  }
 }
 </script>

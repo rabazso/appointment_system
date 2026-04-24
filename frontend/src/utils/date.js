@@ -19,3 +19,13 @@ export function getDay(date) {
 export function shiftMonth(date, amount) {
   return new Date(date.getFullYear(), date.getMonth() + amount, 1)
 }
+
+export function addDays(date, days) {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+export function maxDate(first, second) {
+  return first > second ? first : second
+}

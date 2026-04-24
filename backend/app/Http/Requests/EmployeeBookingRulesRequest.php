@@ -15,8 +15,8 @@ class EmployeeBookingRulesRequest extends FormRequest
     {
         return [
             'valid_from' => [$this->isMethod('post') ? 'required' : 'sometimes', 'date'],
-            'slot_interval_minutes' => ['required', 'integer', 'min:1'],
-            'max_advance_days' => ['required', 'integer', 'min:1'],
+            'booking_interval_minutes' => ['required', 'integer', 'min:1'],
+            'booking_window_days' => ['required', 'integer', 'min:1'],
         ];
     }
 }

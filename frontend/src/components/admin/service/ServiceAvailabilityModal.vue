@@ -2,6 +2,7 @@
   <ServiceAvailabilityEditModal
     v-if="isEditorOpen"
     :availability="editingAvailability"
+    :valid-from-policy="createValidFromPolicy"
     @back="closeEditor"
     @close="$emit('close')"
     @cancel="closeEditor"
@@ -79,6 +80,7 @@ import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import { useServiceAvailabilityConfigurations } from '@/composables/useServiceAvailabilityConfigurations'
 import ServiceAvailabilityEditModal from './ServiceAvailabilityEditModal.vue'
+import { addDays, maxDate, parseISODate, toISO } from '@utils/date'
 
 const emit = defineEmits(['back', 'close'])
 
@@ -101,6 +103,7 @@ const creatingAvailability = ref(false)
 const editingAvailability = ref(null)
 
 const isEditorOpen = computed(() => creatingAvailability.value || editingAvailability.value !== null)
+const createValidFromPolicy = computed(() => getCreateValidFromPolicy(availability.value))
 
 onMounted(fetchAvailability)
 
@@ -131,5 +134,24 @@ async function saveSelectedAvailability(payload) {
 
 async function deleteSelectedAvailability(availabilityVersion) {
   await deleteAvailability(availabilityVersion.id)
+}
+
+function getCreateValidFromPolicy(versions) {
+  const tomorrow = addDays(new Date(), 1)
+  const latestValidFrom = versions
+    .map((version) => version.valid_from)
+    .filter(Boolean)
+    .sort()
+    .at(-1)
+
+  const min = latestValidFrom
+    ? maxDate(tomorrow, addDays(parseISODate(latestValidFrom), 1))
+    : tomorrow
+
+  return {
+    editable: true,
+    min: toISO(min),
+    max: null,
+  }
 }
 </script>

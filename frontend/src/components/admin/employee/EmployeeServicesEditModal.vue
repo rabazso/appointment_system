@@ -113,11 +113,15 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  validFromPolicy: {
+    type: Object,
+    default: null,
+  },
 })
 
 const form = reactive(createForm(props.services))
 const title = computed(() => (props.services ? 'Edit service change' : 'Service change'))
-const validFromPolicy = computed(() => props.services?.valid_from_policy ?? null)
+const validFromPolicy = computed(() => props.services?.valid_from_policy ?? props.validFromPolicy)
 const dateDisabled = computed(() => validFromPolicy.value?.editable === false)
 const description = computed(() => {
   return isPickerOpen.value
@@ -140,7 +144,7 @@ watch(
 
 function createForm(services) {
   return {
-    valid_from: toInputDate(services?.valid_from) || toInputDate(new Date().toISOString()),
+    valid_from: toInputDate(services?.valid_from) || props.validFromPolicy?.min || toInputDate(new Date().toISOString()),
     services: (services?.services ?? []).map((service) => ({ ...service })),
   }
 }

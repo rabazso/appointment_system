@@ -2,6 +2,7 @@
   <EmployeeServicesEditModal
     v-if="activeView === 'editor'"
     :services="selectedServices"
+    :valid-from-policy="createValidFromPolicy"
     @back="closeEditor"
     @close="$emit('close')"
     @cancel="closeEditor"
@@ -58,6 +59,7 @@ import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeServicesEditModal from './EmployeeServicesEditModal.vue'
 import EmployeeServicesView from './EmployeeServicesView.vue'
+import { addDays, maxDate, parseISODate, toISO } from '@utils/date'
 
 defineEmits(['back', 'close'])
 
@@ -85,6 +87,7 @@ const activeTitle = computed(() => {
 const activeDescription = computed(() => {
   return 'Manage assigned services for this employee.'
 })
+const createValidFromPolicy = computed(() => getCreateValidFromPolicy(services.value))
 
 onMounted(fetchServices)
 
@@ -133,5 +136,24 @@ function getServicesSummary(services) {
   if (!count) return 'No services assigned'
   if (count === 1) return '1 service assigned'
   return `${count} services assigned`
+}
+
+function getCreateValidFromPolicy(versions) {
+  const tomorrow = addDays(new Date(), 1)
+  const latestValidFrom = versions
+    .map((version) => version.valid_from)
+    .filter(Boolean)
+    .sort()
+    .at(-1)
+
+  const min = latestValidFrom
+    ? maxDate(tomorrow, addDays(parseISODate(latestValidFrom), 1))
+    : tomorrow
+
+  return {
+    editable: true,
+    min: toISO(min),
+    max: null,
+  }
 }
 </script>

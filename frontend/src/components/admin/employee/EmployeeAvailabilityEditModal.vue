@@ -58,11 +58,15 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  validFromPolicy: {
+    type: Object,
+    default: null,
+  },
 })
 
 const form = reactive(createForm(props.availability))
 const title = computed(() => (props.availability ? 'Edit availability change' : 'Availability change'))
-const validFromPolicy = computed(() => props.availability?.valid_from_policy ?? null)
+const validFromPolicy = computed(() => props.availability?.valid_from_policy ?? props.validFromPolicy)
 const dateDisabled = computed(() => validFromPolicy.value?.editable === false)
 
 watch(
@@ -75,7 +79,7 @@ watch(
 function createForm(availability) {
   return {
     is_available: availability?.is_available ?? true,
-    valid_from: toInputDate(availability?.valid_from) || toInputDate(new Date().toISOString()),
+    valid_from: toInputDate(availability?.valid_from) || props.validFromPolicy?.min || toInputDate(new Date().toISOString()),
   }
 }
 
