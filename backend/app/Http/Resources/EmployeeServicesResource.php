@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\Timeline\ValidFromPolicy;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,8 +13,9 @@ class EmployeeServicesResource extends JsonResource
         return [
             'id' => $this->id,
             'employee_id' => $this->employee_id,
-            'valid_from' => $this->valid_from,
-            'valid_to' => $this->valid_to,
+            'valid_from' => $this->valid_from?->toDateString(),
+            'valid_to' => $this->valid_to?->toDateString(),
+            'valid_from_policy' => ValidFromPolicy::for($this->resource),
             'services' => EmployeeServiceResource::collection($this->whenLoaded('services')),
         ];
     }

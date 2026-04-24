@@ -1,10 +1,12 @@
 <template>
   <div class="space-y-3">
-    <div>
+    <div v-if="!dateDisabled">
       <label class="mr-4 text-sm">Valid from:</label>
       <input
         :value="modelValue"
         type="date"
+        :min="min"
+        :max="max"
         class="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none transition focus:border-black"
         @input="$emit('update:modelValue', $event.target.value)"
       />
@@ -45,6 +47,18 @@ defineProps({
   saving: {
     type: Boolean,
     default: false,
+  },
+  dateDisabled: {
+    type: Boolean,
+    default: false,
+  },
+  min: {
+    type: String,
+    default: null,
+  },
+  max: {
+    type: String,
+    default: null,
   },
 })
 </script>

@@ -35,8 +35,11 @@
   <template #footer>
     <EditModalFooter
       v-model="form.valid_from"
+      :date-disabled="dateDisabled"
+      :min="validFromPolicy?.min"
+      :max="validFromPolicy?.max"
       @cancel="$emit('cancel')"
-      @save="$emit('save', { ...form })"
+      @save="$emit('save', toPayload())"
     />
   </template>
   </ModalShell>
@@ -59,6 +62,8 @@ const props = defineProps({
 
 const form = reactive(createForm(props.availability))
 const title = computed(() => (props.availability ? 'Edit availability change' : 'Availability change'))
+const validFromPolicy = computed(() => props.availability?.valid_from_policy ?? null)
+const dateDisabled = computed(() => validFromPolicy.value?.editable === false)
 
 watch(
   () => props.availability,
@@ -71,6 +76,13 @@ function createForm(availability) {
   return {
     is_available: availability?.is_available ?? true,
     valid_from: toInputDate(availability?.valid_from) || toInputDate(new Date().toISOString()),
+  }
+}
+
+function toPayload() {
+  return {
+    is_available: form.is_available,
+    ...(dateDisabled.value ? {} : { valid_from: form.valid_from }),
   }
 }
 

@@ -43,6 +43,9 @@
   <template #footer>
     <EditModalFooter
       v-model="form.valid_from"
+      :date-disabled="dateDisabled"
+      :min="validFromPolicy?.min"
+      :max="validFromPolicy?.max"
       @cancel="$emit('cancel')"
       @save="$emit('save', toPayload())"
     />
@@ -67,6 +70,8 @@ const props = defineProps({
 
 const form = ref(props.bookingRules ? { ...props.bookingRules } : getDefaultBookingRules())
 const title = computed(() => (props.bookingRules ? 'Edit booking rule change' : 'Booking rule change'))
+const validFromPolicy = computed(() => props.bookingRules?.valid_from_policy ?? null)
+const dateDisabled = computed(() => validFromPolicy.value?.editable === false)
 
 watch(
   () => props.bookingRules,
@@ -85,7 +90,7 @@ function getDefaultBookingRules() {
 
 function toPayload() {
   return {
-    valid_from: form.value.valid_from,
+    ...(dateDisabled.value ? {} : { valid_from: form.value.valid_from }),
     slot_interval_minutes: form.value.slot_interval_minutes,
     max_advance_days: form.value.max_advance_days,
   }

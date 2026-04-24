@@ -129,6 +129,9 @@
     <EditModalFooter
       v-model="form.valid_from"
       :saving="saving"
+      :date-disabled="dateDisabled"
+      :min="validFromPolicy?.min"
+      :max="validFromPolicy?.max"
       @cancel="$emit('cancel')"
       @save="$emit('save', toPayload())"
     />
@@ -162,6 +165,8 @@ const props = defineProps({
 const currentView = ref('hours')
 const form = ref(props.schedule ? cloneSchedule(props.schedule) : getDefaultSchedule())
 const title = computed(() => (props.schedule ? 'Edit schedule' : 'Create schedule'))
+const validFromPolicy = computed(() => props.schedule?.valid_from_policy ?? null)
+const dateDisabled = computed(() => validFromPolicy.value?.editable === false)
 
 const enabledWorkingDays = computed(() => {
   return form.value.weeklyHours
@@ -218,7 +223,7 @@ function getDayLabel(index) {
 
 function toPayload() {
   return {
-    valid_from: form.value.valid_from,
+    ...(dateDisabled.value ? {} : { valid_from: form.value.valid_from }),
     weeklyHours: form.value.weeklyHours,
     breaks: form.value.breaks
       .filter((breakItem) => enabledWorkingDays.value.some(({ index }) => index === breakItem.weekday)),

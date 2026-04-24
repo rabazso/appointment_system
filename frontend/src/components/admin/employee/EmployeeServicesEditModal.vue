@@ -87,8 +87,11 @@
   <template v-if="!isPickerOpen" #footer>
     <EditModalFooter
       v-model="form.valid_from"
+      :date-disabled="dateDisabled"
+      :min="validFromPolicy?.min"
+      :max="validFromPolicy?.max"
       @cancel="$emit('cancel')"
-      @save="$emit('save', { ...form, services: [...form.services] })"
+      @save="$emit('save', toPayload())"
     />
   </template>
   </ModalShell>
@@ -114,6 +117,8 @@ const props = defineProps({
 
 const form = reactive(createForm(props.services))
 const title = computed(() => (props.services ? 'Edit service change' : 'Service change'))
+const validFromPolicy = computed(() => props.services?.valid_from_policy ?? null)
+const dateDisabled = computed(() => validFromPolicy.value?.editable === false)
 const description = computed(() => {
   return isPickerOpen.value
     ? 'Choose which services should be assigned to this employee.'
@@ -182,6 +187,13 @@ function addSelectedServices() {
 
 function removeService(service) {
   form.services = form.services.filter((item) => item.name !== service.name)
+}
+
+function toPayload() {
+  return {
+    ...(dateDisabled.value ? {} : { valid_from: form.valid_from }),
+    services: [...form.services],
+  }
 }
 
 function toInputDate(value) {
