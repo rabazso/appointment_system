@@ -23,13 +23,11 @@ use App\Http\Controllers\EmployeeWorkingHourController;
 use App\Http\Controllers\EmployeeServiceConfigurationController;
 use App\Http\Controllers\EmployeeServicesController;
 use App\Http\Controllers\EmployeeServiceController;
-use App\Http\Controllers\EmployeeVersionController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\ResetPasswordTokenController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceAvailabilityController;
 use App\Http\Controllers\ServiceController;
-use App\Http\Controllers\ServiceVersionController;
 use App\Http\Controllers\ShopImageController;
 use App\Http\Controllers\ShopOpeningHourController;
 use App\Http\Controllers\ShopSettingController;
@@ -115,9 +113,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/employees/{employee}/booking-rules', [EmployeeBookingRulesController::class, 'store']);
         Route::put('/employee-booking-rules/{bookingRules}', [EmployeeBookingRulesController::class, 'update']);
         Route::delete('/employee-booking-rules/{bookingRules}', [EmployeeBookingRulesController::class, 'destroy']);
-        Route::post('/employee-versions', [EmployeeVersionController::class, 'store']);
-        Route::patch('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'update']);
-        Route::delete('/employee-versions/{employeeVersion}', [EmployeeVersionController::class, 'destroy']);
         Route::post('/employee-schedule-configurations', [EmployeeScheduleConfigurationController::class, 'store']);
         Route::patch('/employee-schedule-configurations/{employeeScheduleConfiguration}', [EmployeeScheduleConfigurationController::class, 'update']);
         Route::delete('/employee-schedule-configurations/{employeeScheduleConfiguration}', [EmployeeScheduleConfigurationController::class, 'destroy']);
@@ -155,11 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/shop-opening-hours', [ShopOpeningHourController::class, 'store']);
         Route::patch('/shop-opening-hours/{shopOpeningHour}', [ShopOpeningHourController::class, 'update']);
         Route::delete('/shop-opening-hours/{shopOpeningHour}', [ShopOpeningHourController::class, 'destroy']);
-        Route::post('/service-versions', [ServiceVersionController::class, 'store']);
-        Route::patch('/service-versions/{serviceVersion}', [ServiceVersionController::class, 'update']);
-        Route::delete('/service-versions/{serviceVersion}', [ServiceVersionController::class, 'destroy']);
         Route::get('/employees/versions/valid', [EmployeeController::class, 'indexEmployeesWithValidVersion']);
-        Route::get('/employee-versions', [EmployeeVersionController::class, 'index']);
         Route::get('/employee-schedule-configurations', [EmployeeScheduleConfigurationController::class, 'index']);
         Route::get('/employee-working-hours', [EmployeeWorkingHourController::class, 'index']);
         Route::get('/employee-breaks', [EmployeeBreakController::class, 'index']);
@@ -171,7 +162,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/shop-special-days/month', [ShopSpecialDayController::class, 'indexForMonth']);
         Route::get('/shop-special-days', [ShopSpecialDayController::class, 'index']);
         Route::get('/services/versions/valid', [ServiceController::class, 'indexServicesWithValidVersion']);
-        Route::get('/service-versions', [ServiceVersionController::class, 'index']);
     });
 
     Route::middleware('role:employee')->prefix('/employee')->group(function () { 
