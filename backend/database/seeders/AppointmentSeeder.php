@@ -12,6 +12,8 @@ use Illuminate\Database\Seeder;
 
 class AppointmentSeeder extends Seeder
 {
+    private const APPOINTMENTS_PER_STATUS = 5;
+
     public function run(): void
     {
         $customers = Customer::query()->get();
@@ -23,38 +25,39 @@ class AppointmentSeeder extends Seeder
 
         foreach ($configurations->groupBy('employee_id') as $employeeConfigurations) {
             foreach ($statusOptions as $status) {
-                $customer = $customers->random();
+                for ($i = 0; $i < self::APPOINTMENTS_PER_STATUS; $i++) {
+                    $customer = $customers->random();
 
-                $start = now()
-                    ->addDays(random_int(1, 14))
-                    ->setTime(random_int(9, 20), random_int(0, 1) * 30);
+                    $start = now()
+                        ->addDays(random_int(1, 14))
+                        ->setTime(random_int(9, 20), random_int(0, 1) * 30);
 
-                $configuration = $this->resolveConfigurationForDate($employeeConfigurations, $start);
+                    $configuration = $this->resolveConfigurationForDate($employeeConfigurations, $start);
 
+                    $item = $configuration->services->random();
+                    $serviceVersion = $this->resolveServiceVersionForDate($item->service->versions, $start);
 
-                $item = $configuration->services->random();
-                $serviceVersion = $this->resolveServiceVersionForDate($item->service->versions, $start);
+                    $duration = $item->uses_default_values ? $serviceVersion->default_duration : $item->duration;
+                    $price = $item->uses_default_values ? $serviceVersion->default_price : $item->price;
 
-                $duration = $item->uses_default_values ? $serviceVersion->default_duration : $item->duration;
-                $price = $item->uses_default_values ? $serviceVersion->default_price : $item->price;
+                    $appointment = Appointment::create([
+                        'customer_id' => $customer->id,
+                        'employee_id' => $configuration->employee_id,
+                        'start_datetime' => $start,
+                        'end_datetime' => $start->copy()->addMinutes($duration),
+                        'total_duration' => $duration,
+                        'total_price' => $price,
+                        'status' => $status,
+                        'customer_note' => 'A note from the customer.',
+                    ]);
 
-                $appointment = Appointment::create([
-                    'customer_id' => $customer->id,
-                    'employee_id' => $configuration->employee_id,
-                    'start_datetime' => $start,
-                    'end_datetime' => $start->copy()->addMinutes($duration),
-                    'total_duration' => $duration,
-                    'total_price' => $price,
-                    'status' => $status,
-                    'customer_note' => 'A note from the customer.',
-                ]);
-
-                AppointmentService::create([
-                    'appointment_id' => $appointment->id,
-                    'service_id' => $item->service_id,
-                    'duration' => $duration,
-                    'price' => $price,
-                ]);
+                    AppointmentService::create([
+                        'appointment_id' => $appointment->id,
+                        'service_id' => $item->service_id,
+                        'duration' => $duration,
+                        'price' => $price,
+                    ]);
+                }
             }
         }
     }

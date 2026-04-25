@@ -48,6 +48,13 @@
       </template>
     </VersionsView>
   </ModalShell>
+
+  <AffectedAppointmentsPreviewModal
+    v-if="affectedPreview"
+    :preview="affectedPreview"
+    @cancel="closeAffectedPreview"
+    @save="persistServices(pendingPayload, $event)"
+  />
 </template>
 
 <script setup>
@@ -60,6 +67,8 @@ import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeServicesEditModal from './EmployeeServicesEditModal.vue'
 import EmployeeServicesView from './EmployeeServicesView.vue'
 import { addDays, maxDate, parseISODate, toISO } from '@utils/date'
+import AffectedAppointmentsPreviewModal from '@/components/admin/AffectedAppointmentsPreviewModal.vue'
+import { cancelAdminAppointment, previewEmployeeServicesAffectedAppointments } from '@/api/index'
 
 defineEmits(['back', 'close'])
 
@@ -80,6 +89,8 @@ const {
 
 const activeView = ref('list')
 const selectedServices = ref(null)
+const affectedPreview = ref(null)
+const pendingPayload = ref(null)
 
 const activeTitle = computed(() => {
   return 'Services'
@@ -122,13 +133,48 @@ async function deleteSelectedServices(services) {
 }
 
 async function saveServices(payload) {
+  const response = await previewEmployeeServicesAffectedAppointments({
+    ...payload,
+    employee_id: props.employee.id,
+    valid_from: payload.valid_from ?? selectedServices.value?.valid_from,
+  })
+
+  if (!response.data.affected_count) {
+    await persistServices(payload)
+    return
+  }
+
+  pendingPayload.value = payload
+  affectedPreview.value = response.data
+}
+
+async function persistServices(payload, cancellations = {}) {
+  if (!payload) return
+
   if (selectedServices.value) {
     await saveExistingService(selectedServices.value.id, payload)
   } else {
     await createService(payload)
   }
 
+  await cancelPendingAppointments(cancellations)
+  closeAffectedPreview()
   closeEditor()
+}
+
+async function cancelPendingAppointments({ appointment_ids: appointmentIds = [], cancellation_reason: reason = '' } = {}) {
+  if (!appointmentIds.length) return
+
+  await Promise.all(
+    appointmentIds.map((appointmentId) =>
+      cancelAdminAppointment(appointmentId, { cancellation_reason: reason }),
+    ),
+  )
+}
+
+function closeAffectedPreview() {
+  affectedPreview.value = null
+  pendingPayload.value = null
 }
 
 function getServicesSummary(services) {

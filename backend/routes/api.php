@@ -10,6 +10,8 @@ use App\Http\Controllers\EmployeeBookingRuleController;
 use App\Http\Controllers\EmployeeBookingRulesController;
 use App\Http\Controllers\EmployeeAvailabilityController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\AppointmentAffectedPreviewController;
+use App\Http\Controllers\AdminAppointmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
 use App\Http\Controllers\EmployeeDashboardController;
@@ -89,6 +91,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:admin')->group(function () {
         Route::post('/services', [ServiceController::class, 'store']);
+        Route::post('/admin/appointments/affected-preview/employee-schedule', [AppointmentAffectedPreviewController::class, 'employeeSchedule']);
+        Route::post('/admin/appointments/affected-preview/employee-services', [AppointmentAffectedPreviewController::class, 'employeeServices']);
+        Route::post('/admin/appointments/affected-preview/employee-availability', [AppointmentAffectedPreviewController::class, 'employeeAvailability']);
+        Route::post('/admin/appointments/affected-preview/employee-booking-rules', [AppointmentAffectedPreviewController::class, 'employeeBookingRules']);
+        Route::post('/admin/appointments/affected-preview/service-availability', [AppointmentAffectedPreviewController::class, 'serviceAvailability']);
+        Route::post('/appointments/{appointment}/cancel', [AdminAppointmentController::class, 'cancel']);
         Route::patch('/services/{service}', [ServiceController::class, 'update']);
         Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
         Route::get('/services/{service}/availability', [ServiceAvailabilityController::class, 'index']);

@@ -119,6 +119,12 @@ export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointm
 export const forgotPassword = (email) => API.post('/forgot-password', { email });
 export const resetPassword = (payload) => API.post('/reset-password', payload);
 export const completeBarberAppointment = (appointmentId) => API.post(`/barber/appointments/${appointmentId}/complete`);
+export const previewEmployeeScheduleAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-schedule', payload);
+export const previewEmployeeServicesAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-services', payload);
+export const previewEmployeeAvailabilityAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-availability', payload);
+export const previewEmployeeBookingRulesAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-booking-rules', payload);
+export const previewServiceAvailabilityAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/service-availability', payload);
+export const cancelAdminAppointment = (appointmentId, payload) => API.post(`/appointments/${appointmentId}/cancel`, payload);
 
 export const postService = (payload) => API.post('/services', payload);
 export const putService = (id, payload) => API.put(`/services/${id}`, payload);

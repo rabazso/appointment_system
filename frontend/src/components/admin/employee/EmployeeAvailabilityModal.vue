@@ -1,12 +1,12 @@
 <template>
   <EmployeeAvailabilityEditModal
-    v-if="isEditorOpen"
-    :availability="editingAvailability"
+    v-if="activeView === 'editor'"
+    :availability="selectedAvailability"
     :valid-from-policy="createValidFromPolicy"
     @back="closeEditor"
     @close="$emit('close')"
     @cancel="closeEditor"
-    @save="saveSelectedAvailability"
+    @save="saveAvailability"
   />
 
   <ModalShell
@@ -70,6 +70,13 @@
       </template>
     </VersionsView>
   </ModalShell>
+
+  <AffectedAppointmentsPreviewModal
+    v-if="affectedPreview"
+    :preview="affectedPreview"
+    @cancel="closeAffectedPreview"
+    @save="persistAvailability(pendingPayload, $event)"
+  />
 </template>
 
 <script setup>
@@ -81,6 +88,8 @@ import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeAvailabilityEditModal from './EmployeeAvailabilityEditModal.vue'
 import { addDays, maxDate, parseISODate, toISO } from '@utils/date'
+import AffectedAppointmentsPreviewModal from '@/components/admin/AffectedAppointmentsPreviewModal.vue'
+import { cancelAdminAppointment, previewEmployeeAvailabilityAffectedAppointments } from '@/api/index'
 
 defineEmits(['back', 'close'])
 
@@ -99,10 +108,11 @@ const {
   deleteAvailability,
 } = useEmployeeAvailabilityConfigurations(props.employee.id)
 
-const creatingAvailability = ref(false)
-const editingAvailability = ref(null)
+const activeView = ref('list')
+const selectedAvailability = ref(null)
+const affectedPreview = ref(null)
+const pendingPayload = ref(null)
 
-const isEditorOpen = computed(() => creatingAvailability.value || editingAvailability.value !== null)
 const activeTitle = computed(() => {
   return 'Availability'
 })
@@ -114,28 +124,63 @@ const createValidFromPolicy = computed(() => getCreateValidFromPolicy(availabili
 onMounted(fetchAvailability)
 
 function openCreate() {
-  creatingAvailability.value = true
-  editingAvailability.value = null
+  activeView.value = 'editor'
+  selectedAvailability.value = null
 }
 
 function openEdit(availability) {
-  creatingAvailability.value = false
-  editingAvailability.value = availability
+  activeView.value = 'editor'
+  selectedAvailability.value = availability
 }
 
 function closeEditor() {
-  creatingAvailability.value = false
-  editingAvailability.value = null
+  activeView.value = 'list'
+  selectedAvailability.value = null
 }
 
-async function saveSelectedAvailability(payload) {
-  if (editingAvailability.value) {
-    await saveExistingAvailability(editingAvailability.value.id, payload)
+async function saveAvailability(payload) {
+  const response = await previewEmployeeAvailabilityAffectedAppointments({
+    ...payload,
+    employee_id: props.employee.id,
+    valid_from: payload.valid_from ?? selectedAvailability.value?.valid_from,
+  })
+
+  if (!response.data.affected_count) {
+    await persistAvailability(payload)
+    return
+  }
+
+  pendingPayload.value = payload
+  affectedPreview.value = response.data
+}
+
+async function persistAvailability(payload, cancellations = {}) {
+  if (!payload) return
+
+  if (selectedAvailability.value) {
+    await saveExistingAvailability(selectedAvailability.value.id, payload)
   } else {
     await createAvailability(payload)
   }
 
+  await cancelPendingAppointments(cancellations)
+  closeAffectedPreview()
   closeEditor()
+}
+
+async function cancelPendingAppointments({ appointment_ids: appointmentIds = [], cancellation_reason: reason = '' } = {}) {
+  if (!appointmentIds.length) return
+
+  await Promise.all(
+    appointmentIds.map((appointmentId) =>
+      cancelAdminAppointment(appointmentId, { cancellation_reason: reason }),
+    ),
+  )
+}
+
+function closeAffectedPreview() {
+  affectedPreview.value = null
+  pendingPayload.value = null
 }
 
 async function deleteSelectedAvailability(availability) {
