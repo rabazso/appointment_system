@@ -13,18 +13,20 @@ import ResetPassword from '@pages/resetPassword.vue'
 import Services from '@pages/admin/Services.vue'
 import Employees from '@pages/admin/Employees.vue'
 import Schedule from '@pages/admin/Schedule.vue'
+import Settings from '@pages/admin/Settings.vue'
 import VerifyEmail from '@pages/verifyEmail.vue'
 import AdminSignIn from '@pages/admin/AdminSignIn.vue'
 import EmployeeSignIn from '@pages/employee/EmployeeSignIn.vue'
 import EmployeeDashboard from '@pages/employee/EmployeeDashboard.vue'
 import TimeOff from '@pages/admin/TimeOff.vue'
+import Gallery from '@pages/admin/Gallery.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Main Page',
     component: Index,
-    meta:{
+    meta: {
       title: 'Main Page'
     }
   },
@@ -32,7 +34,7 @@ const routes = [
     path: '/barbers',
     name: 'Barbers',
     component: Barbers,
-    meta:{
+    meta: {
       title: 'Barbers'
     }
   },
@@ -40,7 +42,7 @@ const routes = [
     path: '/contact',
     name: 'Contact',
     component: Contact,
-    meta:{
+    meta: {
       title: 'Contact'
     }
   },
@@ -48,7 +50,7 @@ const routes = [
     path: '/booking',
     name: 'Booking',
     component: Booking,
-    meta:{
+    meta: {
       title: 'Booking'
     }
   },
@@ -56,7 +58,7 @@ const routes = [
     path: '/summary',
     name: 'Summary',
     component: Summary,
-    meta:{
+    meta: {
       title: 'Summary'
     }
   },
@@ -64,7 +66,7 @@ const routes = [
     path: '/confirm/:appointmentId',
     name: 'Confirm',
     component: Confirm,
-    meta:{
+    meta: {
       title: 'Confirm'
     }
   },
@@ -72,7 +74,7 @@ const routes = [
     path: '/confirmation-pending',
     name: 'ConfirmationPending',
     component: ConfirmationPending,
-    meta:{
+    meta: {
       title: 'Confirmation Pending'
     }
   },
@@ -80,7 +82,7 @@ const routes = [
     path: '/yourAppointments',
     name: 'YourAppointments',
     component: YourAppointments,
-    meta:{
+    meta: {
       title: 'YourAppointments'
     }
   },
@@ -88,7 +90,7 @@ const routes = [
     path: '/employee/dashboard',
     name: 'EmployeeDashboard',
     component: EmployeeDashboard,
-    meta:{
+    meta: {
       title: 'Employee Dashboard',
       requiresBarber: true
     }
@@ -118,7 +120,8 @@ const routes = [
     name: 'Services',
     component: Services,
     meta: {
-        title: 'Services'
+      title: 'Services',
+      requiresAdmin: true,
     }
   },
   {
@@ -126,7 +129,8 @@ const routes = [
     name: 'Employees',
     component: Employees,
     meta: {
-        title: 'Employees'
+      title: 'Employees',
+      requiresAdmin: true,
     }
   },
   {
@@ -134,7 +138,8 @@ const routes = [
     name: 'Schedule',
     component: Schedule,
     meta: {
-        title: 'Schedule'
+      title: 'Schedule',
+      requiresAdmin: true,
     }
   },
   {
@@ -150,7 +155,7 @@ const routes = [
     name: 'AdminSignIn',
     component: AdminSignIn,
     meta: {
-        title: 'Admin Signin'
+      title: 'Admin Signin'
     }
   },
   {
@@ -158,7 +163,7 @@ const routes = [
     name: 'EmployeeSignIn',
     component: EmployeeSignIn,
     meta: {
-        title: 'Employee Signin'
+      title: 'Employee Signin'
     }
   },
   {
@@ -166,7 +171,26 @@ const routes = [
     name: 'TimeOff',
     component: TimeOff,
     meta: {
-        title: 'TimeOff'
+      title: 'TimeOff',
+      requiresAdmin: true,
+    }
+  },
+  {
+    path: '/admin/settings',
+    name: 'Configuration',
+    component: Settings,
+    meta: {
+      title: 'Configuration',
+      requiresAdmin: true,
+    }
+  },
+  {
+    path: '/admin/gallery',
+    name: 'Gallery',
+    component: Gallery,
+    meta: {
+      title: 'Shop Gallery',
+      requiresAdmin: true,
     }
   },
 ]
@@ -199,6 +223,16 @@ export const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  if (to.meta?.requiresAdmin) {
+    const token = localStorage.getItem('token')
+    const role = localStorage.getItem('role')
+
+    if (!token || role !== 'admin') {
+      next('/admin/login')
+      return
+    }
+  }
+
   if (to.meta?.requiresBarber) {
     const token = localStorage.getItem('token')
     const role = localStorage.getItem('role')

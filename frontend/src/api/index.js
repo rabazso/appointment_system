@@ -145,6 +145,11 @@ export const deleteShopSpecialDay = (id) => API.delete(`/shop-special-days/${id}
 export const getShopOpeningHours = () => API.get('/shop-opening-hours');
 export const postShopOpeningHour = (payload) => API.post('/shop-opening-hours', payload);
 export const patchShopOpeningHour = (id, payload) => API.patch(`/shop-opening-hours/${id}`, payload);
+export const getShopImages = () => API.get('/shop-images');
+export const uploadShopImage = (payload) => API.post('/shop-images', payload, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+});
+export const deleteShopImage = (id) => API.delete(`/shop-images/${id}`);
 
 export const getEmployeeTimeOffRequestsByMonth = (month) => API.get('/employee-time-off-requests/month', {
     params: { month },
