@@ -9,48 +9,50 @@
       description="Update booking limits and appointment rules."
     />
 
-  <div v-if="errors.booking_interval_minutes" class="text-xs text-red-500 mt-1">
-  {{ errors.booking_interval_minutes }}
-</div>
-
-<div v-if="errors.booking_window_days" class="text-xs text-red-500 mt-1">
-  {{ errors.booking_window_days }}
-</div>
-
   <div class="space-y-3">
     <div class="grid gap-2 sm:grid-cols-[150px_minmax(0,1fr)] sm:items-center">
       <label class="text-sm font-medium text-slate-700">Booking slot interval</label>
-      <div
-        class="rounded-lg border px-3 py-2 transition"
-        :class="errors.booking_interval_minutes ? 'border-red-500' : 'border-black/10 focus-within:border-black'"
-      >
-        <div class="flex items-center gap-2">
-          <input
-            v-model.number="form.booking_interval_minutes"
-            type="number"
-            min="1"
-            class="w-full bg-transparent text-sm outline-none"
-          />
-          <span class="shrink-0 text-sm font-medium text-slate-400">min</span>
+      <div>
+        <div
+          class="rounded-lg border px-3 py-2 transition"
+          :class="fieldError('booking_interval_minutes') ? 'border-red-500' : 'border-black/10 focus-within:border-black'"
+        >
+          <div class="flex items-center gap-2">
+            <input
+              v-model.number="form.booking_interval_minutes"
+              type="number"
+              min="1"
+              class="w-full bg-transparent text-sm outline-none"
+            />
+            <span class="shrink-0 text-sm font-medium text-slate-400">min</span>
+          </div>
         </div>
+        <p v-if="fieldError('booking_interval_minutes')" class="mt-1 text-xs text-red-500">
+          {{ fieldError('booking_interval_minutes') }}
+        </p>
       </div>
     </div>
 
     <div class="grid gap-2 sm:grid-cols-[150px_minmax(0,1fr)] sm:items-center">
       <label class="text-sm font-medium text-slate-700">Booking window days</label>
-      <div
-        class="rounded-lg border px-3 py-2 transition"
-        :class="errors.booking_window_days ? 'border-red-500' : 'border-black/10 focus-within:border-black'"
-      >
-        <div class="flex items-center gap-2">
-          <input
-            v-model.number="form.booking_window_days"
-            type="number"
-            min="1"
-            class="w-full bg-transparent text-sm outline-none"
-          />
-          <span class="shrink-0 text-sm font-medium text-slate-400">days</span>
+      <div>
+        <div
+          class="rounded-lg border px-3 py-2 transition"
+          :class="fieldError('booking_window_days') ? 'border-red-500' : 'border-black/10 focus-within:border-black'"
+        >
+          <div class="flex items-center gap-2">
+            <input
+              v-model.number="form.booking_window_days"
+              type="number"
+              min="1"
+              class="w-full bg-transparent text-sm outline-none"
+            />
+            <span class="shrink-0 text-sm font-medium text-slate-400">days</span>
+          </div>
         </div>
+        <p v-if="fieldError('booking_window_days')" class="mt-1 text-xs text-red-500">
+          {{ fieldError('booking_window_days') }}
+        </p>
       </div>
     </div>
   </div>
@@ -86,35 +88,18 @@ const props = defineProps({
   },
 })
 
-const errors = computed(() => {
-  const e = {}
-
-  if (!form.value.booking_interval_minutes) {
-    e.booking_interval_minutes = 'Required'
-  }
-
-  if (!form.value.booking_window_days) {
-    e.booking_window_days = 'Required'
-  }
-
-  if (!form.value.valid_from) {
-    e.valid_from = 'Required'
-  }
-
-  return e
-})
-
-const isValid = computed(() => Object.keys(errors.value).length === 0)
-
+const submitted = ref(false)
 const form = ref(props.bookingRules ? { ...props.bookingRules } : getDefaultBookingRules())
 const title = computed(() => (props.bookingRules ? 'Edit booking rule change' : 'Booking rule change'))
 const validFromPolicy = computed(() => props.bookingRules?.valid_from_policy ?? props.validFromPolicy)
 const dateDisabled = computed(() => validFromPolicy.value?.editable === false)
+const errors = computed(() => getErrors())
 
 watch(
   () => props.bookingRules,
   (bookingRules) => {
     form.value = bookingRules ? { ...bookingRules } : getDefaultBookingRules()
+    submitted.value = false
   },
 )
 
@@ -135,7 +120,32 @@ function toPayload() {
 }
 
 function handleSave() {
-  if (!isValid.value) return
+  submitted.value = true
+  if (Object.keys(errors.value).length) return
   emit('save', toPayload())
+}
+
+function fieldError(field) {
+  return submitted.value ? errors.value[field] : null
+}
+
+function getErrors() {
+  const nextErrors = {}
+
+  validatePositiveNumber(nextErrors, 'booking_interval_minutes', form.value.booking_interval_minutes)
+  validatePositiveNumber(nextErrors, 'booking_window_days', form.value.booking_window_days)
+
+  return nextErrors
+}
+
+function validatePositiveNumber(nextErrors, key, value) {
+  if (value === null || value === undefined || value === '') {
+    nextErrors[key] = 'Required'
+    return
+  }
+
+  if (Number(value) <= 0) {
+    nextErrors[key] = 'Must be greater than 0'
+  }
 }
 </script>

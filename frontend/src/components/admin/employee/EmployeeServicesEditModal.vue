@@ -40,28 +40,44 @@
           <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_110px_110px_32px] sm:items-center">
             <p class="text-sm font-semibold text-slate-900">{{ service.name }}</p>
 
-            <div class="rounded-lg border border-black/10 bg-white px-3 py-2 transition-all duration-250 focus-within:border-black">
-              <div class="flex items-center gap-2">
-                <input
-                  v-model.number="service.price"
-                  type="number"
-                  min="0"
-                  class="w-full outline-none"
-                />
-                <span class="shrink-0 text-sm font-medium text-slate-400">Ft</span>
+            <div>
+              <div
+                class="rounded-lg border bg-white px-3 py-2 transition-all duration-250 focus-within:border-black"
+                :class="fieldError(service, 'price') ? 'border-red-500' : 'border-black/10'"
+              >
+                <div class="flex items-center gap-2">
+                  <input
+                    v-model.number="service.price"
+                    type="number"
+                    min="1"
+                    class="w-full outline-none"
+                  />
+                  <span class="shrink-0 text-sm font-medium text-slate-400">Ft</span>
+                </div>
               </div>
+              <p v-if="fieldError(service, 'price')" class="mt-1 text-xs text-red-500">
+                {{ fieldError(service, 'price') }}
+              </p>
             </div>
 
-            <div class="rounded-lg border border-black/10 bg-white px-3 py-2 transition-all duration-250 focus-within:border-black">
-              <div class="flex items-center gap-2">
-                <input
-                  v-model.number="service.duration"
-                  type="number"
-                  min="1"
-                  class="w-full outline-none"
-                />
-                <span class="shrink-0 text-sm font-medium text-slate-400">min</span>
+            <div>
+              <div
+                class="rounded-lg border bg-white px-3 py-2 transition-all duration-250 focus-within:border-black"
+                :class="fieldError(service, 'duration') ? 'border-red-500' : 'border-black/10'"
+              >
+                <div class="flex items-center gap-2">
+                  <input
+                    v-model.number="service.duration"
+                    type="number"
+                    min="1"
+                    class="w-full outline-none"
+                  />
+                  <span class="shrink-0 text-sm font-medium text-slate-400">min</span>
+                </div>
               </div>
+              <p v-if="fieldError(service, 'duration')" class="mt-1 text-xs text-red-500">
+                {{ fieldError(service, 'duration') }}
+              </p>
             </div>
 
             <button
@@ -91,7 +107,7 @@
       :min="validFromPolicy?.min"
       :max="validFromPolicy?.max"
       @cancel="$emit('cancel')"
-      @save="$emit('save', toPayload())"
+      @save="handleSave"
     />
   </template>
   </ModalShell>
@@ -106,7 +122,7 @@ import ModalShell from '@/components/admin/ModalShell.vue'
 import { getServices } from '@/api/index'
 import EmployeeServicePicker from './EmployeeServicePicker.vue'
 
-defineEmits(['back', 'cancel', 'close', 'save'])
+const emit = defineEmits(['back', 'cancel', 'close', 'save'])
 
 const props = defineProps({
   services: {
@@ -120,6 +136,7 @@ const props = defineProps({
 })
 
 const form = reactive(createForm(props.services))
+const submitted = ref(false)
 const title = computed(() => (props.services ? 'Edit service change' : 'Service change'))
 const validFromPolicy = computed(() => props.services?.valid_from_policy ?? props.validFromPolicy)
 const dateDisabled = computed(() => validFromPolicy.value?.editable === false)
@@ -132,6 +149,7 @@ const isPickerOpen = ref(false)
 const pendingServicesToAdd = ref([])
 const serviceOptions = ref([])
 const availableServiceOptions = computed(() => serviceOptions.value.map((service) => ({ ...service })))
+const errors = computed(() => getErrors())
 
 onMounted(fetchServiceOptions)
 
@@ -139,6 +157,7 @@ watch(
   () => props.services,
   (services) => {
     Object.assign(form, createForm(services))
+    submitted.value = false
   },
 )
 
@@ -197,6 +216,39 @@ function toPayload() {
   return {
     ...(dateDisabled.value ? {} : { valid_from: form.valid_from }),
     services: [...form.services],
+  }
+}
+
+function handleSave() {
+  submitted.value = true
+  if (Object.keys(errors.value).length) return
+  emit('save', toPayload())
+}
+
+function fieldError(service, field) {
+  const index = form.services.indexOf(service)
+  return submitted.value ? errors.value[`services.${index}.${field}`] : null
+}
+
+function getErrors() {
+  const nextErrors = {}
+
+  form.services.forEach((service, index) => {
+    validatePositiveNumber(nextErrors, `services.${index}.price`, service.price)
+    validatePositiveNumber(nextErrors, `services.${index}.duration`, service.duration)
+  })
+
+  return nextErrors
+}
+
+function validatePositiveNumber(nextErrors, key, value) {
+  if (value === null || value === undefined || value === '') {
+    nextErrors[key] = 'Required'
+    return
+  }
+
+  if (Number(value) <= 0) {
+    nextErrors[key] = 'Must be greater than 0'
   }
 }
 

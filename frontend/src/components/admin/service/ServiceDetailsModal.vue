@@ -10,7 +10,10 @@
     />
 
     <div class="space-y-3">
-      <div class="rounded-lg border border-black/10 bg-white px-3 py-2 transition focus-within:border-black">
+      <div
+        class="rounded-lg border bg-white px-3 py-2 transition focus-within:border-black"
+        :class="fieldError('name') ? 'border-red-500' : 'border-black/10'"
+      >
         <input
           v-model="form.name"
           type="text"
@@ -18,14 +21,23 @@
           class="w-full bg-transparent text-sm outline-none"
         />
       </div>
+      <p v-if="fieldError('name')" class="text-xs text-red-500">
+        {{ fieldError('name') }}
+      </p>
 
-      <div class="h-28 rounded-lg border border-black/10 bg-white p-2 transition focus-within:border-black">
+      <div
+        class="h-28 rounded-lg border bg-white p-2 transition focus-within:border-black"
+        :class="fieldError('description') ? 'border-red-500' : 'border-black/10'"
+      >
         <textarea
           v-model="form.description"
           placeholder="Service description"
           class="h-full w-full resize-none bg-transparent text-sm outline-none"
         />
       </div>
+      <p v-if="fieldError('description')" class="text-xs text-red-500">
+        {{ fieldError('description') }}
+      </p>
 
       <div class="flex justify-end gap-3 pt-3">
         <button
@@ -49,7 +61,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { patchService } from '@/api/index'
 import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
@@ -64,12 +76,15 @@ const props = defineProps({
 })
 
 const saving = ref(false)
+const submitted = ref(false)
 const form = ref(getDefaultForm(props.service))
+const errors = computed(() => getErrors())
 
 watch(
   () => props.service,
   (service) => {
     form.value = getDefaultForm(service)
+    submitted.value = false
   },
 )
 
@@ -81,6 +96,9 @@ function getDefaultForm(service) {
 }
 
 async function saveService() {
+  submitted.value = true
+  if (Object.keys(errors.value).length) return
+
   saving.value = true
 
   try {
@@ -89,5 +107,23 @@ async function saveService() {
   } finally {
     saving.value = false
   }
+}
+
+function fieldError(field) {
+  return submitted.value ? errors.value[field] : null
+}
+
+function getErrors() {
+  const nextErrors = {}
+
+  if (!form.value.name?.trim()) {
+    nextErrors.name = 'Required'
+  }
+
+  if (!form.value.description?.trim()) {
+    nextErrors.description = 'Required'
+  }
+
+  return nextErrors
 }
 </script>

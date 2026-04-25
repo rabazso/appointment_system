@@ -48,17 +48,29 @@
             :class="form.weeklyHours[index].isOpen ? '' : 'opacity-40'"
           >
             <template v-if="form.weeklyHours[index].isOpen">
-              <input
-                v-model="form.weeklyHours[index].start"
-                type="time"
-                class="rounded-lg border border-black/10 bg-white p-1 text-sm outline-none [font-variant-numeric:tabular-nums] transition hover:border-black"
-              />
-              <span class="text-sm text-slate-400">-</span>
-              <input
-                v-model="form.weeklyHours[index].end"
-                type="time"
-                class="rounded-lg border border-black/10 bg-white p-1 text-sm outline-none [font-variant-numeric:tabular-nums] transition hover:border-black"
-              />
+              <div class="w-[110px]">
+                <input
+                  v-model="form.weeklyHours[index].start"
+                  type="time"
+                  class="w-full rounded-lg border bg-white p-1 text-sm outline-none [font-variant-numeric:tabular-nums] transition hover:border-black"
+                  :class="fieldError(`weeklyHours.${index}.start`) ? 'border-red-500' : 'border-black/10'"
+                />
+                <p v-if="fieldError(`weeklyHours.${index}.start`)" class="mt-1 whitespace-normal break-words text-xs leading-none text-red-500">
+                  {{ fieldError(`weeklyHours.${index}.start`) }}
+                </p>
+              </div>
+              <span class="self-start pt-1.5 text-sm text-slate-400">-</span>
+              <div class="w-[110px]">
+                <input
+                  v-model="form.weeklyHours[index].end"
+                  type="time"
+                  class="rounded-lg border bg-white p-1 text-sm outline-none [font-variant-numeric:tabular-nums] transition hover:border-black"
+                  :class="fieldError(`weeklyHours.${index}.end`) ? 'border-red-500' : 'border-black/10'"
+                />
+                <p v-if="fieldError(`weeklyHours.${index}.end`)" class="mt-1 whitespace-normal break-words text-xs leading-none text-red-500">
+                  {{ fieldError(`weeklyHours.${index}.end`) }}
+                </p>
+              </div>
             </template>
             <span v-else class="text-sm font-medium text-slate-400">Off</span>
           </div>
@@ -94,17 +106,33 @@
               <span class="text-sm">Break</span>
 
               <div class="flex flex-wrap items-center gap-2">
-                <input
-                  v-model="breakItem.start"
-                  type="time"
-                  class="rounded-lg border border-black/10 bg-white p-1 text-sm outline-none [font-variant-numeric:tabular-nums] transition hover:border-black"
-                />
-                <span class="text-sm text-slate-400">-</span>
-                <input
-                  v-model="breakItem.end"
-                  type="time"
-                  class="rounded-lg border border-black/10 bg-white p-1 text-sm outline-none [font-variant-numeric:tabular-nums] transition hover:border-black"
-                />
+                <div class="w-[110px] shrink-0">
+                  <input
+                    v-model="breakItem.start"
+                    type="time"
+                    :min="workingTimeForBreak(breakItem)?.start"
+                    :max="workingTimeForBreak(breakItem)?.end"
+                    class="w-full rounded-lg border bg-white p-1 text-sm outline-none [font-variant-numeric:tabular-nums] transition hover:border-black"
+                    :class="fieldError(breakFieldKey(breakItem, 'start')) ? 'border-red-500' : 'border-black/10'"
+                  />
+                  <p v-if="fieldError(breakFieldKey(breakItem, 'start'))" class="mt-1 whitespace-normal break-words text-xs leading-snug text-red-500">
+                    {{ fieldError(breakFieldKey(breakItem, 'start')) }}
+                  </p>
+                </div>
+                <span class="self-start pt-1.5 text-sm text-slate-400">-</span>
+                <div class="w-[110px] shrink-0">
+                  <input
+                    v-model="breakItem.end"
+                    type="time"
+                    :min="workingTimeForBreak(breakItem)?.start"
+                    :max="workingTimeForBreak(breakItem)?.end"
+                    class="w-full rounded-lg border bg-white p-1 text-sm outline-none [font-variant-numeric:tabular-nums] transition hover:border-black"
+                    :class="fieldError(breakFieldKey(breakItem, 'end')) ? 'border-red-500' : 'border-black/10'"
+                  />
+                  <p v-if="fieldError(breakFieldKey(breakItem, 'end'))" class="mt-1 whitespace-normal break-words text-xs leading-snug text-red-500">
+                    {{ fieldError(breakFieldKey(breakItem, 'end')) }}
+                  </p>
+                </div>
                 <button
                   type="button"
                   class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white transition hover:border-black"
@@ -133,7 +161,7 @@
       :min="validFromPolicy?.min"
       :max="validFromPolicy?.max"
       @cancel="$emit('cancel')"
-      @save="$emit('save', toPayload())"
+      @save="handleSave"
     />
   </template>
   </ModalShell>
@@ -148,7 +176,7 @@ import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import { WEEKDAYS } from '@/data/calenderData'
 
-defineEmits(['back', 'cancel', 'close', 'save'])
+const emit = defineEmits(['back', 'cancel', 'close', 'save'])
 
 const props = defineProps({
   schedule: {
@@ -167,10 +195,12 @@ const props = defineProps({
 
 
 const currentView = ref('hours')
+const submitted = ref(false)
 const form = ref(props.schedule ? cloneSchedule(props.schedule) : getDefaultSchedule())
 const title = computed(() => (props.schedule ? 'Edit schedule' : 'Create schedule'))
 const validFromPolicy = computed(() => props.schedule?.valid_from_policy ?? props.validFromPolicy)
 const dateDisabled = computed(() => validFromPolicy.value?.editable === false)
+const errors = computed(() => getErrors())
 
 const enabledWorkingDays = computed(() => {
   return form.value.weeklyHours
@@ -182,6 +212,7 @@ watch(
   () => props.schedule,
   (schedule) => {
     form.value = schedule ? cloneSchedule(schedule) : getDefaultSchedule()
+    submitted.value = false
     currentView.value = 'hours'
   },
 )
@@ -205,11 +236,10 @@ function getDefaultSchedule() {
 }
 
 function addBreak(dayIndex) {
-  const day = form.value.weeklyHours[dayIndex]
   form.value.breaks.push({
     weekday: dayIndex,
-    start: day.start,
-    end: day.end,
+    start: null,
+    end: null,
   })
 }
 
@@ -232,5 +262,64 @@ function toPayload() {
     breaks: form.value.breaks
       .filter((breakItem) => enabledWorkingDays.value.some(({ index }) => index === breakItem.weekday)),
   }
+}
+
+function handleSave() {
+  submitted.value = true
+  if (Object.keys(errors.value).length) return
+  emit('save', toPayload())
+}
+
+function fieldError(key) {
+  return submitted.value ? errors.value[key] : null
+}
+
+function getErrors() {
+  const nextErrors = {}
+
+  form.value.weeklyHours.forEach((day, index) => {
+    if (!day.isOpen) return
+
+    if (!day.start) {
+      nextErrors[`weeklyHours.${index}.start`] = 'Required'
+    }
+
+    if (!day.end) {
+      nextErrors[`weeklyHours.${index}.end`] = 'Required'
+    } else if (day.start && day.end <= day.start) {
+      nextErrors[`weeklyHours.${index}.start`] = 'Start must be before end'
+      nextErrors[`weeklyHours.${index}.end`] = 'End must be after start'
+    }
+  })
+
+  form.value.breaks.forEach((breakItem, index) => {
+    const workingDay = form.value.weeklyHours[breakItem.weekday]
+    if (!workingDay?.isOpen) return
+
+    if (!breakItem.start) {
+      nextErrors[`breaks.${index}.start`] = 'Required'
+    } else if (workingDay.start && breakItem.start < workingDay.start) {
+      nextErrors[`breaks.${index}.start`] = 'Must be within working hours'
+    }
+
+    if (!breakItem.end) {
+      nextErrors[`breaks.${index}.end`] = 'Required'
+    } else if (breakItem.start && breakItem.end <= breakItem.start) {
+      nextErrors[`breaks.${index}.end`] = 'End must be after start'
+    } else if (workingDay.end && breakItem.end > workingDay.end) {
+      nextErrors[`breaks.${index}.end`] = 'Must be within working hours'
+    }
+  })
+
+  return nextErrors
+}
+
+function breakFieldKey(breakItem, field) {
+  const index = form.value.breaks.indexOf(breakItem)
+  return `breaks.${index}.${field}`
+}
+
+function workingTimeForBreak(breakItem) {
+  return form.value.weeklyHours[breakItem.weekday] ?? null
 }
 </script>
