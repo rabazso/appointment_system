@@ -6,7 +6,9 @@ use App\Http\Requests\StoreServiceRequest;
 use App\Http\Requests\UpdateServiceRequest;
 use App\Http\Resources\ServiceResource;
 use App\Models\Service;
+use App\Models\ServiceVersion;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class ServiceController extends Controller
 {
@@ -21,9 +23,22 @@ class ServiceController extends Controller
 
     public function store(StoreServiceRequest $request)
     {
-        $service = Service::create($request->validated());
+        $service = DB::transaction(function () use ($request) {
+            $service = Service::create($request->validated());
 
-        return new ServiceResource($service);
+            ServiceVersion::create([
+                'service_id' => $service->id,
+                'is_available' => false,
+                'valid_from' => now()->startOfDay(),
+                'valid_to' => null,
+            ]);
+
+            return $service;
+        });
+
+        return new ServiceResource($service->load([
+            'versions' => fn ($query) => $query->validAt(now())->orderBy('valid_from'),
+        ]));
     }
 
 
