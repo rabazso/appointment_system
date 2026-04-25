@@ -43,8 +43,8 @@
           <div class="mb-4 flex justify-center">
             <div class="h-24 w-24 overflow-hidden rounded-full">
               <img
-                v-if="employee.avatar || employee.photo_url"
-                :src="employee.avatar || employee.photo_url"
+                v-if="employee.profile_image?.preview_url"
+                :src="employee.profile_image.preview_url"
                 :alt="employee.name"
                 class="h-full w-full object-cover"
               />
