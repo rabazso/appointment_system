@@ -23,11 +23,15 @@ class EmployeeController extends Controller
     {
         $now = now();
 
-        return EmployeeResource::collection(Employee::with([
-            'profileImage',
-            'user',
-            'versions' => fn ($query) => $query->validAt($now),
-        ])->get());
+        return EmployeeResource::collection(
+            Employee::with([
+                'profileImage',
+                'user',
+                'versions' => fn ($query) => $query->validAt($now),
+            ])
+                ->withAvg('reviews as rating', 'rating')
+                ->get()
+        );
     }
 
     public function store(StoreEmployeeRequest $request): EmployeeResource
@@ -53,11 +57,13 @@ class EmployeeController extends Controller
             return $employee;
         });
 
-        return new EmployeeResource($employee->load([
-            'profileImage',
-            'user',
-            'versions' => fn ($query) => $query->validAt(now()),
-        ]));
+        return new EmployeeResource(
+            $employee->load([
+                'profileImage',
+                'user',
+                'versions' => fn ($query) => $query->validAt(now()),
+            ])->loadAvg('reviews as rating', 'rating')
+        );
     }
 
     public function destroy(Employee $employee): JsonResponse
@@ -74,7 +80,9 @@ class EmployeeController extends Controller
         $employees = Employee::with([
             'profileImage',
             'versions' => fn ($query) => $query->validAt($now),
-        ])->get();
+        ])
+            ->withAvg('reviews as rating', 'rating')
+            ->get();
 
         return EmployeeResource::collection($employees);
     }

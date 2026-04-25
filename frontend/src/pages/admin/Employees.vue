@@ -64,7 +64,7 @@
           </div>
 
           <p class="text-center text-sm font-semibold text-black">
-            ⭐ {{ Number(employee.rating).toFixed(1) }}
+            ⭐ {{ formatRating(employee.rating) }}
           </p>
 
           <div class="mt-auto flex justify-end pt-3">
@@ -175,6 +175,11 @@ async function removeSelectedEmployee() {
   await deleteEmployee(selectedEmployee.value.id)
   await fetchEmployees()
   await closeEmployeeDeleteModal()
+}
+
+function formatRating(rating) {
+  const value = Number(rating)
+  return Number.isFinite(value) ? value.toFixed(1) : '0.0'
 }
 
 </script>

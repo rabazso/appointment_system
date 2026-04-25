@@ -16,6 +16,7 @@ class EmployeeResource extends JsonResource
             'user_id' => $this->user_id,
             'email' => $this->whenLoaded('user', fn () => $this->user?->email),
             'is_available' => $currentVersion?->is_available ?? false,
+            'rating' => $this->rating !== null ? round((float) $this->rating, 1) : null,
             'name' => $this->name,
             'phone' => $this->phone,
             'bio' => $this->bio,

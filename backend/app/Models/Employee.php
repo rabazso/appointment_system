@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
@@ -62,5 +63,17 @@ class Employee extends Model
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    public function reviews(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Review::class,
+            Appointment::class,
+            'employee_id',
+            'appointment_id',
+            'id',
+            'id',
+        );
     }
 }
