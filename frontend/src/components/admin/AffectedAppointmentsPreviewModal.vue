@@ -134,22 +134,16 @@ const props = defineProps({
 
 const localPreview = ref(clonePreview(props.preview))
 const selectedAppointmentIds = ref([])
-const openSection = ref(null)
+const openSection = ref('conflicts')
 const cancellationReason = ref('Schedule change made this appointment unavailable.')
 
 watch(
   () => props.preview,
   (preview) => {
     localPreview.value = clonePreview(preview)
+    selectedAppointmentIds.value = []
+    openSection.value = 'conflicts'
   },
-)
-
-watch(
-  () => localPreview.value.conflict_preview,
-  () => {
-    selectedAppointmentIds.value = appointmentIds(localPreview.value.conflict_preview)
-  },
-  { immediate: true },
 )
 
 function toggleSection(appointmentIds) {
