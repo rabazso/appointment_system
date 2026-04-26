@@ -1,5 +1,5 @@
 <script setup>
-import EmployeeSignInCard from '@/components/employee/auth/EmployeeSignInCard.vue'
+import SignInCard from '@/components/employee/auth/SignInCard.vue'
 import Header from '@/components/admin/Header.vue'
 </script>
 
@@ -14,7 +14,7 @@ import Header from '@/components/admin/Header.vue'
       />
 
       <div class="mt-10 flex justify-center">
-        <EmployeeSignInCard />
+        <SignInCard />
       </div>
     </div>
   </main>

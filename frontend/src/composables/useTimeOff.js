@@ -52,8 +52,8 @@ export function useTimeOff() {
     }
   }
 
-  async function updateTimeOffStatus(id, status) {
-    await patchEmployeeTimeOffRequest(id, { status })
+  async function updateTimeOffStatus(id, status, note) {
+    await patchEmployeeTimeOffRequest(id, {status, note,})
   }
 
   return {

@@ -35,7 +35,7 @@
               ? 'border-transparent bg-secondary shadow-sm'
               : 'border-transparent hover:border-black'
           ]"
-          @click="handleSelect(item.id)"
+          @click="handleSelect(item.to)"
         >
           <component :is="item.icon" class="h-5 w-5" />
           <span class="text-base font-medium">{{ item.label }}</span>
@@ -72,18 +72,18 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['close', 'select-section'])
+const emit = defineEmits(['close'])
 const router = useRouter()
 const auth = useAuthStore()
 
 const menuItems = [
-  { id: 'appointments', label: 'Appointments', icon: Calendar },
-  { id: 'profile', label: 'Profile', icon: UserRound },
-  { id: 'time-off', label: 'Time Off', icon: Clock3 },
+  { id: 'appointments', label: 'Appointments', icon: Calendar, to: '/employee/appointments' },
+  { id: 'profile', label: 'Profile', icon: UserRound, to: '/employee/profile' },
+  { id: 'time-off', label: 'Time Off', icon: Clock3, to: '/employee/time-off' },
 ]
 
-function handleSelect(section) {
-  emit('select-section', section)
+function handleSelect(routePath) {
+  router.push(routePath)
   emit('close')
 }
 

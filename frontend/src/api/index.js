@@ -70,18 +70,28 @@ export const logout = async () => {
 };
 
 export const getCurrentUser = () => API.get('/user');
-export const getBarberAppointments = () => API.get('/employee/appointments');
-export const cancelBarberAppointment = (appointmentId, payload) =>
+
+export const getEmployeeAppointments = (params = {}) => API.get('/employee/appointments', { params });
+export const cancelEmployeeAppointment = (appointmentId, payload) =>
     API.post(`/employee/appointments/${appointmentId}/cancel`, payload);
-export const getBarberReviews = () => API.get('/employee/reviews');
-export const getBarberProfile = () => API.get('/employee/profile');
-export const updateBarberProfile = (payload) => API.patch('/employee/profile', payload, {
+export const completeEmployeeAppointment = (appointmentId) => API.post(`/employee/appointments/${appointmentId}/complete`);
+export const markEmployeeAppointmentNoShow = (appointmentId) => API.post(`/employee/appointments/${appointmentId}/no-show`);
+
+export const getEmployeeProfile = () => API.get('/employee/profile');
+export const patchEmployeeProfile = (payload) => API.patch('/employee/profile', payload);
+export const uploadEmployeeProfileAvatar = (payload) => API.post('/employee/profile/avatar', payload, {
     headers: { 'Content-Type': 'multipart/form-data' }
 });
-export const uploadBarberGalleryImage = (payload) => API.post('/employee/profile/gallery', payload, {
+export const uploadEmployeeProfileGalleryImage = (payload) => API.post('/employee/profile/gallery', payload, {
     headers: { 'Content-Type': 'multipart/form-data' }
 });
-export const deleteBarberGalleryImage = (galleryId) => API.delete(`/employee/profile/gallery/${galleryId}`);
+export const deleteEmployeeProfileGalleryImage = (galleryId) => API.delete(`/employee/profile/gallery/${galleryId}`);
+
+export const getEmployeeOwnTimeOffRequests = () => API.get('/employee/time-off-requests');
+export const postEmployeeOwnTimeOffRequest = (payload) => API.post('/employee/time-off-requests', payload);
+export const cancelEmployeeOwnTimeOffRequest = (id) => API.delete(`/employee/time-off-requests/${id}`);
+
+export const getBarberReviews = () => API.get('/reviews');
 
 export const getServices = () => API.get('/services');
 export const getEmployees = () => API.get('/employees');

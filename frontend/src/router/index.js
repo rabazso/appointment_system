@@ -16,7 +16,9 @@ import Schedule from '@pages/admin/Schedule.vue'
 import VerifyEmail from '@pages/verifyEmail.vue'
 import AdminSignIn from '@pages/admin/AdminSignIn.vue'
 import EmployeeSignIn from '@pages/employee/EmployeeSignIn.vue'
-import EmployeeDashboard from '@pages/employee/EmployeeDashboard.vue'
+import AppointmentsPage from '@pages/employee/Appointments.vue'
+import ProfilePage from '@pages/employee/Profile.vue'
+import TimeOffPage from '@pages/employee/TimeOff.vue'
 import TimeOff from '@pages/admin/TimeOff.vue'
 import Gallery from '@pages/admin/Gallery.vue'
 
@@ -86,17 +88,35 @@ const routes = [
     }
   },
   {
-    path: '/employee/dashboard',
-    name: 'EmployeeDashboard',
-    component: EmployeeDashboard,
-    meta: {
-      title: 'Employee Dashboard',
-      requiresBarber: true
-    }
+    path: '/employee',
+    redirect: '/employee/appointments',
   },
   {
-    path: '/barberAdminPage',
-    redirect: '/employee/dashboard',
+    path: '/employee/appointments',
+    name: 'EmployeeAppointments',
+    component: AppointmentsPage,
+    meta: {
+      title: 'Employee Appointments',
+      requiresEmployee: true,
+    },
+  },
+  {
+    path: '/employee/profile',
+    name: 'EmployeeProfile',
+    component: ProfilePage,
+    meta: {
+      title: 'Employee Profile',
+      requiresEmployee: true,
+    },
+  },
+  {
+    path: '/employee/time-off',
+    name: 'EmployeeTimeOff',
+    component: TimeOffPage,
+    meta: {
+      title: 'Employee Time Off',
+      requiresEmployee: true,
+    },
   },
   {
     path: '/forgot-password',
@@ -213,27 +233,23 @@ export const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.meta?.requiresAdmin) {
-    const token = localStorage.getItem('token')
-    const role = localStorage.getItem('role')
+  const token = localStorage.getItem('token')
+  const role = localStorage.getItem('role')
+  const requiresEmployee = to.matched.some((route) => route.meta?.requiresEmployee)
+  const requiresAdmin = to.matched.some((route) => route.meta?.requiresAdmin)
 
-    if (!token || role !== 'admin') {
-      next('/admin/login')
+  if (requiresEmployee) {
+    const canAccessEmployee = Boolean(token) && role === 'employee'
+    if (!canAccessEmployee) {
+      next(token ? '/' : '/employee/login')
       return
     }
   }
 
-  if (to.meta?.requiresBarber) {
-    const token = localStorage.getItem('token')
-    const role = localStorage.getItem('role')
-    const userId = Number(localStorage.getItem('user_id'))
-
-    const isBarberRole = ['employee', 'barber', 'admin'].includes(role)
-    const isBarberId = Number.isInteger(userId) && userId >= 1 && userId <= 5
-    const canAccessBarberAdmin = Boolean(token) && (isBarberRole || isBarberId)
-
-    if (!canAccessBarberAdmin) {
-      next('/')
+  if (requiresAdmin) {
+    const canAccessAdmin = Boolean(token) && role === 'admin'
+    if (!canAccessAdmin) {
+      next(token ? '/' : '/admin/login')
       return
     }
   }
