@@ -13,7 +13,7 @@
           <h2 class="text-2xl font-semibold">Time offs on</h2>
           <p class="text-base font-semibold">{{ date }}</p>
         </div>
-        <Button @click="emit('add')">Add time off</Button>
+        <Button v-if="canManage" @click="emit('add')">Add time off</Button>
       </div>
 
       <div class="mt-4 flex flex-col gap-2">
@@ -24,7 +24,7 @@
         >
           <div
             class="grid items-center gap-3 px-3 py-2 text-sm [grid-template-columns:minmax(0,1fr)_auto_auto]"
-            :class="item.status !== 'cancelled' ? 'cursor-pointer' : ''"
+            :class="canManage && item.status !== 'cancelled' ? 'cursor-pointer' : ''"
             @click="toggleExpandableItem(item)"
           >
             <div class="min-w-0">
@@ -41,7 +41,7 @@
             </span>
 
             <button
-              v-if="item.status !== 'cancelled'"
+              v-if="canManage && item.status !== 'cancelled'"
               type="button"
               class="pointer-events-none inline-flex h-7 w-7 items-center justify-center text-black"
               tabindex="-1"
@@ -52,7 +52,7 @@
             </button>
           </div>
 
-          <div v-if="item.status !== 'cancelled' && expandedTimeOffId === item.id" class="border-t border-black/10 px-3 py-2">
+          <div v-if="canManage && item.status !== 'cancelled' && expandedTimeOffId === item.id" class="border-t border-black/10 px-3 py-2">
             <div v-if="item.status === 'pending'" class="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -83,11 +83,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { ChevronDown, ChevronRight, X } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
 
-defineProps({
+const props = defineProps({
   date: {
     type: String,
     required: true,
@@ -101,8 +101,10 @@ defineProps({
 const emit = defineEmits(['close', 'add', 'status-change'])
 
 const expandedTimeOffId = ref(null)
+const canManage = computed(() => props.date >= new Date().toISOString().slice(0, 10))
 
 function toggleExpandableItem(timeOff) {
+  if (!canManage.value) return
   if (timeOff.status === 'cancelled') return
 
   expandedTimeOffId.value = expandedTimeOffId.value === timeOff.id ? null : timeOff.id

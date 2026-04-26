@@ -67,6 +67,10 @@ class EmployeeTimeOffRequestController extends Controller
         UpdateEmployeeTimeOffRequestRequest $request,
         EmployeeTimeOffRequest $employeeTimeOffRequest
     ): EmployeeTimeOffRequestResource {
+        if ($employeeTimeOffRequest->date < now()->toDateString()) {
+            abort(409, 'Past time off requests cannot be modified.');
+        }
+
         $employeeTimeOffRequest->update($request->validated());
 
         return new EmployeeTimeOffRequestResource($employeeTimeOffRequest->load('employee'));

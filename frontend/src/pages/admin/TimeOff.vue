@@ -169,7 +169,7 @@ import Sidebar from '@/components/admin/Sidebar.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
 import TimeOffCreateModal from '@/components/admin/TimeOffCreateModal.vue'
 import TimeOffDayModal from '@/components/admin/TimeOffDayModal.vue'
-import { formatYearMonth, shiftMonth } from '@/utils/date'
+import { formatYearMonth, shiftMonth, toISO } from '@/utils/date'
 import { useTimeOff } from '@/composables/useTimeOff'
 
 const sidebarOpen = ref(false)
@@ -184,6 +184,7 @@ const showTimeOffDayModal = ref(false)
 const showTimeOffCreateModal = ref(false)
 const selectedTimeOffs = ref([])
 const selectedDate = ref('')
+const todayISO = toISO(new Date())
 const {
   fetchEmployees,
   fetchPendingTimeOffRequests,
@@ -268,7 +269,7 @@ function goNextMonth() {
 
 function openAddTimeOffModal() {
   selectedTimeOffs.value = []
-  selectedDate.value = ''
+  selectedDate.value = todayISO
   showTimeOffDayModal.value = false
   showTimeOffCreateModal.value = true
 }
@@ -276,6 +277,10 @@ function openAddTimeOffModal() {
 function openTimeOffModalForDate(dateISO) {
   const timeOffs = calendarRequests.value.filter((request) => request.date === dateISO)
   const timeOff = timeOffs[0]
+
+  if (!timeOff && dateISO < todayISO) {
+    return
+  }
 
   selectedTimeOffs.value = timeOffs.map((item) => ({ ...item }))
   selectedDate.value = dateISO
@@ -310,6 +315,10 @@ async function saveTimeOff(timeOff) {
 }
 
 async function changeTimeOffStatus({ id, status }) {
+  if (selectedDate.value && selectedDate.value < todayISO) {
+    return
+  }
+
   await updateTimeOffStatus(id, status)
   await loadTimeOffRequests()
   await loadPendingRequests()

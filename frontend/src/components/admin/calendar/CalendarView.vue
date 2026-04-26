@@ -24,7 +24,7 @@
           :contentClass="cellMap[day.dateISO]?.contentClass"
           :dotContent="cellMap[day.dateISO]?.dotContent"
           :dotContentClass="cellMap[day.dateISO]?.dotContentClass"
-          :isDisabled="day.isPast"
+          :isPast="day.isPast"
           :isToday="day.isToday"
           :isInCurrentMonth="day.isInCurrentMonth"
           @day-click="emit('day-click', day.dateISO)"

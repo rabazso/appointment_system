@@ -22,8 +22,8 @@ class StoreOwnEmployeeTimeOffRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date' => ['required', 'date', 'after:today'],
-            'note' => ['nullable', 'string'],
+            'date' => ['required', 'date', 'after_or_equal:today'],
+            'note' => ['required', 'string'],
         ];
     }
 }

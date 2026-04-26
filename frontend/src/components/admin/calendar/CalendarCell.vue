@@ -4,9 +4,8 @@
     :class="{
       '!border-black rounded-sm': isToday,
       'opacity-75': !isInCurrentMonth,
-      'cursor-not-allowed hover:border-transparent': isDisabled
     }"
-    @click="handleClick"
+    @click="emit('day-click')"
   >
     <div class="relative z-10 flex shrink-0 items-start justify-end leading-none text-sm font-semibold text-black">
       <span class="bg-white px-0.5">
@@ -41,21 +40,13 @@ const props = defineProps({
   contentClass: String,
   dotContent: Boolean,
   dotContentClass: String,
-  isDisabled: Boolean,
+  isPast: Boolean,
   isToday: Boolean,
   isInCurrentMonth: Boolean,
   date: String,
 })
 
 const emit = defineEmits(['day-click'])
-
-function handleClick() {
-  if (props.isDisabled) {
-    return
-  }
-
-  emit('day-click')
-}
 
 const dayNumber = computed(() => {
   return parseISODate(props.date).getDate()

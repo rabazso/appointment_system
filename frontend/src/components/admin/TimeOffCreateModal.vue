@@ -64,6 +64,7 @@
               <input
                 v-model="form.days[index]"
                 type="date"
+                :min="todayISO"
                 class="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-base outline-none transition hover:border-black [font-variant-numeric:tabular-nums]"
               />
               <button
@@ -90,12 +91,16 @@
         </div>
 
         <div>
-          <label class="text-xs font-semibold tracking-wider text-gray-500 leading-none">Reason (optional)</label>
+          <label class="text-xs font-semibold tracking-wider text-gray-500 leading-none">Reason</label>
           <textarea
             v-model="form.note"
             placeholder="Reason for time off"
-            class="mt-1 w-full min-h-24 resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-base outline-none transition hover:border-black"
+            class="mt-1 w-full min-h-24 resize-none rounded-lg border bg-white px-3 py-2 text-base outline-none transition hover:border-black"
+            :class="noteError ? 'border-rose-500' : 'border-black/10'"
           />
+          <p v-if="noteError" class="mt-1 whitespace-normal break-words text-xs leading-snug text-rose-500">
+            {{ noteError }}
+          </p>
         </div>
       </div>
 
@@ -107,7 +112,7 @@
 </template>
 
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { X } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
 
@@ -123,26 +128,37 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'save'])
+const todayISO = new Date().toISOString().slice(0, 10)
 
 const form = reactive(createForm())
+const submitted = ref(false)
 
 const filledDays = computed(() => form.days.filter(Boolean))
 const filledEmployees = computed(() => form.employees.filter(Boolean))
-const hasRequiredFields = computed(() => Boolean(filledEmployees.value.length && filledDays.value.length))
+const noteError = computed(() => {
+  if (!submitted.value) {
+    return ''
+  }
+
+  return form.note.trim() ? '' : 'Required'
+})
+const hasRequiredFields = computed(() => Boolean(
+  filledEmployees.value.length &&
+  filledDays.value.length,
+))
 const showSaveButton = computed(() => hasRequiredFields.value)
 
 function createForm() {
   return {
     employees: [''],
-    days: [props.initialDate ?? ''],
+    days: [props.initialDate || todayISO],
     note: '',
     status: 'approved',
-    type: 'vacation',
   }
 }
 
 function addDay() {
-  form.days.push('')
+  form.days.push(todayISO)
 }
 
 function removeDay(index) {
@@ -158,6 +174,8 @@ function removeEmployee(index) {
 }
 
 function saveTimeOff() {
+  submitted.value = true
+
   if (!hasRequiredFields.value) return
 
   emit('save', {
@@ -165,7 +183,6 @@ function saveTimeOff() {
     days: filledDays.value,
     note: form.note.trim(),
     status: form.status,
-    type: form.type,
   })
 }
 </script>

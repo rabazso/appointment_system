@@ -173,6 +173,7 @@ const monthLabel = computed(() =>
     year: 'numeric',
   }),
 )
+const todayISO = toISO(new Date())
 
 const WEEKDAYS = [
   { label: 'Sunday' },
@@ -259,6 +260,10 @@ function openAddSpecialDayModal() {
 }
 
 function openSpecialDayModalForDate(dateISO) {
+  if (dateISO < todayISO) {
+    return
+  }
+
   const specialDay = specialDays.value.find((day) => day.dateISO === dateISO)
 
   specialDayModalMode.value = specialDay ? 'edit' : 'create'

@@ -33,7 +33,6 @@ export function useTimeOff() {
       id: timeOff.id,
       employeeId: timeOff.employee_id,
       employee: timeOff.employee_name,
-      type: timeOff.type,
       date: timeOff.date,
       status: timeOff.status,
       note: timeOff.note ?? '',
@@ -46,7 +45,6 @@ export function useTimeOff() {
         await postEmployeeTimeOffRequest({
           employee_id: employeeId,
           date,
-          type: timeOff.type,
           status: timeOff.status,
           note: timeOff.note || null,
         })
