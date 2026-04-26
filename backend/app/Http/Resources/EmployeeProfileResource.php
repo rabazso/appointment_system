@@ -14,13 +14,23 @@ class EmployeeProfileResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $gallery = $this->relationLoaded('images')
+            ? $this->images->where('id', '!=', $this->profile_image_id)->values()
+            : collect();
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'bio' => $this->bio,
+            'description' => $this->bio,
             'links' => $this->links,
-            'profile_image' => new EmployeeImageResource($this->whenLoaded('profileImage')),
-            'gallery' => EmployeeImageResource::collection($this->whenLoaded('images')->where('id', '!=', $this->profile_image_id)->values()),
+            'photo_url' => $this->profileImage?->preview_url,
+            'profile_image' => $this->profileImage
+                ? (new EmployeeImageResource($this->profileImage))->toArray($request)
+                : null,
+            'gallery' => $gallery
+                ->map(fn ($image) => (new EmployeeImageResource($image))->toArray($request))
+                ->values(),
         ];
     }
 }

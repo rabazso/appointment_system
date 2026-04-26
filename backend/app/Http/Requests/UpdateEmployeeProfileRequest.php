@@ -23,6 +23,7 @@ class UpdateEmployeeProfileRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|string|max:255',
+            'description' => 'nullable|string|max:2000',
             'bio' => 'nullable|string|max:2000',
             'links' => 'nullable|array',
             'links.*.label' => 'required|string|max:50',
