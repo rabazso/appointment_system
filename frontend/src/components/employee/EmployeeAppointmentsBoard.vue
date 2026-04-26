@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { CalendarDays, Check, ChevronLeft, ChevronRight, X } from 'lucide-vue-next'
 import { toISO } from '@/utils/date'
 
 const props = defineProps({
@@ -185,10 +185,10 @@ const formatSecondaryTime = (date) => date?.toLocaleTimeString('en-US', {
 
 const getStatusText = (status) => ({
   confirmed: 'Confirmed',
-  pending: 'Pending',
+  pending: 'In Progress',
   completed: 'Completed',
   cancelled: 'Cancelled',
-  no_show: 'No show',
+  no_show: 'No Show',
 }[status] || status)
 
 const getStatusClass = (status) => ({
@@ -198,6 +198,19 @@ const getStatusClass = (status) => ({
   cancelled: 'bg-red-100 text-red-700',
   no_show: 'bg-rose-100 text-rose-700',
 }[status] || 'bg-slate-100 text-slate-700')
+
+const getDailyStatusClass = (status) => ({
+  confirmed: 'text-amber-700',
+  pending: 'text-slate-700',
+  completed: 'text-emerald-700',
+  cancelled: 'text-rose-400',
+  no_show: 'text-rose-400',
+}[status] || 'text-slate-600')
+
+const getDailyRowClass = (status) =>
+  (status === 'cancelled' || status === 'no_show')
+    ? 'opacity-50'
+    : ''
 </script>
 
 <template>
@@ -316,23 +329,58 @@ const getStatusClass = (status) => ({
           No appointments match this day and status filter.
         </div>
 
-        <div v-else class="overflow-hidden rounded-lg border border-black/10">
-          <div class="hidden bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 md:grid md:grid-cols-[120px,minmax(0,2fr),minmax(0,1.4fr),110px,130px,130px] md:gap-4">
-            <span>Time</span>
-            <span>Guest</span>
-            <span>Service</span>
-            <span>Price</span>
-            <span>Status</span>
-            <span>Actions</span>
-          </div>
+        <div v-else class="overflow-x-auto rounded-2xl border border-black/10 bg-white">
+          <div class="min-w-[960px]">
+            <div class="grid grid-cols-[130px,minmax(220px,2.1fr),minmax(180px,1.5fr),95px,100px,140px] gap-4 bg-slate-50/80 px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
+              <span>Time</span>
+              <span>Guest</span>
+              <span>Service</span>
+              <span>Price</span>
+              <span>Status</span>
+              <span>Actions</span>
+            </div>
 
-          <div
-            v-for="appointment in dailyAppointments"
-            :key="appointment.id"
-            class="border-t border-black/10 px-4 py-4 first:border-t-0 md:grid md:grid-cols-[120px,minmax(0,2fr),minmax(0,1.4fr),110px,130px,130px] md:items-center md:gap-4"
-          >
-            <div class="flex items-start gap-3">
-              <label v-if="isAppointmentCancellable(appointment.status)" class="mt-1 inline-flex items-center">
+            <div
+              v-for="appointment in dailyAppointments"
+              :key="appointment.id"
+              :class="[
+                'grid grid-cols-[130px,minmax(220px,2.1fr),minmax(180px,1.5fr),95px,100px,140px] items-center gap-4 border-t border-black/10 px-5 py-5 first:border-t-0',
+                getDailyRowClass(appointment.status),
+              ]"
+            >
+            <div>
+              <p class="text-3xl leading-none font-semibold tracking-tight text-slate-800">{{ formatTime(appointment._startDate) }}</p>
+              <p class="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-gray-400">
+                {{ formatSecondaryTime(appointment._endDate || appointment._startDate) }}
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-300 to-slate-500 text-sm font-semibold text-white">
+                {{ appointment.client?.charAt(0) || '?' }}
+              </div>
+              <div class="min-w-0">
+                <p class="truncate text-base font-semibold text-slate-900">{{ appointment.client }}</p>
+                <p class="truncate text-xs font-medium text-gray-400">{{ formatContact(appointment) }}</p>
+              </div>
+            </div>
+
+            <div>
+              <span class="inline-flex rounded-md bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+                {{ appointment.service || 'Service' }}
+              </span>
+            </div>
+
+            <div class="text-base font-semibold text-slate-800">
+              {{ formatPrice(appointment.price) }}
+            </div>
+
+            <div class="text-sm font-semibold" :class="getDailyStatusClass(appointment.status)">
+              {{ getStatusText(appointment.status) }}
+            </div>
+
+            <div class="flex flex-wrap items-center justify-end gap-2">
+              <label v-if="isAppointmentCancellable(appointment.status)" class="inline-flex items-center">
                 <input
                   type="checkbox"
                   class="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
@@ -340,59 +388,34 @@ const getStatusClass = (status) => ({
                   @change="$emit('toggle-appointment-selection', appointment.id)"
                 >
               </label>
-              <div>
-                <p class="text-2xl font-semibold text-black">{{ formatTime(appointment._startDate) }}</p>
-                <p class="text-xs text-gray-500">
-                  {{ formatSecondaryTime(appointment._endDate || appointment._startDate) }}
-                </p>
-              </div>
-            </div>
 
-            <div class="mt-4 flex items-center gap-3 md:mt-0">
-              <div class="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700">
-                {{ appointment.client?.charAt(0) || '?' }}
-              </div>
-              <div class="min-w-0">
-                <p class="truncate font-semibold text-black">{{ appointment.client }}</p>
-                <p class="truncate text-sm text-gray-500">{{ formatContact(appointment) }}</p>
-              </div>
-            </div>
-
-            <div class="mt-4 md:mt-0">
-              <span class="inline-flex rounded-md bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-                {{ appointment.service || 'Service' }}
-              </span>
-            </div>
-
-            <div class="mt-4 text-sm font-semibold text-black md:mt-0">
-              {{ formatPrice(appointment.price) }}
-            </div>
-
-            <div class="mt-4 md:mt-0">
-              <span :class="['inline-flex rounded-full px-3 py-1 text-xs font-medium', getStatusClass(appointment.status)]">
-                {{ getStatusText(appointment.status) }}
-              </span>
-            </div>
-
-            <div class="mt-4 flex items-center gap-2 md:mt-0">
               <button
                 v-if="appointment.status === 'confirmed'"
                 type="button"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-200 text-emerald-700 transition hover:bg-emerald-50"
+                class="inline-flex h-8 items-center rounded-md border border-emerald-200 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700 transition hover:bg-emerald-50"
                 title="Complete appointment"
                 @click="$emit('complete-appointment', appointment.id)"
               >
-                <Check class="h-4 w-4" />
+                Complete
               </button>
               <button
                 v-if="isAppointmentCancellable(appointment.status)"
                 type="button"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-200 text-red-600 transition hover:bg-red-50"
+                class="inline-flex h-8 items-center rounded-md border border-rose-200 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-rose-500 transition hover:bg-rose-50"
                 title="Cancel appointment"
                 @click="$emit('cancel-appointment', appointment.id)"
               >
-                <X class="h-4 w-4" />
+                Cancel
               </button>
+              <button
+                v-if="appointment.status === 'cancelled' || appointment.status === 'no_show'"
+                type="button"
+                disabled
+                class="inline-flex h-8 items-center rounded-md border border-amber-200 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-500/80"
+              >
+                Rebook
+              </button>
+            </div>
             </div>
           </div>
         </div>
