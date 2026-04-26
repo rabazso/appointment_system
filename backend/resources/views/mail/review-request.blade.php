@@ -21,7 +21,7 @@
   <tr>
     <td style="background:#ffedd8; border-radius:8px; padding:20px;">
       <p style="margin:0 0 6px; color:#6b7280; font-size:14px;">Service</p>
-      <p style="margin:0 0 14px; font-weight:700; font-size:15px; color:#000000;">{{ $appointment->service?->name }}</p>
+      <p style="margin:0 0 14px; font-weight:700; font-size:15px; color:#000000;">{{ $appointment->appointmentServices->first()?->service?->name ?? 'Service' }}</p>
 
       <p style="margin:0 0 6px; color:#6b7280; font-size:14px;">Barber</p>
       <p style="margin:0; font-weight:700; font-size:15px; color:#000000;">{{ $appointment->employee?->name }}</p>

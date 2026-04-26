@@ -17,7 +17,7 @@
         </svg>
       </div>
       <h2 style="margin:0; font-weight:700; font-size:22px; color:#000000; line-height:1.2;">
-        {{ $appointment->guest_name ?? $appointment->customer?->name }}, your appointment was successful
+        {{ $appointment->customer?->name ?? 'Guest' }}, your appointment was successful
       </h2>
       <p style="color:#6b7280; margin-top:8px; font-size:14px; line-height:1.4;">
         Your appointment details
@@ -32,12 +32,12 @@
 
         <tr style="border-bottom:1px solid rgba(0,0,0,0.1);">
           <td style="color:#6b7280; font-size:14px;">Service:</td>
-          <td align="right" style="font-weight:700; font-size:14px; color:#000000;">{{ $appointment->service->name }}</td>
+          <td align="right" style="font-weight:700; font-size:14px; color:#000000;">{{ $appointment->appointmentServices->first()?->service?->name ?? 'Service' }}</td>
         </tr>
 
         <tr style="border-bottom:1px solid rgba(0,0,0,0.1);">
           <td style="color:#6b7280; font-size:14px;">Barber:</td>
-          <td align="right" style="font-weight:700; font-size:14px; color:#000000;">{{ $appointment->employee->user->name }}</td>
+          <td align="right" style="font-weight:700; font-size:14px; color:#000000;">{{ $appointment->employee?->name ?? 'Barber' }}</td>
         </tr>
 
         <tr style="border-bottom:1px solid rgba(0,0,0,0.1);">
@@ -53,7 +53,7 @@
         <tr>
           <td style="color:#6b7280; font-weight:700; font-size:14px;">Total:</td>
           <td align="right" style="font-weight:700; font-size:18px; color:#000000;">
-            ${{ $appointment->price }}
+            ${{ $appointment->total_price }}
           </td>
         </tr>
 

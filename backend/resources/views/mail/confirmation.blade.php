@@ -8,7 +8,7 @@
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                         <td style="padding:0 0 12px; font-size:15px; color:#667085;">Service:</td>
-                        <td style="padding:0 0 12px; font-size:15px; font-weight:700; color:#000000;" align="right">{{ $appointment->service?->name ?? 'Service' }}</td>
+                        <td style="padding:0 0 12px; font-size:15px; font-weight:700; color:#000000;" align="right">{{ $appointment->appointmentServices->first()?->service?->name ?? 'Service' }}</td>
                     </tr>
                     <tr>
                         <td style="padding:12px 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:15px; color:#667085;">Barber:</td>
@@ -23,8 +23,12 @@
                         <td style="padding:12px 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:15px; font-weight:700; color:#000000;" align="right">{{ $appointment->start_datetime?->format('H:i') }}</td>
                     </tr>
                     <tr>
+                        <td style="padding:12px 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:15px; color:#667085;">Total duration:</td>
+                        <td style="padding:12px 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:15px; font-weight:700; color:#000000;" align="right">{{ $appointment->total_duration ? $appointment->total_duration . ' min' : '-' }}</td>
+                    </tr>
+                    <tr>
                         <td style="padding:12px 0 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:15px; font-weight:700; color:#667085;">Total:</td>
-                        <td style="padding:12px 0 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:18px; font-weight:700; color:#000000;" align="right">${{ $appointment->price }}</td>
+                        <td style="padding:12px 0 0; border-top:1px solid rgba(0, 0, 0, 0.08); font-size:18px; font-weight:700; color:#000000;" align="right">${{ $appointment->total_price }}</td>
                     </tr>
                 </table>
             </td>
