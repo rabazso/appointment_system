@@ -14,6 +14,7 @@ use App\Http\Controllers\AppointmentAffectedPreviewController;
 use App\Http\Controllers\AdminAppointmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
+use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\EmployeeImageController;
 use App\Http\Controllers\EmployeeOwnTimeOffRequestController;
 use App\Http\Controllers\EmployeeProfileController;
@@ -174,19 +175,18 @@ Route::middleware('auth.api-token')->group(function () {
     });
 
     Route::middleware('role:employee')->prefix('/employee')->group(function () { 
-        Route::get("/appointments", [AppointmentController::class, "employeeAppointments"]);
-        Route::get("/reviews", [AppointmentController::class, "employeeReviews"]);
+        Route::get("/appointments", [EmployeeDashboardController::class, "index"]);
         Route::get("/profile", [EmployeeProfileController::class, 'show']);
-        Route::post("/appointments/{appointment}/cancel", [AppointmentController::class, 'cancelEmployeeAppointment']);
-        Route::post("/appointments/{appointment}/complete", [AppointmentController::class, 'completeEmployeeAppointment']);
+        Route::post("/appointments/{appointment}/cancel", [EmployeeDashboardController::class, 'cancelAppointment']);
+        Route::post("/appointments/{appointment}/complete", [EmployeeDashboardController::class, 'completeAppointment']);
+        Route::post("/appointments/{appointment}/no-show", [EmployeeDashboardController::class, 'markNoShow']);
         Route::patch("/profile", [EmployeeProfileController::class, 'update']);
         Route::post("/profile/avatar", [EmployeeProfileController::class, 'storeProfilePic']);
         Route::post("/profile/gallery", [EmployeeProfileController::class, 'storeGalleryImg']);
         Route::delete("/profile/gallery/{imgId}", [EmployeeProfileController::class, 'destroyGalleryImg'])->whereNumber('imgId');
         Route::get('/time-off-requests', [EmployeeOwnTimeOffRequestController::class, 'index']);
         Route::post('/time-off-requests', [EmployeeOwnTimeOffRequestController::class, 'store']);
-        Route::delete('/time-off-requests/{employeeTimeOffRequest}', [EmployeeOwnTimeOffRequestController::class, 'destroy']);
-        Route::get('/current-weekly-schedule', );
+        Route::delete('/time-off-requests/{employeeTimeOffRequest}', [EmployeeOwnTimeOffRequestController::class, 'cancel']);
         Route::get('/regular-breaks', );
         Route::get('/upcoming-approved-time-off', );
      });

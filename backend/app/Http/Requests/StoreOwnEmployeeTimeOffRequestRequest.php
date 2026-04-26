@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreOwnEmployeeTimeOffRequestRequest extends FormRequest
 {
@@ -21,8 +22,9 @@ class StoreOwnEmployeeTimeOffRequestRequest extends FormRequest
      */
     public function rules(): array
     {
+        $employeeId = $this->user()?->employee?->id;
         return [
-            'date' => ['required', 'date', 'after_or_equal:today'],
+            'date' => ['required', 'date', 'after_or_equal:today', Rule::unique('employee_time_off_requests', 'date')->where('employee_id', $employeeId),],
             'note' => ['required', 'string'],
         ];
     }

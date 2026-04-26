@@ -21,13 +21,13 @@ class EmployeeOwnTimeOffRequestController extends Controller
     public function store(StoreOwnEmployeeTimeOffRequestRequest $request): OwnEmployeeTimeOffRequestResource
     {
         $employee = $request->user()->employee;
-
+        
         $timeOffRequest = $employee->timeOffRequests()->create([...$request->validated(), 'status' => 'pending',]);
 
         return new OwnEmployeeTimeOffRequestResource($timeOffRequest);
     }
 
-    public function destroy(Request $request, EmployeeTimeOffRequest $employeeTimeOffRequest)
+    public function cancel(Request $request, EmployeeTimeOffRequest $employeeTimeOffRequest)
     {
         $employee = $request->user()->employee;
 
@@ -39,6 +39,8 @@ class EmployeeOwnTimeOffRequestController extends Controller
             return response()->noContent(409);
         }
 
-        return $employeeTimeOffRequest->delete() ? response()->noContent() : abort(500);
+        $employeeTimeOffRequest->update(['status' => 'cancelled']);
+
+        return response()->noContent();
     }
 }
