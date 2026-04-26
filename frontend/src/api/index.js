@@ -70,18 +70,18 @@ export const logout = async () => {
 };
 
 export const getCurrentUser = () => API.get('/user');
-export const getBarberAppointments = () => API.get('/barber/appointments');
+export const getBarberAppointments = () => API.get('/employee/appointments');
 export const cancelBarberAppointment = (appointmentId, payload) =>
-    API.post(`/barber/appointments/${appointmentId}/cancel`, payload);
-export const getBarberReviews = () => API.get('/barber/reviews');
-export const getBarberProfile = () => API.get('/barber/profile');
-export const updateBarberProfile = (payload) => API.post('/barber/profile', payload, {
+    API.post(`/employee/appointments/${appointmentId}/cancel`, payload);
+export const getBarberReviews = () => API.get('/employee/reviews');
+export const getBarberProfile = () => API.get('/employee/profile');
+export const updateBarberProfile = (payload) => API.patch('/employee/profile', payload, {
     headers: { 'Content-Type': 'multipart/form-data' }
 });
-export const uploadBarberGalleryImage = (payload) => API.post('/barber/profile/gallery', payload, {
+export const uploadBarberGalleryImage = (payload) => API.post('/employee/profile/gallery', payload, {
     headers: { 'Content-Type': 'multipart/form-data' }
 });
-export const deleteBarberGalleryImage = (galleryId) => API.delete(`/barber/profile/gallery/${galleryId}`);
+export const deleteBarberGalleryImage = (galleryId) => API.delete(`/employee/profile/gallery/${galleryId}`);
 
 export const getServices = () => API.get('/services');
 export const getEmployees = () => API.get('/employees');
@@ -103,14 +103,34 @@ export const getEmployeeBookingRules = (employeeId) => API.get(`/employees/${emp
 export const createEmployeeBookingRules = (employeeId, payload) => API.post(`/employees/${employeeId}/booking-rules`, payload);
 export const updateEmployeeBookingRules = (id, payload) => API.put(`/employee-booking-rules/${id}`, payload);
 export const deleteEmployeeBookingRules = (id) => API.delete(`/employee-booking-rules/${id}`);
-export const getAppointmentByServiceAndDate = (serviceId, selectedDate) => API.get(`/appointments?service_id=${serviceId}&selected_date=${selectedDate}`);
-export const getAppointmentsByServiceAndDateAndEmployee = (serviceId, selectedDate, employeeId) => API.get(`/appointments?service_id=${serviceId}&selected_date=${selectedDate}&employee_id=${employeeId}`);
-export const getEmployeesByService = (serviceId) => API.get(`/employees?service_id=${serviceId}`);
-export const getEmployeesByServiceAndAppointment = (serviceId, appointment) => API.get(`/employees?service_id=${serviceId}&appointment=${appointment}`);
+export const getBookingServices = () => API.get('/booking/services');
+export const getBookingEmployees = (serviceIds) => API.get('/booking/employees', {
+    params: { service_ids: serviceIds },
+});
+export const getBookingSummary = (serviceIds, employeeId, appointmentStart) => API.get('/booking/summary', {
+    params: {
+        service_ids: serviceIds,
+        employee_id: employeeId,
+        appointment_start: appointmentStart,
+    },
+});
+export const getBookingDays = (serviceIds, employeeId, month) => API.get('/booking/days', {
+    params: {
+        service_ids: serviceIds,
+        employee_id: employeeId,
+        month,
+    },
+});
+export const getBookingSlots = (serviceIds, employeeId, selectedDate) => API.get('/booking/slots', {
+    params: {
+        service_ids: serviceIds,
+        employee_id: employeeId,
+        selected_date: selectedDate,
+    },
+});
 export const getReviews = () => API.get('/reviews');
 export const postReview = (payload) => API.post('/reviews', payload);
 export const postAppointment = (payload) => API.post('/appointments', payload);
-export const postGuest = (name, email) => API.post('/guest', { name, email });
 export const confirmAppointment = (appointmentId, expires, signature) => API.get(`/appointments/confirm/${appointmentId}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
 export const verifyEmailAddress = (userId, hash, expires, signature) =>
     API.get(`/email/verify/${userId}/${hash}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
@@ -118,7 +138,7 @@ export const getUserAppointments = () => API.get('/user/appointments');
 export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointments/${appointmentId}/cancel`);
 export const forgotPassword = (email) => API.post('/forgot-password', { email });
 export const resetPassword = (payload) => API.post('/reset-password', payload);
-export const completeBarberAppointment = (appointmentId) => API.post(`/barber/appointments/${appointmentId}/complete`);
+export const completeBarberAppointment = (appointmentId) => API.post(`/employee/appointments/${appointmentId}/complete`);
 export const previewEmployeeScheduleAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-schedule', payload);
 export const previewEmployeeServicesAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-services', payload);
 export const previewEmployeeAvailabilityAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-availability', payload);
