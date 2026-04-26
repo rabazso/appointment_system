@@ -78,36 +78,59 @@
           </div>
 
           <div class="flex flex-1 flex-col gap-3">
-              <div
-                v-for="day in openingHours"
-                :key="day.weekday"
-                class="flex flex-1 flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-black/10 px-4 py-3"
-              >
-                <div class="flex shrink-0 items-center gap-3">
-                  <ToggleButton v-model="day.isOpen" />
-                  <span class="text-black">{{ WEEKDAYS[day.weekday].label }}</span>
-                </div>
-
-                <div
-                  v-if="day.isOpen"
-                  class="ml-auto flex shrink-0 items-center justify-end gap-2"
-                >
-                  <input
-                    v-model="day.openTime"
-                    type="time"
-                    class="rounded-lg border border-black/10 p-1 text-sm [font-variant-numeric:tabular-nums]"
-                  />
-                  <span class="text-center text-gray-500">-</span>
-                  <input
-                    v-model="day.closeTime"
-                    type="time"
-                    class="rounded-lg border border-black/10 p-1 text-sm [font-variant-numeric:tabular-nums]"
-                  />
-                </div>
-
-                <span v-else class="ml-auto text-sm">Closed</span>
+              <div v-if="isOpeningHoursLoading" class="rounded-2xl border border-black/10 px-4 py-6 text-sm text-gray-500">
+                Loading weekly schedule...
               </div>
-              <div v-if="hasOpeningHoursChanges" class="flex justify-end">
+              <template v-else>
+                <div
+                  v-for="day in openingHours"
+                  :key="day.weekday"
+                  class="flex flex-1 flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-black/10 px-4 py-3"
+                >
+                  <div class="flex shrink-0 items-center gap-3">
+                    <ToggleButton v-model="day.isOpen" />
+                    <span class="text-black">{{ WEEKDAYS[day.weekday].label }}</span>
+                  </div>
+
+                  <div
+                    v-if="day.isOpen"
+                    class="ml-auto flex shrink-0 items-start justify-end gap-2"
+                  >
+                    <div class="w-[110px] shrink-0">
+                      <input
+                        v-model="day.openTime"
+                        type="time"
+                        class="w-full rounded-lg border bg-white p-1 text-sm outline-none [font-variant-numeric:tabular-nums] transition hover:border-black"
+                        :class="openingHourFieldError(day.weekday, 'openTime') ? 'border-rose-500 text-rose-600' : 'border-black/10'"
+                      />
+                      <p
+                        v-if="openingHourFieldError(day.weekday, 'openTime')"
+                        class="mt-1 whitespace-normal break-words text-xs leading-snug text-rose-500"
+                      >
+                        {{ openingHourFieldError(day.weekday, 'openTime') }}
+                      </p>
+                    </div>
+                    <span class="text-center text-gray-500">-</span>
+                    <div class="w-[110px] shrink-0">
+                      <input
+                        v-model="day.closeTime"
+                        type="time"
+                        class="w-full rounded-lg border bg-white p-1 text-sm outline-none [font-variant-numeric:tabular-nums] transition hover:border-black"
+                        :class="openingHourFieldError(day.weekday, 'closeTime') ? 'border-rose-500 text-rose-600' : 'border-black/10'"
+                      />
+                      <p
+                        v-if="openingHourFieldError(day.weekday, 'closeTime')"
+                        class="mt-1 whitespace-normal break-words text-xs leading-snug text-rose-500"
+                      >
+                        {{ openingHourFieldError(day.weekday, 'closeTime') }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span v-else class="ml-auto text-sm">Closed</span>
+                </div>
+              </template>
+              <div v-if="!isOpeningHoursLoading && hasOpeningHoursChanges" class="flex justify-end">
                 <Button @click="saveOpeningHours">
                   Save
                 </Button>
@@ -121,6 +144,7 @@
     v-if="showSpecialDayModal"
     :day="selectedDay"
     :special-days="specialDays"
+    :fetch-special-day-by-date="fetchSpecialDayByDate"
     :mode="specialDayModalMode"
     @close="closeSpecialDayModal"
     @save="saveSpecialDay"
@@ -136,7 +160,6 @@ import Button from '@/components/admin/Button.vue'
 import ToggleButton from '@/components/admin/ToggleButton.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
 import SpecialDayModal from '@/components/admin/SpecialDayModal.vue'
-import { INITIAL_WEEKLY_SCHEDULE } from '@/data/calenderData'
 import { shiftMonth, toISO, formatYearMonth } from '@/utils/date'
 import { useShopSchedule } from '@/composables/useShopSchedule'
 
@@ -161,13 +184,16 @@ const WEEKDAYS = [
   { label: 'Saturday' },
 ]
 
-const openingHours = ref(INITIAL_WEEKLY_SCHEDULE.map((day, weekday) => ({ ...day, weekday })))
-const savedOpeningHoursSnapshot = ref(normalizeOpeningHours(openingHours.value))
+const openingHours = ref([])
+const savedOpeningHoursSnapshot = ref(normalizeOpeningHours([]))
+const isOpeningHoursLoading = ref(true)
+const openingHoursSubmitted = ref(false)
 const specialDays = ref([])
 const showSpecialDayModal = ref(false)
 const selectedDay = ref(null)
 const specialDayModalMode = ref('create')
 const {
+  fetchSpecialDayByDate,
   fetchSpecialDays,
   saveSpecialDays,
   fetchOpeningHours,
@@ -256,13 +282,36 @@ async function loadSpecialDays() {
 }
 
 async function loadOpeningHours() {
-  openingHours.value = await fetchOpeningHours()
-  savedOpeningHoursSnapshot.value = normalizeOpeningHours(openingHours.value)
+  isOpeningHoursLoading.value = true
+  openingHoursSubmitted.value = false
+
+  try {
+    openingHours.value = await fetchOpeningHours()
+    savedOpeningHoursSnapshot.value = normalizeOpeningHours(openingHours.value)
+  } finally {
+    isOpeningHoursLoading.value = false
+  }
 }
 
 async function saveOpeningHours() {
-  await persistOpeningHours(openingHours.value)
-  await loadOpeningHours()
+  openingHoursSubmitted.value = true
+
+  if (Object.keys(getOpeningHourErrors()).length) {
+    return
+  }
+
+  const changedDays = getChangedOpeningHours()
+
+  if (!changedDays.length) {
+    return
+  }
+
+  try {
+    await persistOpeningHours(changedDays)
+    await loadOpeningHours()
+  } catch (error) {
+    applyBackendOpeningHourErrors(error)
+  }
 }
 
 function normalizeOpeningHours(days) {
@@ -272,6 +321,63 @@ function normalizeOpeningHours(days) {
     openTime: day.openTime,
     closeTime: day.closeTime,
   })))
+}
+
+function getChangedOpeningHours() {
+  const savedDays = JSON.parse(savedOpeningHoursSnapshot.value)
+
+  return openingHours.value.filter((day) => {
+    const savedDay = savedDays.find((item) => item.weekday === day.weekday)
+
+    return JSON.stringify({
+      weekday: day.weekday,
+      isOpen: day.isOpen,
+      openTime: day.openTime,
+      closeTime: day.closeTime,
+    }) !== JSON.stringify(savedDay ?? null)
+  })
+}
+
+function getOpeningHourErrors() {
+  const errors = {}
+
+  for (const day of openingHours.value) {
+    if (!day.isOpen) {
+      continue
+    }
+
+    if (!day.openTime) {
+      errors[`openingHours.${day.weekday}.openTime`] = 'Required'
+    }
+
+    if (!day.closeTime) {
+      errors[`openingHours.${day.weekday}.closeTime`] = 'Required'
+    } else if (day.openTime && day.closeTime <= day.openTime) {
+      errors[`openingHours.${day.weekday}.openTime`] = 'Start must be before end'
+      errors[`openingHours.${day.weekday}.closeTime`] = 'End must be after start'
+    }
+  }
+
+  return errors
+}
+
+function openingHourFieldError(weekday, field) {
+  if (!openingHoursSubmitted.value) {
+    return null
+  }
+
+  return getOpeningHourErrors()[`openingHours.${weekday}.${field}`] ?? null
+}
+
+function applyBackendOpeningHourErrors(error) {
+  const closeError = error?.response?.data?.errors?.close_time?.[0]
+  const openError = error?.response?.data?.errors?.open_time?.[0]
+
+  if (!closeError && !openError) {
+    return
+  }
+
+  openingHoursSubmitted.value = true
 }
 
 watch(monthLabel, loadSpecialDays)

@@ -24,6 +24,8 @@
           :contentClass="cellMap[day.dateISO]?.contentClass"
           :dotContent="cellMap[day.dateISO]?.dotContent"
           :dotContentClass="cellMap[day.dateISO]?.dotContentClass"
+          :isDisabled="day.isPast"
+          :isToday="day.isToday"
           :isInCurrentMonth="day.isInCurrentMonth"
           @day-click="emit('day-click', day.dateISO)"
         />
@@ -62,12 +64,16 @@ const calendarDays = computed(() => {
 
   const totalCells = 42
   const days = []
+  const todayISO = toISO(new Date())
   for (let i = 0; i < totalCells; i += 1) {
     const day = new Date(startDay)
     day.setDate(startDay.getDate() + i)
+    const dateISO = toISO(day)
     days.push({
-      dateISO: toISO(day),
-      isInCurrentMonth: day.getMonth() === monthStart.getMonth()
+      dateISO,
+      isInCurrentMonth: day.getMonth() === monthStart.getMonth(),
+      isPast: dateISO < todayISO,
+      isToday: dateISO === todayISO,
     })
   }
   return days

@@ -49,6 +49,23 @@ class ShopSpecialDayController extends Controller
         return ShopSpecialDayResource::collection($specialDays);
     }
 
+    public function showByDate(IndexShopSpecialDaysRequest $request): JsonResponse|ShopSpecialDayResource
+    {
+        $validated = $request->validate([
+            'date' => ['required', 'date'],
+        ]);
+
+        $specialDay = ShopSpecialDay::query()
+            ->whereDate('date', $validated['date'])
+            ->first();
+
+        if (! $specialDay) {
+            return response()->json(['data' => null]);
+        }
+
+        return new ShopSpecialDayResource($specialDay);
+    }
+
     public function store(StoreShopSpecialDayRequest $request): ShopSpecialDayResource
     {
         $specialDay = ShopSpecialDay::create($request->validated());

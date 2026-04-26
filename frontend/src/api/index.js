@@ -138,6 +138,9 @@ export const deleteServiceAvailability = (id) => API.delete(`/service-availabili
 export const getShopSpecialDaysByMonth = (month) => API.get('/shop-special-days/month', {
     params: { month },
 });
+export const getShopSpecialDayByDate = (date) => API.get('/shop-special-days/date', {
+    params: { date },
+});
 export const postShopSpecialDay = (payload) => API.post('/shop-special-days', payload);
 export const patchShopSpecialDay = (id, payload) => API.patch(`/shop-special-days/${id}`, payload);
 export const deleteShopSpecialDay = (id) => API.delete(`/shop-special-days/${id}`);

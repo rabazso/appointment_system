@@ -167,6 +167,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'index']);
         Route::get('/employee-services', [EmployeeServiceController::class, 'index']);
         Route::get('/shop-settings', [ShopSettingController::class, 'show']);
+        Route::get('/shop-special-days/date', [ShopSpecialDayController::class, 'showByDate']);
         Route::get('/shop-special-days/month', [ShopSpecialDayController::class, 'indexForMonth']);
         Route::get('/shop-special-days', [ShopSpecialDayController::class, 'index']);
         Route::get('/services/versions/valid', [ServiceController::class, 'indexServicesWithValidVersion']);

@@ -13,7 +13,6 @@ import ResetPassword from '@pages/resetPassword.vue'
 import Services from '@pages/admin/Services.vue'
 import Employees from '@pages/admin/Employees.vue'
 import Schedule from '@pages/admin/Schedule.vue'
-import Settings from '@pages/admin/Settings.vue'
 import VerifyEmail from '@pages/verifyEmail.vue'
 import AdminSignIn from '@pages/admin/AdminSignIn.vue'
 import EmployeeSignIn from '@pages/employee/EmployeeSignIn.vue'
@@ -172,15 +171,6 @@ const routes = [
     component: TimeOff,
     meta: {
       title: 'TimeOff',
-      requiresAdmin: true,
-    }
-  },
-  {
-    path: '/admin/settings',
-    name: 'Configuration',
-    component: Settings,
-    meta: {
-      title: 'Configuration',
       requiresAdmin: true,
     }
   },

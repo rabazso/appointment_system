@@ -30,6 +30,7 @@
               <input
                 v-model="form.days[index]"
                 type="date"
+                :min="todayISO"
                 class="hover:border-black transition min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 py-2 outline-none [font-variant-numeric:tabular-nums]"
               />
 
@@ -89,6 +90,10 @@
           </div>
         </div>
 
+        <div v-if="timeError" class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          {{ timeError }}
+        </div>
+
         <div v-if="showSaveButton" class="mt-4 flex justify-end">
           <Button @click="saveDay">Save</Button>
         </div>
@@ -97,7 +102,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { X } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
 import ToggleButton from '@/components/admin/ToggleButton.vue'
@@ -111,6 +116,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  fetchSpecialDayByDate: {
+    type: Function,
+    default: null,
+  },
   mode: {
     type: String,
     default: 'create',
@@ -120,6 +129,8 @@ const props = defineProps({
 const emit = defineEmits(['close', 'save'])
 
 const form = reactive(createForm(props.day))
+const lookedUpSpecialDays = ref({})
+const todayISO = new Date().toISOString().slice(0, 10)
 
 const title = computed(() => (props.mode === 'edit' ? 'Edit special day' : 'Add special day'))
 const initialSnapshot = computed(() => normalizeForm(createForm(props.day)))
@@ -128,13 +139,32 @@ const hasChanges = computed(() => initialSnapshot.value !== currentSnapshot.valu
 const filledDays = computed(() => form.days.filter(Boolean))
 const hasSelectedSpecialDay = computed(() => {
   return filledDays.value.some((dateISO) => {
-    return props.specialDays.some((specialDay) => specialDay.dateISO === dateISO)
+    if (props.specialDays.some((specialDay) => specialDay.dateISO === dateISO)) {
+      return true
+    }
+
+    return Boolean(lookedUpSpecialDays.value[dateISO])
   })
 })
 const hasRequiredFields = computed(() => {
   if (!filledDays.value.length) return false
   if (form.isSpecial) return true
   return hasSelectedSpecialDay.value
+})
+const timeError = computed(() => {
+  if (!form.isSpecial || form.status !== 'open') {
+    return ''
+  }
+
+  if (!form.openTime || !form.closeTime) {
+    return 'Opening and closing times are required.'
+  }
+
+  if (form.closeTime <= form.openTime) {
+    return 'Opening time must be earlier than closing time.'
+  }
+
+  return ''
 })
 const showSaveButton = computed(() => {
   return hasRequiredFields.value && (props.mode === 'create' || hasChanges.value)
@@ -144,7 +174,36 @@ watch(
   () => props.day,
   (day) => {
     Object.assign(form, createForm(day))
+    lookedUpSpecialDays.value = {}
   },
+)
+
+watch(
+  filledDays,
+  async (days) => {
+    if (!props.fetchSpecialDayByDate) {
+      return
+    }
+
+    const missingDates = days.filter((dateISO) => {
+      if (props.specialDays.some((specialDay) => specialDay.dateISO === dateISO)) {
+        return false
+      }
+
+      return dateISO && !(dateISO in lookedUpSpecialDays.value)
+    })
+
+    await Promise.all(
+      missingDates.map(async (dateISO) => {
+        const specialDay = await props.fetchSpecialDayByDate(dateISO)
+        lookedUpSpecialDays.value = {
+          ...lookedUpSpecialDays.value,
+          [dateISO]: specialDay,
+        }
+      }),
+    )
+  },
+  { immediate: true },
 )
 
 function createForm(day) {
@@ -174,7 +233,7 @@ function normalizeForm(value) {
 }
 
 function addDay() {
-  form.days.push('')
+  form.days.push(todayISO)
 }
 
 function removeDay(index) {
@@ -183,6 +242,7 @@ function removeDay(index) {
 
 function saveDay() {
   if (!hasRequiredFields.value) return
+  if (timeError.value) return
 
   emit('save', {
     id: form.id,

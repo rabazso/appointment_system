@@ -1,8 +1,12 @@
 <template>
   <div
     class="relative flex h-full flex-col overflow-hidden bg-white transition duration-200 border border-transparent hover:border-black hover:rounded-sm"
-    :class="{ 'opacity-75': !isInCurrentMonth }"
-    @click="$emit('day-click')"
+    :class="{
+      '!border-black rounded-sm': isToday,
+      'opacity-75': !isInCurrentMonth,
+      'cursor-not-allowed hover:border-transparent': isDisabled
+    }"
+    @click="handleClick"
   >
     <div class="relative z-10 flex shrink-0 items-start justify-end leading-none text-sm font-semibold text-black">
       <span class="bg-white px-0.5">
@@ -37,11 +41,21 @@ const props = defineProps({
   contentClass: String,
   dotContent: Boolean,
   dotContentClass: String,
+  isDisabled: Boolean,
+  isToday: Boolean,
   isInCurrentMonth: Boolean,
   date: String,
 })
 
-defineEmits(['day-click'])
+const emit = defineEmits(['day-click'])
+
+function handleClick() {
+  if (props.isDisabled) {
+    return
+  }
+
+  emit('day-click')
+}
 
 const dayNumber = computed(() => {
   return parseISODate(props.date).getDate()

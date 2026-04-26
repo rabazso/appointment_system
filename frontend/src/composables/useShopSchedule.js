@@ -1,36 +1,62 @@
 import {
   deleteShopSpecialDay,
   getShopOpeningHours,
+  getShopSpecialDayByDate,
   getShopSpecialDaysByMonth,
   patchShopOpeningHour,
   patchShopSpecialDay,
-  postShopOpeningHour,
   postShopSpecialDay,
 } from '@/api/index'
 
 export function useShopSchedule() {
-  async function fetchSpecialDays(month) {
-    const response = await getShopSpecialDaysByMonth(month)
-    return response.data.data.map((day) => ({
+  function normalizeTimeForInput(time) {
+    return time ? time.slice(0, 5) : null
+  }
+
+  function normalizeSpecialDay(day) {
+    return {
       id: day.id,
       name: day.name,
       dateISO: day.date,
-      openTime: day.open_time,
-      closeTime: day.close_time,
-    }))
+      openTime: normalizeTimeForInput(day.open_time),
+      closeTime: normalizeTimeForInput(day.close_time),
+    }
+  }
+
+  async function fetchSpecialDays(month) {
+    const response = await getShopSpecialDaysByMonth(month)
+    return response.data.data.map((day) => normalizeSpecialDay(day))
+  }
+
+  async function fetchSpecialDayByDate(date) {
+    const response = await getShopSpecialDayByDate(date)
+    const day = response.data?.data
+
+    return day ? normalizeSpecialDay(day) : null
   }
 
   async function saveSpecialDays(payload, currentSpecialDays) {
+    const resolveSpecialDay = async (dateISO) => {
+      const existingSpecialDay = currentSpecialDays.find((specialDay) => specialDay.dateISO === dateISO)
+
+      if (existingSpecialDay) {
+        return existingSpecialDay
+      }
+
+      return fetchSpecialDayByDate(dateISO)
+    }
+
     if (!payload.isSpecial) {
-      const specialDaysToDelete = currentSpecialDays.filter(
-        (specialDay) => payload.days.includes(specialDay.dateISO))
+      const specialDaysToDelete = (await Promise.all(
+        payload.days.map((dateISO) => resolveSpecialDay(dateISO)),
+      )).filter(Boolean)
 
       await Promise.all(specialDaysToDelete.map((specialDay) => deleteShopSpecialDay(specialDay.id)))
       return
     }
 
-    await Promise.all(payload.days.map((dateISO) => {
-      const existingSpecialDay = currentSpecialDays.find((specialDay) => specialDay.dateISO === dateISO)
+    await Promise.all(payload.days.map(async (dateISO) => {
+      const existingSpecialDay = await resolveSpecialDay(dateISO)
       const isOpen = payload.status === 'open'
       const requestPayload = {
         date: dateISO,
@@ -54,24 +80,26 @@ export function useShopSchedule() {
         id: day.id,
         weekday: day.weekday,
         isOpen: day.is_open,
-        openTime: day.open_time,
-        closeTime: day.close_time,
+        openTime: normalizeTimeForInput(day.open_time),
+        closeTime: normalizeTimeForInput(day.close_time),
       }
     })
-    return days;
+    return days.sort((a, b) => a.weekday - b.weekday)
   }
 
-async function saveOpeningHours(data) {
-  await Promise.all(
-    data.map((day) =>
-      patchShopOpeningHour(day.id, {
-        open_time: day.isOpen ? `${day.openTime}:00` : null,
-        close_time: day.isOpen ? `${day.closeTime}:00` : null,
-      })
+  async function saveOpeningHours(data) {
+    await Promise.all(
+      data.map((day) =>
+        patchShopOpeningHour(day.id, {
+          open_time: day.isOpen ? `${day.openTime}:00` : null,
+          close_time: day.isOpen ? `${day.closeTime}:00` : null,
+        })
+      )
     )
-  )
-}
+  }
+
   return {
+    fetchSpecialDayByDate,
     fetchSpecialDays,
     saveSpecialDays,
     fetchOpeningHours,
