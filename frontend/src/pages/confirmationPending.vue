@@ -29,21 +29,27 @@ const goHome = () => router.push('/')
       </CardHeader>
       <CardContent class="space-y-5 px-6 md:px-10">
         <div v-if="booking" class="rounded-2xl border border-[#f0c99f] bg-[#fbefe1] p-5">
-          <div class="flex justify-between items-center">
+          <div class="flex min-h-12 items-center justify-between py-1">
             <p class="text-lg text-slate-600">Service:</p>
             <p class="text-lg font-bold text-black">{{ booking.serviceName }}</p>
           </div>
-          <div class="flex justify-between items-center border-t border-black/10 py-3">
+          <div class="flex min-h-12 items-center justify-between border-t border-black/10 py-1">
             <p class="text-lg text-slate-600">Barber:</p>
             <p class="text-lg font-bold text-black">{{ booking.barberName }}</p>
           </div>
-          <div class="flex justify-between items-center border-t border-black/10 py-3">
+          <div class="flex min-h-12 items-center justify-between border-t border-black/10 py-1">
             <p class="text-lg text-slate-600">Date:</p>
             <p class="text-lg font-bold text-black">{{ booking.date }}</p>
           </div>
-          <div class="flex justify-between items-center border-t border-black/10 pt-3">
+          <div class="flex min-h-12 items-center justify-between border-t border-black/10 py-1">
             <p class="text-lg text-slate-600">Time:</p>
             <p class="text-lg font-bold text-black">{{ booking.time }}</p>
+          </div>
+          <div class="flex min-h-12 items-center justify-between border-t border-black/10 py-1">
+            <p class="text-lg text-slate-600">Total duration:</p>
+            <p class="text-lg font-bold text-black">
+              {{ booking.duration !== null && booking.duration !== undefined ? `${booking.duration} min` : '-' }}
+            </p>
           </div>
         </div>
         <p class="text-center text-base text-slate-600">Once you confirm, we will show your summary.</p>

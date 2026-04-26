@@ -20,13 +20,14 @@ onMounted(() => {
   const stateData = history.state.booking
 
   if (!stateData) {
-    const { serviceName, barberName, date, time, price } = route.query
-    if (serviceName || barberName || date || time || price) {
+    const { serviceName, barberName, date, time, duration, price } = route.query
+    if (serviceName || barberName || date || time || duration || price) {
       booking.value = {
         serviceName: serviceName ?? '',
         barberName: barberName ?? '',
         date: date ?? '',
         time: time ?? '',
+        duration: duration ? Number(duration) : null,
         price: price ? Number(price) : null
       }
       return
@@ -62,24 +63,31 @@ const handleGoHome = () => {
       <CardContent>
         <div class="rounded-lg border border-accent/30 bg-accent/10 p-6 space-y-3">
           
-          <div class="flex justify-between items-center border-b border-accent/20 pb-2 last:border-0 last:pb-0">
+          <div class="flex min-h-11 items-center justify-between border-b border-accent/20 py-2 last:border-0 last:pb-0">
             <p class="text-muted-foreground">Service:</p>
             <p class="font-semibold text-foreground">{{ booking.serviceName }}</p>
           </div>
 
-          <div class="flex justify-between items-center border-b border-accent/20 pb-2 last:border-0 last:pb-0">
+          <div class="flex min-h-11 items-center justify-between border-b border-accent/20 py-2 last:border-0 last:pb-0">
             <p class="text-muted-foreground">Barber:</p>
             <p class="font-semibold text-foreground">{{ booking.barberName }}</p>
           </div>
 
-          <div class="flex justify-between items-center border-b border-accent/20 pb-2 last:border-0 last:pb-0">
+          <div class="flex min-h-11 items-center justify-between border-b border-accent/20 py-2 last:border-0 last:pb-0">
             <p class="text-muted-foreground">Date:</p>
             <p class="font-semibold text-foreground">{{ booking.date }}</p>
           </div>
 
-          <div class="flex justify-between items-center border-b border-accent/20 pb-2 last:border-0 last:pb-0">
+          <div class="flex min-h-11 items-center justify-between border-b border-accent/20 py-2 last:border-0 last:pb-0">
             <p class="text-muted-foreground">Time:</p>
             <p class="font-semibold text-foreground">{{ booking.time }}</p>
+          </div>
+
+          <div class="flex min-h-11 items-center justify-between border-b border-accent/20 py-2 last:border-0 last:pb-0">
+            <p class="text-muted-foreground">Total duration:</p>
+            <p class="font-semibold text-foreground">
+              {{ booking.duration !== null && booking.duration !== undefined ? `${booking.duration} min` : '-' }}
+            </p>
           </div>
 
           <div class="flex justify-between items-center pt-2">
