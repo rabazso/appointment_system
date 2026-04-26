@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Calculations\AppointmentCalculation;
-use App\Calculations\CreateAppointment;
-use App\Http\Requests\AppointmentRequest;
 use App\Http\Requests\AppointmentStoreRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Http\Resources\AppointmentStatusResource;
-use App\Http\Resources\BarberAppointmentResource;
+use App\Http\Resources\EmployeeAppointmentResource;
 use App\Http\Resources\UserAppointmentResource;
 use App\Mail\AppointmentCancelled;
 use App\Mail\Booking;
@@ -17,19 +14,25 @@ use App\Mail\BookingSummary;
 use App\Mail\ReviewRequest;
 use App\Models\Appointment;
 use App\Models\Review;
+use App\Services\Booking\AppointmentAvailabilityService;
 use App\Services\Booking\AppointmentCreationService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
 class AppointmentController extends Controller
 {
-    public function index(AppointmentRequest $request, AppointmentCalculation $calculation)
+    public function index(Request $request, AppointmentAvailabilityService $availability)
     {
-        $appointments = $calculation->Appointments($request);
-        
-        return response()->json(
-            $appointments,
-        );
+        $this->addServiceIdsToRequest($request);
+
+        $request->validate([
+            'service_ids' => ['required', 'array', 'min:1'],
+            'service_ids.*' => ['required', 'integer', 'distinct', 'exists:services,id'],
+            'employee_id' => ['required', 'integer', 'exists:employees,id'],
+            'selected_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+        ]);
+
+        return response()->json($availability->bookableSlotsForDate($request));
     }
 
     public function store(AppointmentStoreRequest $request, AppointmentCreationService $appointments)
@@ -68,10 +71,15 @@ class AppointmentController extends Controller
 
     public function userAppointments(Request $request)
     {
+        $customer = $request->user()->customer;
+        if (!$customer) {
+            return response()->json(['message' => 'Customer profile not found'], 404);
+        }
+
         $appointments = Appointment::query()
-            ->where('customer_id', $request->user()->id)
+            ->where('customer_id', $customer->id)
             ->with([
-                'service' => fn ($query) => $query->select('services.id', 'services.name'),
+                'appointmentServices.service:id,name',
                 'employee:id,name',
             ])
             ->orderByDesc('start_datetime')
@@ -84,36 +92,46 @@ class AppointmentController extends Controller
         return response()->json($payload);
     }
 
-    public function confirm(Appointment $appointment){
-        $frontendBase = 'http://' . rtrim((string) config('app.frontend_url'), '/');
+    public function confirm(Appointment $appointment)
+    {
+        $frontendBase = $this->frontendBaseUrl();
         if ($frontendBase === '') {
             return response()->json(["message" => "Frontend URL is not configured"], 500);
         }
 
-        if ($appointment->confirmed_at) {
+        if ($appointment->status === 'confirmed') {
             return response()->json(["message" => "Booking already confirmed"], 410);
         }
-        $appointment->forceFill([
+
+        if ($appointment->status !== 'pending') {
+            return response()->json(["message" => "Only pending appointments can be confirmed"], 409);
+        }
+
+        $appointment->update([
             "status" => "confirmed",
-            "confirmed_at" => now(),
-        ])->save();
-        $appointment->load([
-            'service' => fn ($query) => $query->select('services.id', 'services.name'),
-            'employee:id,name',
-            'appointmentServices:id,appointment_id,price',
         ]);
+
+        $appointment->load([
+            'appointmentServices.service:id,name',
+            'employee:id,name',
+            'customer:id,name,email',
+        ]);
+
         $summary = $this->buildSummary($appointment);
         $query = http_build_query($summary, '', '&', PHP_QUERY_RFC3986);
-        $recipientEmail = $appointment->customer?->email ?? $appointment->guest_email;
+        $recipientEmail = $appointment->customer?->email;
+
         if ($recipientEmail) {
             Mail::to($recipientEmail)->send(new BookingSummary($appointment));
         }
+
         return redirect()->away($frontendBase . "/summary" . ($query ? "?{$query}" : ''));
     }
 
     public function cancelUserAppointment(Request $request, Appointment $appointment)
     {
-        if ($appointment->customer_id !== $request->user()->id) {
+        $customer = $request->user()->customer;
+        if (!$customer || $appointment->customer_id !== $customer->id) {
             return response()->json(['message' => 'You are not allowed to cancel this appointment'], 403);
         }
 
@@ -127,6 +145,7 @@ class AppointmentController extends Controller
 
         $appointment->forceFill([
             'status' => 'cancelled',
+            'cancelled_by' => 'customer',
         ])->save();
 
         return response()->json([
@@ -135,7 +154,40 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function cancelBarberAppointment(Request $request, Appointment $appointment)
+    public function employeeAppointments(Request $request)
+    {
+        $employee = $request->user()->employee;
+        if (!$employee) {
+            return response()->json(['message' => 'Employee profile not found'], 404);
+        }
+
+        $appointments = Appointment::query()
+            ->where('employee_id', $employee->id)
+            ->with(['customer', 'appointmentServices.service'])
+            ->orderBy('start_datetime');
+
+        if ($request->filled('date')) {
+            $appointments->whereDate('start_datetime', $request->input('date'));
+        }
+
+        $statuses = $request->input('statuses', []);
+        if (is_string($statuses)) {
+            $statuses = array_filter(explode(',', $statuses));
+        }
+
+        if (!empty($statuses)) {
+            $appointments->whereIn('status', $statuses);
+        }
+
+        $payload = $appointments
+            ->get()
+            ->map(fn (Appointment $appointment) => (new EmployeeAppointmentResource($appointment))->toArray($request))
+            ->values();
+
+        return response()->json($payload);
+    }
+
+    public function cancelEmployeeAppointment(Request $request, Appointment $appointment)
     {
         $employee = $request->user()->employee;
         if (!$employee || $appointment->employee_id !== $employee->id) {
@@ -164,8 +216,9 @@ class AppointmentController extends Controller
         $appointment->forceFill([
             'status' => 'cancelled',
             'cancellation_reason' => $reason !== '' ? $reason : null,
+            'cancelled_by' => 'employee',
         ])->save();
-        $this->sendBarberCancellationEmail($appointment);
+        $this->sendEmployeeCancellationEmail($appointment);
 
         return response()->json([
             'message' => 'Appointment cancelled',
@@ -173,11 +226,11 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function barberReviews(Request $request)
+    public function employeeReviews(Request $request)
     {
         $employee = $request->user()->employee;
         if (!$employee) {
-            return response()->json(['message' => 'Barber profile not found'], 404);
+            return response()->json(['message' => 'Employee profile not found'], 404);
         }
 
         $reviews = Review::query()
@@ -200,19 +253,20 @@ class AppointmentController extends Controller
     private function buildSummary(Appointment $appointment): array
     {
         $employee = $appointment->employee;
-        $service = $appointment->service;
-        $price = $appointment->appointmentServices->first()?->price ?? $appointment->total_price;
+        $appointmentService = $appointment->appointmentServices->first();
+        $service = $appointmentService?->service;
 
         return [
             'serviceName' => $service?->name,
             'barberName' => $employee?->name,
             'date' => optional($appointment->start_datetime)->format('Y-m-d'),
             'time' => optional($appointment->start_datetime)->format('H:i'),
-            'price' => $price,
+            'duration' => $appointment->total_duration,
+            'price' => $appointment->total_price,
         ];
     }
 
-    public function completeBarberAppointment(Request $request, Appointment $appointment)
+    public function completeEmployeeAppointment(Request $request, Appointment $appointment)
     {
         $employee = $request->user()->employee;
         if (!$employee || $appointment->employee_id !== $employee->id) {
@@ -243,7 +297,7 @@ class AppointmentController extends Controller
     {
         $appointment->loadMissing([
             'customer:id,name,email',
-            'service' => fn ($query) => $query->select('services.id', 'services.name'),
+            'appointmentServices.service:id,name',
             'employee:id,name',
         ]);
 
@@ -251,11 +305,7 @@ class AppointmentController extends Controller
             return;
         }
 
-        $frontendBase = rtrim((string) config('app.frontend_url'), '/');
-        if ($frontendBase !== '' && !preg_match('#^https?://#', $frontendBase)) {
-            $frontendBase = 'http://' . $frontendBase;
-        }
-
+        $frontendBase = $this->frontendBaseUrl();
         if ($frontendBase === '') {
             return;
         }
@@ -272,15 +322,15 @@ class AppointmentController extends Controller
         );
     }
 
-    private function sendBarberCancellationEmail(Appointment $appointment): void
+    private function sendEmployeeCancellationEmail(Appointment $appointment): void
     {
         $appointment->loadMissing([
             'customer:id,name,email',
-            'service' => fn ($query) => $query->select('services.id', 'services.name'),
+            'appointmentServices.service:id,name',
             'employee:id,name',
         ]);
 
-        $recipientEmail = $appointment->customer?->email ?? $appointment->guest_email;
+        $recipientEmail = $appointment->customer?->email;
         if (!$recipientEmail) {
             return;
         }
@@ -288,4 +338,31 @@ class AppointmentController extends Controller
         Mail::to($recipientEmail)->send(new AppointmentCancelled($appointment));
     }
 
+    private function addServiceIdsToRequest(Request $request): void
+    {
+        $serviceIds = $request->input('service_ids');
+
+        if (!$serviceIds && $request->filled('service_id')) {
+            $serviceIds = [$request->input('service_id')];
+        }
+
+        if ($serviceIds && !is_array($serviceIds)) {
+            $serviceIds = [$serviceIds];
+        }
+
+        $request->merge([
+            'service_ids' => $serviceIds ?: [],
+        ]);
+    }
+
+    private function frontendBaseUrl(): string
+    {
+        $frontendBase = rtrim((string) config('app.frontend_url'), '/');
+
+        if ($frontendBase !== '' && !preg_match('#^https?://#', $frontendBase)) {
+            $frontendBase = 'http://' . $frontendBase;
+        }
+
+        return $frontendBase;
+    }
 }

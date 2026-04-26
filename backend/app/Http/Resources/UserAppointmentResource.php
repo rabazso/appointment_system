@@ -12,6 +12,8 @@ class UserAppointmentResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $appointmentService = $this->appointmentServices->first();
+
         return [
             'id' => $this->id,
             'status' => $this->status,
@@ -20,8 +22,8 @@ class UserAppointmentResource extends JsonResource
             'end_datetime' => $this->end_datetime?->toIso8601String(),
             'price' => $this->total_price,
             'service' => [
-                'id' => $this->service?->id,
-                'name' => $this->service?->name,
+                'id' => $appointmentService?->service?->id,
+                'name' => $appointmentService?->service?->name,
             ],
             'employee' => [
                 'id' => $this->employee?->id,
