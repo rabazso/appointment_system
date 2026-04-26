@@ -12,7 +12,6 @@ use App\Models\Service;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class BarberAdminDataTest extends TestCase
@@ -31,9 +30,9 @@ class BarberAdminDataTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        Sanctum::actingAs($barberUser);
+        $this->withApiToken($barberUser);
 
-        $this->getJson('/api/barber/appointments')
+        $this->getJson('/api/employee/appointments')
             ->assertOk()
             ->assertJsonPath('0.id', $appointment->id)
             ->assertJsonPath('0.client', $customer->name)
@@ -45,25 +44,33 @@ class BarberAdminDataTest extends TestCase
     public function test_barber_profile_endpoint_returns_employee_name_and_image_urls(): void
     {
         ['user' => $barberUser, 'employee' => $employee] = $this->createBarber([
-            'photo_path' => 'images/profile/avatar.jpg',
             'bio' => 'Precision cuts and sharp fades.',
         ]);
 
-        EmployeeImage::create([
+        $profileImage = EmployeeImage::create([
             'employee_id' => $employee->id,
-            'image_path' => 'images/profile/gallery-1.jpg',
+            'type' => 'image/jpeg',
+            'original' => 'profile-original',
+            'preview' => 'profile-preview',
         ]);
 
-        Sanctum::actingAs($barberUser);
+        $employee->update(['profile_image_id' => $profileImage->id]);
 
-        $baseUrl = rtrim((string) config('app.url'), '/');
+        $galleryImage = EmployeeImage::create([
+            'employee_id' => $employee->id,
+            'type' => 'image/jpeg',
+            'original' => 'gallery-original',
+            'preview' => 'gallery-preview',
+        ]);
 
-        $this->getJson('/api/barber/profile')
+        $this->withApiToken($barberUser);
+
+        $this->getJson('/api/employee/profile')
             ->assertOk()
             ->assertJsonPath('name', $employee->name)
             ->assertJsonPath('description', 'Precision cuts and sharp fades.')
-            ->assertJsonPath('photo_url', $baseUrl . '/storage/images/profile/avatar.jpg')
-            ->assertJsonPath('gallery.0.image_url', $baseUrl . '/storage/images/profile/gallery-1.jpg');
+            ->assertJsonPath('photo_url', route('employee-images.preview', ['employeeImage' => $profileImage]))
+            ->assertJsonPath('gallery.0.preview_url', route('employee-images.preview', ['employeeImage' => $galleryImage]));
     }
 
     public function test_barber_profile_update_persists_employee_name_and_description(): void
@@ -73,9 +80,9 @@ class BarberAdminDataTest extends TestCase
             'bio' => 'Original bio',
         ]);
 
-        Sanctum::actingAs($barberUser);
+        $this->withApiToken($barberUser);
 
-        $this->postJson('/api/barber/profile', [
+        $this->patchJson('/api/employee/profile', [
             'name' => 'Updated Barber',
             'description' => 'Updated bio',
         ])->assertOk()
@@ -106,9 +113,9 @@ class BarberAdminDataTest extends TestCase
             'is_visible' => true,
         ]);
 
-        Sanctum::actingAs($barberUser);
+        $this->withApiToken($barberUser);
 
-        $this->getJson('/api/barber/reviews')
+        $this->getJson('/api/employee/reviews')
             ->assertOk()
             ->assertJsonPath('0.client', $customer->name)
             ->assertJsonPath('0.rating', 5)
@@ -129,8 +136,6 @@ class BarberAdminDataTest extends TestCase
             'name' => 'Barber ' . Str::upper(Str::random(6)),
             'phone' => 'employee-' . Str::uuid(),
             'bio' => 'Barber bio',
-            'photo_path' => null,
-            'instagram_url' => null,
         ], $employeeOverrides));
 
         return [

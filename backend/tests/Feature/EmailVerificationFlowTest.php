@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ApiToken;
 use App\Models\Employee;
 use App\Models\User;
 use App\Notifications\VerifyEmailNotification;
@@ -9,7 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class EmailVerificationFlowTest extends TestCase
@@ -88,7 +88,7 @@ class EmailVerificationFlowTest extends TestCase
 
         $user = $this->createUser(['email_verified_at' => null]);
 
-        Sanctum::actingAs($user);
+        $this->withApiToken($user);
 
         $this->postJson('/api/email/verification-notification')
             ->assertOk()
@@ -118,6 +118,12 @@ class EmailVerificationFlowTest extends TestCase
 
         $this->assertIsString($response->json('token'));
         $this->assertNotSame('', $response->json('token'));
+
+        $apiToken = ApiToken::query()->where('user_id', $user->id)->first();
+
+        $this->assertNotNull($apiToken);
+        $this->assertTrue($apiToken->expires_at->greaterThan(now()->addHours(23)));
+        $this->assertTrue($apiToken->expires_at->lessThan(now()->addHours(25)));
     }
 
     public function test_verified_employee_can_log_in_and_receives_a_serialized_verification_timestamp(): void
@@ -132,11 +138,9 @@ class EmailVerificationFlowTest extends TestCase
             'name' => 'Barber Test',
             'phone' => 'employee-' . Str::uuid(),
             'bio' => 'Test barber profile.',
-            'photo_path' => null,
-            'instagram_url' => null,
         ]);
 
-        $response = $this->postJson('/api/login', [
+        $response = $this->postJson('/api/employee/login', [
             'email' => $user->email,
             'password' => 'password',
         ]);
@@ -170,6 +174,41 @@ class EmailVerificationFlowTest extends TestCase
             ]);
 
         Notification::assertSentTo($user, VerifyEmailNotification::class);
+    }
+
+    public function test_logout_revokes_the_current_api_token(): void
+    {
+        $user = $this->createUser();
+        $token = $this->apiTokenFor($user);
+
+        $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson('/api/logout')
+            ->assertOk()
+            ->assertJson(['message' => 'Logged out']);
+
+        $this->assertDatabaseMissing('api_tokens', [
+            'user_id' => $user->id,
+            'token_hash' => hash('sha256', $token),
+        ]);
+    }
+
+    public function test_only_one_active_api_token_is_kept_per_user(): void
+    {
+        $user = $this->createUser();
+
+        $firstToken = $this->apiTokenFor($user);
+        $secondToken = $this->apiTokenFor($user);
+
+        $this->assertNotSame($firstToken, $secondToken);
+        $this->assertDatabaseCount('api_tokens', 1);
+        $this->assertDatabaseHas('api_tokens', [
+            'user_id' => $user->id,
+            'token_hash' => hash('sha256', $secondToken),
+        ]);
+        $this->assertDatabaseMissing('api_tokens', [
+            'user_id' => $user->id,
+            'token_hash' => hash('sha256', $firstToken),
+        ]);
     }
 
     private function verificationUrlFor(User $user): string
