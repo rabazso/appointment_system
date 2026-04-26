@@ -24,6 +24,7 @@ class AppointmentCreationService
         $guestName = $request->get('guest_name');
         $guestEmail = $request->get('guest_email');
         $guestPhone = $request->get('guest_phone');
+        $slotStart = Carbon::createFromFormat('Y-m-d H:i', $appointmentStart, $timezone);
 
         if (!$this->availability->isSlotBookable($serviceIds, $employeeId, $appointmentStart)) {
             throw ValidationException::withMessages([
@@ -40,7 +41,6 @@ class AppointmentCreationService
 
         $totalDuration = (int) $employeeServices->sum('duration');
         $totalPrice = (int) $employeeServices->sum('price');
-        $slotStart = Carbon::createFromFormat('Y-m-d H:i', $appointmentStart, $timezone);
         $slotEnd = $slotStart->copy()->addMinutes($totalDuration);
 
         $customer = $this->resolveCustomer($request, $guestName, $guestEmail, $guestPhone);

@@ -33,13 +33,12 @@ class AppointmentAvailabilityService
             ->startOfDay();
 
         $employee = Employee::find($employeeId);
+        if (!$employee) {
+            return [];
+        }
 
-        $bookingRuleConfiguration = EmployeeBookingRuleConfiguration::where('employee_id', $employee->id)
-            ->validAt($startDate)
-            ->with('rules')
-            ->first();
-
-        $bookingWindowDays = (int) ($bookingRuleConfiguration->rules->first()->booking_window_days);
+        $ruleLookupDate = $startDate->gte($today) ? $startDate : $today;
+        $bookingWindowDays = $this->bookingWindowDaysForEmployeeAt($employee->id, $ruleLookupDate);
 
         $bookingWindowEnd = $today->copy()->addDays($bookingWindowDays);
 
@@ -89,6 +88,7 @@ class AppointmentAvailabilityService
         $emptySlots = [$selectedDate->toDateString() => []];
 
         $employee = Employee::Find($employeeId);
+
 
         $specialDay = ShopSpecialDay::whereDate('date', $selectedDate)->first();
         if ($specialDay && (!$specialDay->open_time || !$specialDay->close_time)) {
@@ -355,7 +355,6 @@ class AppointmentAvailabilityService
         if (!$workingHour->start_time && !$workingHour->end_time) {
             return $this->emptyDayAvailability();
         }
-
         $workingStart = Carbon::parse($selectedDate->toDateString() . ' ' . $workingHour->start_time);
         $workingEnd = Carbon::parse($selectedDate->toDateString() . ' ' . $workingHour->end_time);
 
@@ -448,5 +447,29 @@ class AppointmentAvailabilityService
         }
 
         return (int) $employeeServices->sum('duration');
+    }
+
+    private function bookingWindowDaysForEmployeeAt(int $employeeId, Carbon $date): int
+    {
+        $bookingRuleConfiguration = EmployeeBookingRuleConfiguration::where('employee_id', $employeeId)
+            ->validAt($date)
+            ->with('rules')
+            ->first();
+
+        $window = (int) ($bookingRuleConfiguration?->rules?->first()?->booking_window_days ?? 28);
+
+        return $window > 0 ? $window : 28;
+    }
+
+    private function bookingIntervalMinutesForEmployeeAt(int $employeeId, Carbon $date): int
+    {
+        $bookingRuleConfiguration = EmployeeBookingRuleConfiguration::where('employee_id', $employeeId)
+            ->validAt($date)
+            ->with('rules')
+            ->first();
+
+        $interval = (int) ($bookingRuleConfiguration?->rules?->first()?->booking_interval_minutes ?? 30);
+
+        return $interval > 0 ? $interval : 30;
     }
 }
