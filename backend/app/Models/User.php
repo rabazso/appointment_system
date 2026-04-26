@@ -1,16 +1,16 @@
 <?php
+
 namespace App\Models;
 
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens;
     use Notifiable;
     use CanResetPassword;
 
@@ -23,6 +23,10 @@ class User extends Authenticatable implements MustVerifyEmail
 
     protected $hidden = ['password'];
 
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
     public function employee()
     {
         return $this->hasOne(Employee::class);
@@ -31,6 +35,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function customer()
     {
         return $this->hasOne(Customer::class);
+    }
+
+    public function apiTokens(): HasMany
+    {
+        return $this->hasMany(ApiToken::class);
     }
 
     public function sendEmailVerificationNotification(): void

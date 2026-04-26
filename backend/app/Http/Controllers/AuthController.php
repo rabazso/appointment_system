@@ -7,6 +7,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\CustomerResource;
 use App\Http\Resources\UserResource;
+use App\Models\ApiToken;
 use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -72,7 +73,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $token = $user->createToken('token')->plainTextToken;
+        $token = ApiToken::issueForUser($user, now()->addDay());
 
         return response()->json([
             'user' => new UserResource($user),
@@ -84,7 +85,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $apiToken = $request->attributes->get('api_token');
+        if ($apiToken) {
+            $apiToken->delete();
+        }
 
         return response()->json(['message' => 'Logged out']);
     }
