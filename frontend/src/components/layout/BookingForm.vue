@@ -1,18 +1,19 @@
 <script setup>
-import { ref, watch, nextTick, onMounted, computed } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Scissors } from 'lucide-vue-next'
 import { Calendar } from '@/components/ui/calendar'
-import { getLocalTimeZone, today } from '@internationalized/date'
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
 import { Button } from '@/components/ui/button'
 import { 
-  getServices, 
-  getEmployeesByService, 
-  getAppointmentsByServiceAndDateAndEmployee,
-  postGuest,
+  getBookingDays,
+  getBookingEmployees,
+  getBookingSummary,
+  getBookingServices,
+  getBookingSlots,
   postAppointment
 } from '@/api/index'
 import { useRouter } from 'vue-router'
@@ -20,9 +21,10 @@ import { useAuthStore } from '@/stores/AuthStore.js'
 
 const router = useRouter()
 
-const selectedService = ref('')
+const selectedServices = ref([])
 const selectedBarber = ref('')
-const selectedDate = ref('')
+const selectedDate = ref(null)
+const calendarDate = ref(today(getLocalTimeZone()))
 const selectedTime = ref('')
 const userData = ref({ name: '', email: ''})
 const bookingErrorMessage = ref('')
@@ -31,30 +33,148 @@ const openSection = ref('service')
 
 const services = ref([])
 const barbers = ref([])
+const bookableDays = ref([])
+const bookableDaysLoaded = ref(false)
 const timeSlots = ref([])
+const bookingSummary = ref({
+  services: [],
+  total_duration: 0,
+  total_price: 0,
+})
+const bookingSummaryLoaded = ref(false)
+const hasContinuedToBarber = ref(false)
+const needsBarberRefresh = ref(false)
 
 const barberRef = ref(null)
 const dateTimeRef = ref(null)
 const userDataRef = ref(null)
 
-onMounted(async () => {
-  const res = await getServices()
-  services.value = res.data
+const store = useAuthStore()
+const isAuthenticated = computed(() => store.isLoggedIn)
+const pad = (n) => n.toString().padStart(2,'0')
+const serviceIds = computed(() => selectedServices.value.map((serviceId) => Number(serviceId)))
+const guestName = computed(() => userData.value.name.trim())
+const guestEmail = computed(() => userData.value.email.trim())
+const guestDetailsReady = computed(() => guestName.value !== '' && guestEmail.value !== '')
+const selectedServiceIdsSet = computed(() => new Set(serviceIds.value))
+const selectedServiceObjs = computed(() =>
+  services.value.filter((service) => selectedServiceIdsSet.value.has(Number(service.id))),
+)
+const selectedServiceNames = computed(() => selectedServiceObjs.value.map((service) => service.name).join(', '))
+const selectedBarberObj = computed(() =>
+  barbers.value.find((barber) => Number(barber.id) === Number(selectedBarber.value)),
+)
+const bookingTotalDuration = computed(() => Number(bookingSummary.value.total_duration || 0))
+const bookingTotalPrice = computed(() => Number(bookingSummary.value.total_price || 0))
+const bookableDateSet = computed(() => new Set(
+  bookableDays.value
+    .filter((day) => day.is_bookable)
+    .map((day) => day.date),
+))
+const selectedAppointmentStart = computed(() => {
+  if (!selectedDate.value || !selectedTime.value) return ''
+
+  return `${dateToString(selectedDate.value)} ${selectedTime.value}`
 })
 
-watch(selectedService, async (serviceId) => {
-  if (!serviceId) return
-  const res = await getEmployeesByService(serviceId)
-  barbers.value = res.data
-  openSection.value = 'barber'
-  await nextTick()
-  barberRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+onMounted(async () => {
+  try {
+    const res = await getBookingServices()
+    services.value = apiCollection(res).filter((service) => service.is_valid !== false)
+  } catch (error) {
+    bookingErrorMessage.value = extractBookingError(error, 'Failed to load booking services.')
+  }
+})
+
+function resetAfterServiceChange() {
+  const previouslyLoadedBarbers = hasContinuedToBarber.value
+
+  selectedBarber.value = ''
+  selectedDate.value = null
+  selectedTime.value = ''
+  barbers.value = []
+  bookableDays.value = []
+  bookableDaysLoaded.value = false
+  timeSlots.value = []
+  resetBookingSummary()
+  needsBarberRefresh.value = previouslyLoadedBarbers
+}
+
+function toggleService(serviceId) {
+  const id = Number(serviceId)
+
+  if (selectedServiceIdsSet.value.has(id)) {
+    selectedServices.value = selectedServices.value.filter((selectedId) => selectedId !== id)
+  } else {
+    selectedServices.value = [...selectedServices.value, id]
+  }
+
+  resetAfterServiceChange()
+}
+
+async function loadBarbersForSelectedServices({ openAfterLoad = false } = {}) {
+  if (serviceIds.value.length === 0) return
+
+  bookingErrorMessage.value = ''
+
+  try {
+    const res = await getBookingEmployees(serviceIds.value)
+    barbers.value = apiCollection(res)
+      .filter((row) => row.is_valid !== false && row.employee)
+      .map((row) => row.employee)
+
+    hasContinuedToBarber.value = true
+    needsBarberRefresh.value = false
+
+    if (openAfterLoad) {
+      openSection.value = 'barber'
+      await nextTick()
+      barberRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  } catch (error) {
+    bookingErrorMessage.value = extractBookingError(error, 'Failed to load barbers for this service.')
+  }
+}
+
+async function continueToBarber() {
+  if (serviceIds.value.length === 0) return
+
+  resetAfterServiceChange()
+  await loadBarbersForSelectedServices({ openAfterLoad: true })
+}
+
+watch(openSection, async (section) => {
+  if (section !== 'barber') return
+
+  if (serviceIds.value.length === 0) {
+    openSection.value = 'service'
+    return
+  }
+
+  if (!hasContinuedToBarber.value) {
+    openSection.value = 'service'
+    return
+  }
+
+  if (needsBarberRefresh.value) {
+    await loadBarbersForSelectedServices()
+  }
 })
 
 watch(selectedBarber, async (barberId) => {
   if (!barberId) return
   selectedTime.value = ''
+  resetBookingSummary()
+  bookableDaysLoaded.value = false
+  calendarDate.value = today(getLocalTimeZone())
   selectedDate.value = today(getLocalTimeZone())
+  await loadBookableDays(calendarDate.value)
+
+  const firstBookableDay = bookableDays.value.find((day) => day.is_bookable)
+  if (firstBookableDay && !bookableDateSet.value.has(dateToString(selectedDate.value))) {
+    selectedDate.value = parseDate(firstBookableDay.date)
+  }
+
   await loadTimeSlots()
   openSection.value = 'datetime'
   await nextTick()
@@ -62,19 +182,47 @@ watch(selectedBarber, async (barberId) => {
 })
 
 watch(selectedDate, async () => {
-  if (!selectedService.value || !selectedBarber.value) return
+  if (serviceIds.value.length === 0 || !selectedBarber.value) return
   selectedTime.value = ''
+  resetBookingSummary()
   await loadTimeSlots()
 })
 
+watch(selectedTime, async (time) => {
+  if (!time) {
+    resetBookingSummary()
+    return
+  }
+
+  await loadBookingSummary()
+})
+
+watch(calendarDate, async (date) => {
+  if (serviceIds.value.length === 0 || !selectedBarber.value) return
+  await loadBookableDays(date)
+})
+
 async function loadTimeSlots() {
-  if (!selectedDate.value) return
-  const isoDate = `${selectedDate.value.year}-${String(selectedDate.value.month).padStart(2,'0')}-${String(selectedDate.value.day).padStart(2,'0')}`
-  const res = await getAppointmentsByServiceAndDateAndEmployee(selectedService.value, isoDate, selectedBarber.value)
-  timeSlots.value = res.data?.[isoDate] || []
+  if (!selectedDate.value || !selectedBarber.value) return
+
+  const isoDate = dateToString(selectedDate.value)
+  if (bookableDaysLoaded.value && !bookableDateSet.value.has(isoDate)) {
+    timeSlots.value = []
+    return
+  }
+
+  try {
+    const res = await getBookingSlots(serviceIds.value, Number(selectedBarber.value), isoDate)
+    const day = apiCollection(res).find((item) => item.date === isoDate)
+    timeSlots.value = day?.slots || []
+  } catch (error) {
+    timeSlots.value = []
+    bookingErrorMessage.value = extractBookingError(error, 'Failed to load time slots.')
+  }
 }
 
-const isReadyForUser = () => selectedService.value && selectedBarber.value && selectedTime.value && selectedDate.value
+const isReadyForUser = () => serviceIds.value.length > 0 && selectedBarber.value && selectedTime.value && selectedDate.value
+const canSubmitBooking = computed(() => isReadyForUser() && (isAuthenticated.value || guestDetailsReady.value))
 
 watch(
   () => isReadyForUser(),
@@ -89,51 +237,117 @@ watch(
   }
 )
 
-const store = useAuthStore()
-const isAuthenticated = computed(() => store.isLoggedIn)
-const pad = (n) => n.toString().padStart(2,'0')
+function apiCollection(response) {
+  return response?.data?.data || response?.data || []
+}
+
+function dateToString(date) {
+  if (!date) return ''
+  return `${date.year}-${pad(date.month)}-${pad(date.day)}`
+}
+
+function isDateUnavailable(date) {
+  if (!selectedBarber.value || !bookableDaysLoaded.value) {
+    return false
+  }
+
+  return !bookableDateSet.value.has(dateToString(date))
+}
+
+function monthValueFor(date) {
+  const targetDate = date || today(getLocalTimeZone())
+
+  return `${targetDate.year}-${pad(targetDate.month)}`
+}
+
+async function loadBookableDays(startDate) {
+  if (serviceIds.value.length === 0 || !selectedBarber.value) {
+    return
+  }
+
+  try {
+    const res = await getBookingDays(serviceIds.value, Number(selectedBarber.value), monthValueFor(startDate))
+    bookableDays.value = apiCollection(res)
+    bookableDaysLoaded.value = true
+  } catch (error) {
+    bookableDays.value = []
+    bookableDaysLoaded.value = true
+    bookingErrorMessage.value = extractBookingError(error, 'Failed to load bookable days.')
+  }
+}
+
+function resetBookingSummary() {
+  bookingSummary.value = {
+    services: [],
+    total_duration: 0,
+    total_price: 0,
+  }
+  bookingSummaryLoaded.value = false
+}
+
+async function loadBookingSummary() {
+  if (serviceIds.value.length === 0 || !selectedBarber.value || !selectedAppointmentStart.value) {
+    resetBookingSummary()
+    return
+  }
+
+  try {
+    const res = await getBookingSummary(
+      serviceIds.value,
+      Number(selectedBarber.value),
+      selectedAppointmentStart.value
+    )
+
+    bookingSummary.value = res?.data?.data || {
+      services: [],
+      total_duration: 0,
+      total_price: 0,
+    }
+    bookingSummaryLoaded.value = true
+  } catch (error) {
+    resetBookingSummary()
+    bookingErrorMessage.value = extractBookingError(error, 'Failed to load booking summary.')
+  }
+}
 
 const handleSubmit = async () => {
   try {
     if (!isReadyForUser()) return
     bookingErrorMessage.value = ''
 
-    const dateStr = `${selectedDate.value.year}-${pad(selectedDate.value.month)}-${pad(selectedDate.value.day)}`
+    if (!bookingSummaryLoaded.value) {
+      await loadBookingSummary()
+    }
+
+    if (!isAuthenticated.value && !guestDetailsReady.value) {
+      bookingErrorMessage.value = 'Please enter your name and email.'
+      await openUserDataSection()
+      return
+    }
+
+    const dateStr = dateToString(selectedDate.value)
     const appointmentStart = `${dateStr} ${selectedTime.value}`
 
     const appointmentPayload = {
-      service_id: Number(selectedService.value),
+      service_ids: serviceIds.value,
       employee_id: Number(selectedBarber.value),
       appointment_start: appointmentStart,
     }
 
     if (!isAuthenticated.value){
-      try {
-        await postGuest(userData.value.name, userData.value.email)
-        appointmentPayload.guest_name = userData.value.name?.trim()
-        appointmentPayload.guest_email = userData.value.email?.trim()
-      } catch (e) {
-        bookingErrorMessage.value = extractBookingError(e, 'Could not validate guest details.')
-        return
-      }
-    } else {
-      const storedId = localStorage.getItem('user_id')
-      if (storedId) {
-        appointmentPayload.customer_id = parseInt(storedId, 10)
-      }
+      appointmentPayload.guest_name = guestName.value
+      appointmentPayload.guest_email = guestEmail.value
     }
 
     await postAppointment(appointmentPayload)
 
-    const serviceObj = services.value.find(s => s.id === selectedService.value)
-    const barberObj = barbers.value.find(b => b.id === selectedBarber.value)
-
     const bookingData = {
-      serviceName: serviceObj?.name,
-      barberName: barberObj?.name,
+      serviceName: selectedServiceNames.value,
+      barberName: selectedBarberObj.value?.name,
       date: dateStr,
       time: selectedTime.value,
-      price: barberObj?.services?.price
+      duration: bookingTotalDuration.value,
+      price: bookingTotalPrice.value
     }
 
     router.push({ 
@@ -142,21 +356,38 @@ const handleSubmit = async () => {
     })
 
   } catch (err) {
+    const wasAuthenticated = isAuthenticated.value
+
     bookingErrorMessage.value = extractBookingError(
       err,
       'Failed to book appointment. Please check your details and try again.'
     )
 
-    if (!isAuthenticated.value && hasGuestDetailsError(err)) {
-      openSection.value = 'userdata'
-      await nextTick()
-      userDataRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (err?.response?.status === 401) {
+      store.setToken(null)
+      store.setUser(null)
+      store.setName(null)
+      store.setRole(null)
+      bookingErrorMessage.value = 'Your login expired. Please log in again.'
+      return
+    }
+
+    if (!wasAuthenticated && hasGuestDetailsError(err)) {
+      await openUserDataSection()
     }
   }
 }
 
+async function openUserDataSection() {
+  openSection.value = 'userdata'
+  await nextTick()
+  userDataRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 function extractBookingError(error, fallbackMessage) {
   return (
+    error?.response?.data?.errors?.name?.[0] ||
+    error?.response?.data?.errors?.guest_name?.[0] ||
     error?.response?.data?.errors?.email?.[0] ||
     error?.response?.data?.errors?.guest_email?.[0] ||
     error?.response?.data?.errors?.customer_id?.[0] ||
@@ -169,7 +400,7 @@ function extractBookingError(error, fallbackMessage) {
 function hasGuestDetailsError(error) {
   const fieldErrors = error?.response?.data?.errors || {}
 
-  return Boolean(fieldErrors.email || fieldErrors.guest_email || fieldErrors.customer_id)
+  return Boolean(fieldErrors.name || fieldErrors.guest_name || fieldErrors.email || fieldErrors.guest_email || fieldErrors.customer_id)
 }
 
 watch(() => userData.value.name, () => {
@@ -180,7 +411,7 @@ watch(() => userData.value.email, () => {
   bookingErrorMessage.value = ''
 })
 
-watch([selectedService, selectedBarber, selectedDate, selectedTime], () => {
+watch([selectedServices, selectedBarber, selectedDate, selectedTime], () => {
   bookingErrorMessage.value = ''
 })
 
@@ -192,7 +423,7 @@ watch(isAuthenticated, (loggedIn) => {
 </script>
 
 <template>
-<form @submit.prevent class="space-y-6">
+<form @submit.prevent="handleSubmit" class="space-y-6">
 
   <Accordion type="single" collapsible v-model="openSection" class="space-y-4">
     <AccordionItem value="service">
@@ -208,28 +439,39 @@ watch(isAuthenticated, (loggedIn) => {
         </AccordionTrigger>
         <AccordionContent>
           <CardContent>
-            <RadioGroup v-model="selectedService">
-              <div class="grid gap-3 md:grid-cols-2">
-                <Label v-for="service in services" :key="service.id"
-                       class="flex gap-3 p-4 rounded-lg border-2"
-                       :class="selectedService === service.id ? 'border-primary bg-primary/5' : 'border-border bg-background'">
-                  <RadioGroupItem :value="service.id" />
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                      <Scissors class="size-4" />
-                      <p class="font-semibold">{{ service.name }}</p>
-                    </div>
-                    <p class="text-sm text-muted-foreground">{{ service.default_duration }} mins</p>
+            <div class="grid gap-3 md:grid-cols-2">
+              <Label v-for="service in services" :key="service.id"
+                     class="flex gap-3 p-4 rounded-lg border-2"
+                     :class="selectedServiceIdsSet.has(Number(service.id)) ? 'border-primary bg-primary/5' : 'border-border bg-background'">
+                <input
+                  type="checkbox"
+                  class="mt-1 h-4 w-4 accent-primary"
+                  :checked="selectedServiceIdsSet.has(Number(service.id))"
+                  @change="toggleService(service.id)"
+                />
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <Scissors class="size-4" />
+                    <p class="font-semibold">{{ service.name }}</p>
                   </div>
-                </Label>
-              </div>
-            </RadioGroup>
+                  <p class="text-sm text-muted-foreground">{{ service.description || 'Available for booking' }}</p>
+                </div>
+              </Label>
+              <p v-if="services.length === 0" class="text-sm text-muted-foreground">
+                No services are available right now.
+              </p>
+            </div>
+            <div class="mt-4 flex justify-end">
+              <Button type="button" :disabled="serviceIds.length === 0" @click="continueToBarber">
+                Continue
+              </Button>
+            </div>
           </CardContent>
         </AccordionContent>
       </Card>
     </AccordionItem>
 
-    <AccordionItem value="barber" :disabled="!selectedService">
+    <AccordionItem value="barber" :disabled="serviceIds.length === 0 || !hasContinuedToBarber">
         <div ref="barberRef">
       <Card>
         <AccordionTrigger>
@@ -246,14 +488,33 @@ watch(isAuthenticated, (loggedIn) => {
             <RadioGroup v-model="selectedBarber">
               <div class="grid gap-3 md:grid-cols-2">
                 <Label v-for="barber in barbers" :key="barber.id"
-                       class="flex gap-3 p-4 rounded-lg border-2"
-                       :class="selectedBarber === barber.id ? 'border-primary bg-primary/5' : 'border-border bg-background'">
-                  <RadioGroupItem :value="barber.id" />
+                       class="flex items-center gap-3 p-4 rounded-lg border-2"
+                       :class="Number(selectedBarber) === Number(barber.id) ? 'border-primary bg-primary/5' : 'border-border bg-background'">
+                  <RadioGroupItem :value="barber.id" class="mt-1" />
+                  <div class="shrink-0">
+                    <img
+                      v-if="barber.profile_image?.preview_url"
+                      :src="barber.profile_image.preview_url"
+                      :alt="`${barber.name} preview`"
+                      class="h-12 w-12 rounded-full object-cover"
+                    />
+                    <div
+                      v-else
+                      class="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground"
+                    >
+                      {{ barber.name?.charAt(0) || '?' }}
+                    </div>
+                  </div>
                   <div class="flex-1">
                     <p class="font-semibold">{{ barber.name }}</p>
-                    <p class="text-sm text-accent mt-1">${{ barber.services?.price }}</p>
+                    <p v-if="barber.total_duration" class="text-xs text-muted-foreground">
+                      {{ barber.total_duration }} min
+                    </p>
                   </div>
                 </Label>
+                <p v-if="barbers.length === 0" class="text-sm text-muted-foreground">
+                  No barber can take this service right now.
+                </p>
               </div>
             </RadioGroup>
           </CardContent>
@@ -280,10 +541,12 @@ watch(isAuthenticated, (loggedIn) => {
               <div class="w-fit">
                 <Label class="block mb-2 font-semibold">Select Your Date</Label>
                 <Calendar v-model="selectedDate"
+                          v-model:placeholder="calendarDate"
                           class="rounded-md border border-border shadow-sm"
                           layout="month-and-year"
                           :min-value="today(getLocalTimeZone())"
-                          :max-value="today(getLocalTimeZone()).add({weeks:4})"/>
+                          :max-value="today(getLocalTimeZone()).add({weeks:4})"
+                          :is-date-unavailable="isDateUnavailable"/>
               </div>
               <div>
                 <Label class="block mb-2 font-semibold">Choose a Time Slot</Label>
@@ -346,11 +609,11 @@ watch(isAuthenticated, (loggedIn) => {
     <CardContent class="space-y-2">
       <div class="flex justify-between">
         <p class="text-muted-foreground">Service:</p>
-        <p class="font-semibold">{{ services.find(s => s.id === selectedService)?.name }}</p>
+        <p class="font-semibold text-right">{{ selectedServiceNames }}</p>
       </div>
       <div class="flex justify-between">
         <p class="text-muted-foreground">Barber:</p>
-        <p class="font-semibold">{{ barbers.find(b => b.id === selectedBarber)?.name }}</p>
+        <p class="font-semibold">{{ selectedBarberObj?.name }}</p>
       </div>
       <div class="flex justify-between">
         <p class="text-muted-foreground">Date:</p>
@@ -363,13 +626,19 @@ watch(isAuthenticated, (loggedIn) => {
         <p class="font-semibold">{{ selectedTime }}</p>
       </div>
       <div class="flex justify-between">
+        <p class="text-muted-foreground">Total duration:</p>
+        <p v-if="bookingSummaryLoaded" class="font-semibold">{{ bookingTotalDuration }} min</p>
+        <p v-else class="font-semibold text-muted-foreground">Calculating...</p>
+      </div>
+      <div class="flex justify-between">
         <p class="text-muted-foreground">Total:</p>
-        <p class="font-semibold">${{ barbers.find(b => b.id === selectedBarber)?.services?.price }}</p>
+        <p v-if="bookingSummaryLoaded" class="font-semibold">${{ bookingTotalPrice }}</p>
+        <p v-else class="font-semibold text-muted-foreground">Calculating...</p>
       </div>
     </CardContent>
   </Card>
 
-  <Button v-if="isReadyForUser()" type="submit" size="lg" class="w-full text-lg font-bold mt-3" @click="handleSubmit">
+  <Button v-if="isReadyForUser()" type="submit" size="lg" class="w-full text-lg font-bold mt-3" :disabled="!canSubmitBooking">
     Confirm Booking
   </Button>
 </form>
