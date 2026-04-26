@@ -14,7 +14,6 @@ use App\Http\Controllers\AppointmentAffectedPreviewController;
 use App\Http\Controllers\AdminAppointmentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
-use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\EmployeeImageController;
 use App\Http\Controllers\EmployeeOwnTimeOffRequestController;
 use App\Http\Controllers\EmployeeProfileController;
@@ -59,7 +58,7 @@ Route::get('/services', [ServiceController::class, 'index']);
 
 Route::get('/shop-opening-hours', [ShopOpeningHourController::class, 'index']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
-Route::post('/appointments', [AppointmentController::class, 'store']);
+Route::post('/appointments', [AppointmentController::class, 'store'])->middleware('optional.api-token');
 
 Route::get('/appointments/confirm/{appointment}', [AppointmentController::class, 'confirm'])->name("appointments.confirm")->middleware("signed:relative");
 
@@ -68,11 +67,12 @@ Route::get('/reviews', [ReviewController::class, 'index']);
 Route::prefix('/booking')->group(function () {
     Route::get('/services', [BookingController::class, 'services']);
     Route::get('/employees', [BookingController::class, 'employees']);
+    Route::get('/summary', [BookingController::class, 'summary']);
     Route::get('/days', [BookingController::class, 'days']);
     Route::get('/slots', [BookingController::class, 'slots']);
     });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth.api-token')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
@@ -174,10 +174,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware('role:employee')->prefix('/employee')->group(function () { 
-        Route::get("/appointments", [EmployeeDashboardController::class, "index"]);
+        Route::get("/appointments", [AppointmentController::class, "employeeAppointments"]);
+        Route::get("/reviews", [AppointmentController::class, "employeeReviews"]);
         Route::get("/profile", [EmployeeProfileController::class, 'show']);
-        Route::post("/appointments/{appointment}/cancel", [EmployeeDashboardController::class, 'cancelAppointment']);
-        Route::post("/appointments/{appointment}/complete", [EmployeeDashboardController::class, 'completeAppointment']);
+        Route::post("/appointments/{appointment}/cancel", [AppointmentController::class, 'cancelEmployeeAppointment']);
+        Route::post("/appointments/{appointment}/complete", [AppointmentController::class, 'completeEmployeeAppointment']);
         Route::patch("/profile", [EmployeeProfileController::class, 'update']);
         Route::post("/profile/avatar", [EmployeeProfileController::class, 'storeProfilePic']);
         Route::post("/profile/gallery", [EmployeeProfileController::class, 'storeGalleryImg']);

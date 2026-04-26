@@ -15,6 +15,23 @@ class AppointmentStoreRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $serviceIds = $this->input('service_ids');
+
+        if (!$serviceIds && $this->filled('service_id')) {
+            $serviceIds = [$this->input('service_id')];
+        }
+
+        if ($serviceIds && !is_array($serviceIds)) {
+            $serviceIds = [$serviceIds];
+        }
+
+        $this->merge([
+            'service_ids' => $serviceIds ?: [],
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
