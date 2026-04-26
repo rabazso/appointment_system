@@ -20,7 +20,7 @@ import AppointmentsPage from '@pages/employee/Appointments.vue'
 import ProfilePage from '@pages/employee/Profile.vue'
 import TimeOffPage from '@pages/employee/TimeOff.vue'
 import TimeOff from '@pages/admin/TimeOff.vue'
-import Gallery from '@pages/admin/Gallery.vue'
+import ShopProfile from '@pages/admin/ShopProfile.vue'
 
 const routes = [
   {
@@ -157,7 +157,7 @@ const routes = [
     name: 'Schedule',
     component: Schedule,
     meta: {
-      title: 'Schedule',
+      title: 'Shop Schedule',
       requiresAdmin: true,
     }
   },
@@ -195,11 +195,11 @@ const routes = [
     }
   },
   {
-    path: '/admin/gallery',
-    name: 'Gallery',
-    component: Gallery,
+    path: '/admin/shop-profile',
+    name: 'shop-profile',
+    component: ShopProfile,
     meta: {
-      title: 'Shop Gallery',
+      title: 'Shop Profile',
       requiresAdmin: true,
     }
   },

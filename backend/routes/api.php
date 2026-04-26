@@ -12,6 +12,7 @@ use App\Http\Controllers\EmployeeAvailabilityController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AppointmentAffectedPreviewController;
 use App\Http\Controllers\AdminAppointmentController;
+use App\Http\Controllers\AdminAppointmentIndexController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
 use App\Http\Controllers\EmployeeDashboardController;
@@ -26,11 +27,11 @@ use App\Http\Controllers\EmployeeServiceConfigurationController;
 use App\Http\Controllers\EmployeeServicesController;
 use App\Http\Controllers\EmployeeServiceController;
 use App\Http\Controllers\ResetPasswordController;
-use App\Http\Controllers\ResetPasswordTokenController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceAvailabilityController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ShopImageController;
+use App\Http\Controllers\ShopInformationController;
 use App\Http\Controllers\ShopOpeningHourController;
 use App\Http\Controllers\ShopSettingController;
 use App\Http\Controllers\ShopSpecialDayController;
@@ -91,6 +92,7 @@ Route::middleware('auth.api-token')->group(function () {
     });
 
     Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/appointments', [AdminAppointmentIndexController::class, 'index']);
         Route::post('/services', [ServiceController::class, 'store']);
         Route::post('/admin/appointments/affected-preview/employee-schedule', [AppointmentAffectedPreviewController::class, 'employeeSchedule']);
         Route::post('/admin/appointments/affected-preview/employee-services', [AppointmentAffectedPreviewController::class, 'employeeServices']);
@@ -98,6 +100,8 @@ Route::middleware('auth.api-token')->group(function () {
         Route::post('/admin/appointments/affected-preview/employee-booking-rules', [AppointmentAffectedPreviewController::class, 'employeeBookingRules']);
         Route::post('/admin/appointments/affected-preview/service-availability', [AppointmentAffectedPreviewController::class, 'serviceAvailability']);
         Route::post('/appointments/{appointment}/cancel', [AdminAppointmentController::class, 'cancel']);
+        Route::post('/appointments/{appointment}/complete', [AdminAppointmentController::class, 'complete']);
+        Route::post('/appointments/{appointment}/no-show', [AdminAppointmentController::class, 'markNoShow']);
         Route::patch('/services/{service}', [ServiceController::class, 'update']);
         Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
         Route::get('/services/{service}/availability', [ServiceAvailabilityController::class, 'index']);
@@ -150,6 +154,9 @@ Route::middleware('auth.api-token')->group(function () {
         Route::delete('/employee-images/{employeeImage}', [EmployeeImageController::class, 'destroy']);
         Route::post('/shop-images', [ShopImageController::class, 'store']);
         Route::delete('/shop-images/{shopImage}', [ShopImageController::class, 'destroy']);
+        Route::post('/shop-information', [ShopInformationController::class, 'store']);
+        Route::patch('/shop-information/{shopInformation}', [ShopInformationController::class, 'update']);
+        Route::delete('/shop-information/{shopInformation}', [ShopInformationController::class, 'destroy']);
         Route::post('/shop-settings', [ShopSettingController::class, 'store']);
         Route::patch('/shop-settings/{shopSetting}', [ShopSettingController::class, 'update']);
         Route::delete('/shop-settings/{shopSetting}', [ShopSettingController::class, 'destroy']);
@@ -167,6 +174,7 @@ Route::middleware('auth.api-token')->group(function () {
         Route::get('/employee-time-off-requests', [EmployeeTimeOffRequestController::class, 'index']);
         Route::get('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'index']);
         Route::get('/employee-services', [EmployeeServiceController::class, 'index']);
+        Route::get('/shop-information', [ShopInformationController::class, 'show']);
         Route::get('/shop-settings', [ShopSettingController::class, 'show']);
         Route::get('/shop-special-days/date', [ShopSpecialDayController::class, 'showByDate']);
         Route::get('/shop-special-days/month', [ShopSpecialDayController::class, 'indexForMonth']);
