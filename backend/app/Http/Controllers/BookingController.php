@@ -5,15 +5,18 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BookingEmployeesRequest;
 use App\Http\Requests\BookingDaysRequest;
 use App\Http\Requests\BookingSlotsRequest;
+use App\Http\Requests\BookingSummaryRequest;
 use App\Http\Resources\BookingDayResource;
 use App\Http\Resources\BookingEmployeeResource;
 use App\Http\Resources\BookingServiceResource;
 use App\Http\Resources\BookingSlotResource;
 use App\Models\Employee;
+use App\Models\EmployeeService;
 use App\Models\Service;
 use App\Services\Booking\EmployeeAvailabilityService;
 use App\Services\Booking\AppointmentAvailabilityService;
-use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class BookingController extends Controller
 {
@@ -124,6 +127,42 @@ class BookingController extends Controller
         });
 
         return BookingEmployeeResource::collection($employees);
+    }
+
+    public function summary(BookingSummaryRequest $request)
+    {
+        $serviceIds = array_map('intval', $request->validated('service_ids'));
+        $employeeId = (int) $request->validated('employee_id');
+        $timezone = (string) config('app.timezone', 'UTC');
+        $appointmentStart = Carbon::createFromFormat('Y-m-d H:i', $request->validated('appointment_start'), $timezone);
+
+        $employeeServices = EmployeeService::query()
+            ->whereHas('configuration', fn ($query) => $query
+                ->where('employee_id', $employeeId)
+                ->validAt($appointmentStart)
+            )
+            ->whereIn('service_id', $serviceIds)
+            ->with('service')
+            ->get();
+
+        if ($employeeServices->count() !== count($serviceIds)) {
+            throw ValidationException::withMessages([
+                'service_ids' => 'Selected services are not available for this barber at the chosen time.',
+            ]);
+        }
+
+        return response()->json([
+            'data' => [
+                'services' => $employeeServices->map(fn ($employeeService) => [
+                    'id' => $employeeService->service_id,
+                    'name' => $employeeService->service?->name,
+                    'duration' => (int) $employeeService->duration,
+                    'price' => (float) $employeeService->price,
+                ])->values(),
+                'total_duration' => (int) $employeeServices->sum('duration'),
+                'total_price' => (float) $employeeServices->sum('price'),
+            ],
+        ]);
     }
 
     public function days(BookingDaysRequest $request, AppointmentAvailabilityService $availability)

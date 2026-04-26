@@ -13,7 +13,11 @@ class BookingEmployeeResource extends JsonResource
             'employee' => [
                 'id' => $this->id,
                 'name' => $this->name,
-                'profile_image' => new EmployeeImageResource($this->whenLoaded('profileImage')),
+                'profile_image' => $this->profileImage
+                    ? [
+                        'preview_url' => $this->profileImage->preview_url,
+                    ]
+                    : null,
             ],
             'is_valid' => $this->is_valid,
             'valid_from' => $this->valid_from,

@@ -12,6 +12,7 @@ class BookingServiceResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'description' => $this->description,
             'is_valid' => $this->is_valid,
             'valid_from' => $this->valid_from,
             'valid_to' => $this->valid_to,
