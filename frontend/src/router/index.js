@@ -16,7 +16,7 @@ import Schedule from '@pages/admin/Schedule.vue'
 import VerifyEmail from '@pages/verifyEmail.vue'
 import AdminSignIn from '@pages/admin/AdminSignIn.vue'
 import EmployeeSignIn from '@pages/employee/EmployeeSignIn.vue'
-import AppointmentsPage from '@pages/employee/Appointments.vue'
+//import AppointmentsPage from '@pages/employee/Appointments.vue'
 import ProfilePage from '@pages/employee/Profile.vue'
 import TimeOffPage from '@pages/employee/TimeOff.vue'
 import TimeOff from '@pages/admin/TimeOff.vue'
@@ -91,15 +91,15 @@ const routes = [
     path: '/employee',
     redirect: '/employee/appointments',
   },
-  {
-    path: '/employee/appointments',
-    name: 'EmployeeAppointments',
-    component: AppointmentsPage,
-    meta: {
-      title: 'Employee Appointments',
-      requiresEmployee: true,
-    },
-  },
+  // {
+  //   path: '/employee/appointments',
+  //   name: 'EmployeeAppointments',
+  //   component: AppointmentsPage,
+  //   meta: {
+  //     title: 'Employee Appointments',
+  //     requiresEmployee: true,
+  //   },
+  // },
   {
     path: '/employee/profile',
     name: 'EmployeeProfile',
