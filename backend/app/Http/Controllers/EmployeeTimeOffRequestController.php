@@ -17,7 +17,6 @@ class EmployeeTimeOffRequestController extends Controller
         $validated = $request->validated();
         $employeeId = $validated['employee_id'] ?? null;
         $date = $validated['date'] ?? null;
-        $type = $validated['type'] ?? null;
         $status = $validated['status'] ?? null;
 
         $timeOffRequests = EmployeeTimeOffRequest::query()
@@ -29,10 +28,6 @@ class EmployeeTimeOffRequestController extends Controller
             ->when(
                 $date,
                 fn ($query) => $query->whereDate('date', $date)
-            )
-            ->when(
-                $type,
-                fn ($query) => $query->where('type', $type)
             )
             ->when(
                 $status,

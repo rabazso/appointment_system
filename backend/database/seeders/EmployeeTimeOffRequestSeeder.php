@@ -14,7 +14,6 @@ class EmployeeTimeOffRequestSeeder extends Seeder
             'Blowout Ben' => [
                 [
                     'date' => now()->addDays(3)->toDateString(),
-                    'type' => 'sickness',
                     'status' => 'pending',
                     'note' => 'A reason for the time off.',
                 ],
@@ -22,7 +21,6 @@ class EmployeeTimeOffRequestSeeder extends Seeder
             'Crispy Chris' => [
                 [
                     'date' => now()->addDays(7)->toDateString(),
-                    'type' => 'vacation',
                     'status' => 'cancelled',
                     'note' => 'A reason for the time off.',
                 ],
@@ -30,7 +28,6 @@ class EmployeeTimeOffRequestSeeder extends Seeder
             'Bouncy Bella' => [
                 [
                     'date' => now()->addDays(10)->toDateString(),
-                    'type' => 'vacation',
                     'status' => 'approved',
                     'note' => 'A reason for the time off.',
                 ],
@@ -38,7 +35,6 @@ class EmployeeTimeOffRequestSeeder extends Seeder
             'Loud Lucy' => [
                 [
                     'date' => now()->addDays(14)->toDateString(),
-                    'type' => 'personal',
                     'status' => 'cancelled',
                     'note' => 'A reason for the time off.',
                 ],
@@ -52,7 +48,6 @@ class EmployeeTimeOffRequestSeeder extends Seeder
                 EmployeeTimeOffRequest::create([
                     'employee_id' => $employee->id,
                     'date' => $entry['date'],
-                    'type' => $entry['type'],
                     'status' => $entry['status'],
                     'note' => $entry['note'],
                 ]);

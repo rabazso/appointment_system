@@ -12,7 +12,6 @@ class OwnEmployeeTimeOffRequestResource extends JsonResource
         return [
             'id' => $this->id,
             'date' => $this->date,
-            'type' => $this->type,
             'status' => $this->status,
             'note' => $this->note,
         ];

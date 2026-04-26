@@ -8,7 +8,6 @@ class EmployeeTimeOffRequest extends Model
     protected $fillable = [
         'employee_id',
         'date',
-        'type',
         'status',
         'note',
     ];

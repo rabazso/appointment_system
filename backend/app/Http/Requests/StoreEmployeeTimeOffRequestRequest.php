@@ -16,7 +16,6 @@ class StoreEmployeeTimeOffRequestRequest extends FormRequest
         return [
             'employee_id' => ['required', 'integer', 'exists:employees,id'],
             'date' => ['required', 'date'],
-            'type' => ['required', 'in:vacation,sickness,personal'],
             'status' => ['required', 'in:pending,approved,rejected,cancelled'],
             'note' => ['nullable', 'string'],
         ];

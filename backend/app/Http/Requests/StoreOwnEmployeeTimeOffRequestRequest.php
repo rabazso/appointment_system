@@ -23,7 +23,6 @@ class StoreOwnEmployeeTimeOffRequestRequest extends FormRequest
     {
         return [
             'date' => ['required', 'date', 'after:today'],
-            'type' => ['required', 'in:vacation,sickness,personal'],
             'note' => ['nullable', 'string'],
         ];
     }

@@ -16,7 +16,6 @@ class IndexEmployeeTimeOffRequestsRequest extends FormRequest
         return [
             'employee_id' => ['integer', 'exists:employees,id'],
             'date' => ['date'],
-            'type' => ['in:vacation,sickness,personal'],
             'status' => ['in:pending,approved,rejected,cancelled'],
         ];
     }
