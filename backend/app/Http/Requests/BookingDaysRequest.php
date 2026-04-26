@@ -17,7 +17,7 @@ class BookingDaysRequest extends FormRequest
             'service_ids' => ['required', 'array', 'min:1'],
             'service_ids.*' => ['required', 'integer', 'distinct', 'exists:services,id'],
             'employee_id' => ['required', 'integer', 'exists:employees,id'],
-            'start_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'month' => ['required', 'date_format:Y-m'],
         ];
     }
 }

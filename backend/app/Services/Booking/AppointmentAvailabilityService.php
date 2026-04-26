@@ -23,10 +23,16 @@ class AppointmentAvailabilityService
     public function bookableDaysFromDate(Request $request): array
     {
         $serviceIds = $request->validated('service_ids');
-        $employeeId = (int) $request->get('employee_id');
-        $startDate = Carbon::parse($request->get('start_date', Carbon::today()->toDateString()))->startOfDay();
+        $employeeId = $request->validated('employee_id');
 
-        $employee = Employee::Find($employeeId);
+        $today = Carbon::today()->startOfDay();
+
+        $month = $request->validated('month');
+        $startDate = Carbon::createFromFormat('Y-m', $month)
+            ->startOfMonth()
+            ->startOfDay();
+
+        $employee = Employee::find($employeeId);
 
         $bookingRuleConfiguration = EmployeeBookingRuleConfiguration::where('employee_id', $employee->id)
             ->validAt($startDate)
@@ -35,20 +41,34 @@ class AppointmentAvailabilityService
 
         $bookingWindowDays = (int) ($bookingRuleConfiguration->rules->first()->booking_window_days);
 
-        $monthEnd = $startDate->copy()->endOfMonth()->startOfDay();
-        $bookingWindowEnd = Carbon::today()->addDays($bookingWindowDays)->startOfDay();
-        
-        $endDate = $monthEnd->lt($bookingWindowEnd) ? $monthEnd : $bookingWindowEnd;
+        $bookingWindowEnd = $today->copy()->addDays($bookingWindowDays);
+
+        $monthEnd = $startDate->copy()->endOfMonth();
+
+        $endDate = $monthEnd->min($bookingWindowEnd);
 
         if ($startDate->gt($endDate)) {
             return [];
         }
 
-        $days = (int) $startDate->diffInDays($endDate);
         $bookableDays = [];
 
-        for ($i = 0; $i < $days+1; $i++) {
-            $date = $startDate->copy()->addDays($i);
+        for (
+            $date = $startDate->copy();
+            $date->lte($endDate);
+            $date->addDay()
+        ) {
+            $isPast = $date->lt($today);
+
+            if ($isPast) {
+                $bookableDays[] = [
+                    'date' => $date->toDateString(),
+                    'is_bookable' => false,
+                    'occupancy_percent' => 0,
+                ];
+                continue;
+            }
+
             $availability = $this->dayAvailability($employee, $serviceIds, $date);
 
             $bookableDays[] = [
