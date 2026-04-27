@@ -15,7 +15,7 @@ use App\Http\Controllers\AdminAppointmentController;
 use App\Http\Controllers\AdminAppointmentIndexController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeBreakController;
-use App\Http\Controllers\EmployeeDashboardController;
+use App\Http\Controllers\EmployeeAppointmentController;
 use App\Http\Controllers\EmployeeImageController;
 use App\Http\Controllers\EmployeeOwnTimeOffRequestController;
 use App\Http\Controllers\EmployeeProfileController;
@@ -185,13 +185,13 @@ Route::middleware('auth.api-token')->group(function () {
     });
 
     Route::middleware('role:employee')->prefix('/employee')->group(function () { 
-        Route::get("/appointments", [EmployeeDashboardController::class, "index"]);
+        Route::get("/appointments", [EmployeeAppointmentController::class, "index"]);
         Route::get("/reviews", [EmployeeReviewsController::class, "index"]);
         Route::patch("/reviews/{review}", [EmployeeReviewsController::class, "updateVisibility"]);
         Route::get("/profile", [EmployeeProfileController::class, 'show']);
-        Route::post("/appointments/{appointment}/cancel", [EmployeeDashboardController::class, 'cancelAppointment']);
-        Route::post("/appointments/{appointment}/complete", [EmployeeDashboardController::class, 'completeAppointment']);
-        Route::post("/appointments/{appointment}/no-show", [EmployeeDashboardController::class, 'markNoShow']);
+        Route::post("/appointments/{appointment}/cancel", [EmployeeAppointmentController::class, 'cancelAppointment']);
+        Route::post("/appointments/{appointment}/complete", [EmployeeAppointmentController::class, 'completeAppointment']);
+        Route::post("/appointments/{appointment}/no-show", [EmployeeAppointmentController::class, 'markNoShow']);
         Route::patch("/profile", [EmployeeProfileController::class, 'update']);
         Route::post("/profile/avatar", [EmployeeProfileController::class, 'storeProfilePic']);
         Route::post("/profile/gallery", [EmployeeProfileController::class, 'storeGalleryImg']);
