@@ -7,7 +7,7 @@
     }"
     @click="emit('day-click')"
   >
-    <div class="relative z-10 flex shrink-0 items-start justify-end leading-none text-sm font-semibold text-black">
+    <div class="relative z-1 flex shrink-0 items-start justify-end leading-none text-sm font-semibold text-black">
       <span class="bg-white px-0.5">
         {{ dayNumber }}
       </span>
