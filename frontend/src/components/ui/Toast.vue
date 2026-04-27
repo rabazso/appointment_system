@@ -29,9 +29,7 @@ const toastClass = computed(() => {
 <template>
   <div data-testid="toast"
     :class="[
-           'fixed bottom-5 right-4 z-[100]
-           px-4 py-3 rounded-lg shadow-lg
-           animate-in fade-in slide-in-from-top-2',
+           'fixed bottom-5 right-4 z-[100] px-4 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2',
            toastClass
          ]"
   >
