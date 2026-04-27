@@ -95,6 +95,8 @@ export const getBarberReviews = () => API.get('/reviews');
 
 export const getServices = () => API.get('/services');
 export const getEmployees = () => API.get('/employees');
+export const getEmployeeById = (id) => API.get(`/employees/${id}`);
+
 export const createEmployee = (payload) => API.post('/employees', payload);
 export const deleteEmployee = (id) => API.delete(`/employees/${id}`);
 export const getEmployeeSchedules = (employeeId) => API.get(`/employees/${employeeId}/schedules`);

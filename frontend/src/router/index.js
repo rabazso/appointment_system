@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { setTitle } from '@/router/guards/SetTitleGuard.mjs'
 import Index from '@pages/index.vue'
 import Barbers from '@pages/barbers.vue'
+import EmployeeDetails from '@pages/employeeDetails.vue'
 import Contact from '@pages/contact.vue'
 import Booking from '@pages/booking.vue'
 import Summary from '@pages/summary.vue'
@@ -38,6 +39,14 @@ const routes = [
     meta: {
       title: 'Barbers'
     }
+  },
+  {
+    path: '/barbers/:id',
+    name: 'EmployeeDetails',
+    component: EmployeeDetails,
+    meta: {
+      title: 'Barber Profile',
+    },
   },
   {
     path: '/contact',
