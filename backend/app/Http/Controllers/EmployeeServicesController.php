@@ -14,9 +14,11 @@ class EmployeeServicesController extends Controller
 {
     public function index(Employee $employee)
     {
+        $today = now()->startOfDay();
+
         $serviceConfigurations = $employee->serviceConfigurations()
             ->with('services.service')
-            ->orderBy('valid_from')
+            ->currentAndUpcomingFrom($today)
             ->get();
 
         return EmployeeServicesResource::collection($serviceConfigurations);

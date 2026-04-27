@@ -13,8 +13,10 @@ class EmployeeAvailabilityController extends Controller
 {
     public function index(Employee $employee)
     {
+        $today = now()->startOfDay();
+
         $availability = $employee->versions()
-            ->orderBy('valid_from')
+            ->currentAndUpcomingFrom($today)
             ->get();
 
         return EmployeeAvailabilityResource::collection($availability);

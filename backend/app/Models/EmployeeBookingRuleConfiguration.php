@@ -39,4 +39,15 @@ class EmployeeBookingRuleConfiguration extends Model
                     ->orWhere('valid_to', '>', $at);
             });
     }
+
+    public function scopeCurrentAndUpcomingFrom(Builder $query, Carbon $at): Builder
+    {
+        return $query
+            ->where(function ($query) use ($at) {
+                $query
+                    ->whereNull('valid_to')
+                    ->orWhere('valid_to', '>', $at);
+            })
+            ->orderBy('valid_from');
+    }
 }

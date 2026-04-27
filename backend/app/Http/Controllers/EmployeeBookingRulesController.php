@@ -14,9 +14,11 @@ class EmployeeBookingRulesController extends Controller
 {
     public function index(Employee $employee)
     {
+        $today = now()->startOfDay();
+
         $bookingRules = $employee->bookingRuleConfigurations()
             ->with('rules')
-            ->orderBy('valid_from')
+            ->currentAndUpcomingFrom($today)
             ->get();
 
         return EmployeeBookingRulesResource::collection($bookingRules);

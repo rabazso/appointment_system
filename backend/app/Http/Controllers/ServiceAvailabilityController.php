@@ -13,8 +13,10 @@ class ServiceAvailabilityController extends Controller
 {
     public function index(Service $service)
     {
+        $today = now()->startOfDay();
+
         $availability = $service->versions()
-            ->orderBy('valid_from')
+            ->currentAndUpcomingFrom($today)
             ->get();
 
         return ServiceAvailabilityResource::collection($availability);

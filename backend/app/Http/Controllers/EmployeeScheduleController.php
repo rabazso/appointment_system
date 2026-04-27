@@ -14,9 +14,11 @@ class EmployeeScheduleController extends Controller
 {
     public function index(Employee $employee)
     {
+        $today = now()->startOfDay();
+
         $schedules = $employee->scheduleConfigurations()
             ->with(['workingHours', 'breaks'])
-            ->orderBy('valid_from')
+            ->currentAndUpcomingFrom($today)
             ->get();
 
         return EmployeeScheduleResource::collection($schedules);
