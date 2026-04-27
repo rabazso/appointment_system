@@ -28,24 +28,24 @@
             <span class="text-sm font-medium text-slate-700">{{ day.fullLabel }}</span>
             <span
               class="text-sm font-semibold"
-              :class="schedule?.weeklyHours?.[index]?.isOpen ? 'text-slate-900' : 'text-slate-400'"
+              :class="schedule?.weeklyHours?.[day.weekday]?.isOpen ? 'text-slate-900' : 'text-slate-400'"
             >
               {{
-                schedule?.weeklyHours?.[index]?.isOpen
-                  ? `${schedule.weeklyHours[index].start} - ${schedule.weeklyHours[index].end}`
+                schedule?.weeklyHours?.[day.weekday]?.isOpen
+                  ? `${schedule.weeklyHours[day.weekday].start} - ${schedule.weeklyHours[day.weekday].end}`
                   : 'Off'
               }}
             </span>
           </div>
 
           <div
-            v-if="schedule?.weeklyHours?.[index]?.isOpen && getBreaksForWeekday(index).length"
+            v-if="schedule?.weeklyHours?.[day.weekday]?.isOpen && getBreaksForWeekday(day.weekday).length"
             class="mt-2 flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5"
           >
             <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Breaks</span>
             <div class="flex flex-wrap gap-1">
               <span
-                v-for="(breakItem, breakIndex) in getBreaksForWeekday(index)"
+                v-for="(breakItem, breakIndex) in getBreaksForWeekday(day.weekday)"
                 :key="`${breakItem.weekday}-${breakIndex}`"
                 class="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-600"
               >
@@ -62,6 +62,7 @@
 <script setup>
 import ModalShell from '@/components/admin/ModalShell.vue'
 import ModalHeader from '@/components/admin/ModalHeader.vue'
+import { WEEKDAYS } from '@/data/calenderData'
 import VersionDetailActions from './VersionDetailActions.vue'
 
 defineEmits(['back', 'close', 'edit', 'delete'])
@@ -73,15 +74,11 @@ const props = defineProps({
   },
 })
 
-const weekDayOptions = [
-  { key: 'mon', fullLabel: 'Monday' },
-  { key: 'tue', fullLabel: 'Tuesday' },
-  { key: 'wed', fullLabel: 'Wednesday' },
-  { key: 'thu', fullLabel: 'Thursday' },
-  { key: 'fri', fullLabel: 'Friday' },
-  { key: 'sat', fullLabel: 'Saturday' },
-  { key: 'sun', fullLabel: 'Sunday' },
-]
+const weekDayOptions = WEEKDAYS.map((day) => ({
+  key: day.id,
+  fullLabel: day.label,
+  weekday: day.id,
+}))
 
 function getBreaksForWeekday(weekday) {
   return props.schedule.breaks?.filter((breakEntry) => breakEntry.weekday === weekday) ?? []
