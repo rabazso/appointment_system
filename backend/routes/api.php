@@ -159,6 +159,7 @@ Route::middleware('auth.api-token')->group(function () {
         Route::post('/employee-images', [EmployeeImageController::class, 'store']);
         Route::delete('/employee-images/{employeeImage}', [EmployeeImageController::class, 'destroy']);
         Route::post('/shop-images', [ShopImageController::class, 'store']);
+        Route::post('/shop-images/batch', [ShopImageController::class, 'storeMultiple']);
         Route::delete('/shop-images/{shopImage}', [ShopImageController::class, 'destroy']);
         Route::post('/shop-information', [ShopInformationController::class, 'store']);
         Route::patch('/shop-information/{shopInformation}', [ShopInformationController::class, 'update']);

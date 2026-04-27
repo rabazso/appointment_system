@@ -42,13 +42,6 @@
             </div>
           </div>
 
-          <div
-            v-if="loadError"
-            class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-          >
-            {{ loadError }}
-          </div>
-
           <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
             <div class="min-w-0 space-y-2">
               <label class="text-sm font-semibold text-slate-900">Phone</label>
@@ -109,7 +102,7 @@
 
               <div
                 v-for="(link, index) in form.links"
-                :key="link.id"
+                :key="index"
                 class="grid gap-3 md:grid-cols-[10rem_minmax(0,1fr)_auto]"
               >
                 <div class="min-w-0">
@@ -148,21 +141,21 @@
             <div class="flex justify-end gap-3">
               <button
                 type="button"
-                :disabled="isSaving || isLoading || !shopInformationId"
+                :disabled="isLoading || !shopInformationId"
                 class="inline-flex rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                :class="{ 'cursor-not-allowed opacity-60': isSaving || isLoading || !shopInformationId }"
+                :class="{ 'cursor-not-allowed opacity-60': isLoading || !shopInformationId }"
                 @click="resetChanges"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                :disabled="isSaving || isLoading || !shopInformationId"
+                :disabled="isLoading || !shopInformationId"
                 class="inline-flex rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-black shadow-[0_10px_24px_rgba(249,115,22,0.18)] transition hover:bg-[#ffab5c]"
-                :class="{ 'cursor-not-allowed opacity-60': isSaving || isLoading || !shopInformationId }"
+                :class="{ 'cursor-not-allowed opacity-60': isLoading || !shopInformationId }"
                 @click="saveSettings"
               >
-                {{ isSaving ? 'Saving...' : 'Save changes' }}
+                Save changes
               </button>
             </div>
           </div>
@@ -178,19 +171,24 @@
               <p class="mt-1 text-sm text-slate-500">Upload and manage the images customers see first.</p>
             </div>
 
-            <label class="inline-flex cursor-pointer items-center justify-center rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-              + Upload images
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                class="hidden"
-                @change="onGalleryChange"
-              />
-            </label>
+            <div class="flex flex-col items-end gap-1">
+              <label class="inline-flex cursor-pointer items-center justify-center rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                + Upload images
+                <input
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                  multiple
+                  class="hidden"
+                  @change="onGalleryChange"
+                />
+              </label>
+              <p class="text-right text-xs text-slate-400">
+                JPG, PNG, WebP. Max 4 MB each.
+              </p>
+            </div>
           </div>
 
-          <div v-if="galleryItems.length" class="grid flex-1 grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 overflow-auto pr-1">
+          <div v-if="galleryItems.length" class="grid flex-1 grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3 overflow-auto pr-1">
             <div
               v-for="image in galleryItems"
               :key="image.id"
@@ -204,7 +202,7 @@
               />
               <button
                 type="button"
-                class="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/60 bg-white/90 text-slate-700 opacity-0 transition group-hover:opacity-100"
+                class="absolute right-1 top-1 inline-flex p-1 items-center justify-center rounded-lg border border-black/10 bg-white text-slate-700 opacity-0 transition group-hover:opacity-100 hover:border-black"
                 @click.stop="removeGalleryImage(image)"
               >
                 <Trash class="h-4 w-4" />
@@ -223,21 +221,17 @@
             <div class="flex justify-end gap-3">
               <button
                 type="button"
-                :disabled="isGallerySaving"
                 class="inline-flex rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                :class="{ 'cursor-not-allowed opacity-60': isGallerySaving }"
                 @click="resetGalleryChanges"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                :disabled="isGallerySaving"
                 class="inline-flex rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-black shadow-[0_10px_24px_rgba(249,115,22,0.18)] transition hover:bg-[#ffab5c]"
-                :class="{ 'cursor-not-allowed opacity-60': isGallerySaving }"
-                @click="saveGallery"
+                @click="saveGalleryWithValidation"
               >
-                {{ isGallerySaving ? 'Saving...' : 'Save changes' }}
+                Save changes
               </button>
             </div>
           </div>
@@ -267,79 +261,57 @@
       </div>
     </div>
 
-    <Toast
-      v-if="showToast"
-      :message="toastMessage"
-      @close="showToast = false"
-    />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { Trash, X } from 'lucide-vue-next'
-import { deleteShopImage, getShopImages, getShopInformation, patchShopInformation, uploadShopImage } from '@/api'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
-import Toast from '@/components/ui/Toast.vue'
+import { useShopInformation } from '@/composables/useShopInformation'
+import { useShopGallery } from '@/composables/useShopGallery'
+import { useToastStore } from '@/stores/ToastStore.js'
+
+const {
+  form,
+  isDirty,
+  loading: isLoading,
+  shopInformationId,
+  fetchShopInformation,
+  saveShopInformation,
+} = useShopInformation()
+const {
+  images: galleryItems,
+  deletedImageIds: deletedGalleryIds,
+  galleryDirty,
+  fetchShopImages,
+  saveGallery,
+} = useShopGallery()
+const toast = useToastStore()
 
 const sidebarOpen = ref(false)
 const viewMode = ref('contact')
 const activeImage = ref(null)
-const galleryItems = ref([])
-const initialGallerySnapshot = ref('')
-const deletedGalleryIds = ref([])
-const isGallerySaving = ref(false)
-const shopInformationId = ref(null)
-const isLoading = ref(false)
-const isSaving = ref(false)
-const loadError = ref('')
-const showToast = ref(false)
-const toastMessage = ref('')
-const initialSnapshot = ref('')
 
-const form = reactive({
-  phone: '',
-  email: '',
-  address: '',
-  links: [],
-})
-
-const isDirty = computed(() => JSON.stringify(snapshotForm()) !== initialSnapshot.value)
+const MAX_IMAGE_SIZE_BYTES = 4096 * 1024
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 onMounted(async () => {
-  await Promise.all([fetchSettings(), loadGallery()])
+  await Promise.all([loadSettings(), loadGallery()])
 })
 
-async function fetchSettings() {
-  isLoading.value = true
-  loadError.value = ''
-
+async function loadSettings() {
   try {
-    const { data } = await getShopInformation()
-    const settings = data?.data ?? data
-
-    shopInformationId.value = settings.id
-    form.phone = settings.phone ?? ''
-    form.email = settings.email ?? ''
-    form.address = settings.address ?? ''
-    form.links = normalizeLinks(settings.links)
-    initialSnapshot.value = JSON.stringify(snapshotForm())
+    await fetchShopInformation()
   } catch (error) {
-    loadError.value = 'Unable to load shop information.'
-  } finally {
-    isLoading.value = false
+    toast.showError('Failed to load shop information.')
   }
 }
 
 async function saveSettings() {
-  if (!shopInformationId.value) return
-
-  isSaving.value = true
-  loadError.value = ''
-
   try {
-    await patchShopInformation(shopInformationId.value, {
+    await saveShopInformation(shopInformationId.value, {
       phone: form.phone || null,
       email: form.email || null,
       address: form.address || null,
@@ -351,29 +323,21 @@ async function saveSettings() {
         .filter((link) => link.label || link.url),
     })
 
-    initialSnapshot.value = JSON.stringify(snapshotForm())
-    toastMessage.value = 'Shop information saved.'
-    showToast.value = true
+    toast.show('Shop information saved.')
   } catch (error) {
-    loadError.value = 'Unable to save shop information.'
-  } finally {
-    isSaving.value = false
+    toast.showError('Failed to save shop information.')
   }
 }
 
 async function loadGallery() {
-  const response = await getShopImages()
-  const items = (response.data.data ?? response.data ?? []).map((image) => ({
-    ...image,
-    isNew: false,
-    file: null,
-  }))
-  galleryItems.value = items
-  deletedGalleryIds.value = []
-  initialGallerySnapshot.value = JSON.stringify(snapshotGalleryState(items, []))
+  try {
+    await fetchShopImages()
+  } catch (error) {
+    toast.showError('Failed to load gallery.')
+  }
 }
 
-async function onGalleryChange(event) {
+function onGalleryChange(event) {
   const files = Array.from(event.target.files ?? [])
   event.target.value = ''
 
@@ -391,7 +355,22 @@ async function onGalleryChange(event) {
   }
 }
 
-async function removeGalleryImage(image) {
+function validateGalleryImages() {
+  const newImages = galleryItems.value.filter((image) => image.isNew)
+  const invalidTypeImage = newImages.find((image) => image.file && !ALLOWED_IMAGE_TYPES.includes(image.file.type))
+
+  if (invalidTypeImage) {
+    throw new Error('Only JPG, PNG and WebP images are allowed.')
+  }
+
+  const oversizedImage = newImages.find((image) => image.file && image.file.size > MAX_IMAGE_SIZE_BYTES)
+
+  if (oversizedImage) {
+    throw new Error('One or more images are too large. Maximum size is 4 MB.')
+  }
+}
+
+function removeGalleryImage(image) {
   if (image.isNew) {
     galleryItems.value = galleryItems.value.filter((item) => item.id !== image.id)
     return
@@ -413,48 +392,22 @@ function closePreview() {
   activeImage.value = null
 }
 
-async function saveGallery() {
-  isGallerySaving.value = true
+async function resetGalleryChanges() {
+  await loadGallery()
+}
 
+async function saveGalleryWithValidation() {
   try {
-    for (const id of deletedGalleryIds.value) {
-      await deleteShopImage(id)
-    }
-
-    for (const image of galleryItems.value.filter((item) => item.isNew)) {
-      const payload = new FormData()
-      payload.append('image', image.file)
-      await uploadShopImage(payload)
-    }
-
-    await loadGallery()
-    toastMessage.value = 'Gallery saved.'
-    showToast.value = true
+    validateGalleryImages()
+    await saveGallery()
+    toast.show('Gallery saved.')
   } catch (error) {
-    toastMessage.value = 'Unable to save gallery.'
-    showToast.value = true
-  } finally {
-    isGallerySaving.value = false
+    toast.showError(error instanceof Error ? error.message : 'Failed to save gallery.')
   }
 }
 
-function resetGalleryChanges() {
-  const snapshot = JSON.parse(initialGallerySnapshot.value || '[]')
-  galleryItems.value = snapshot.map((image) => ({
-    ...image,
-    isNew: false,
-    file: null,
-  }))
-  deletedGalleryIds.value = []
-}
-
-const galleryDirty = computed(() => {
-  return JSON.stringify(snapshotGalleryState(galleryItems.value, deletedGalleryIds.value)) !== initialGallerySnapshot.value
-})
-
 function addLink() {
   form.links.push({
-    id: createLinkId(),
     label: '',
     url: '',
   })
@@ -466,48 +419,8 @@ function removeLink(index) {
 
 function markDirty() {}
 
-function normalizeLinks(links) {
-  if (!Array.isArray(links)) return []
-
-  return links.map((link) => ({
-    id: createLinkId(),
-    label: link?.label ?? '',
-    url: link?.url ?? '',
-  }))
-}
-
-function snapshotForm() {
-  return {
-    phone: form.phone,
-    email: form.email,
-    address: form.address,
-    links: form.links.map((link) => ({
-      label: link.label,
-      url: link.url,
-    })),
-  }
-}
-
 function resetChanges() {
-  if (!initialSnapshot.value) return
-
-  const snapshot = JSON.parse(initialSnapshot.value)
-  form.phone = snapshot.phone ?? ''
-  form.email = snapshot.email ?? ''
-  form.address = snapshot.address ?? ''
-  form.links = (snapshot.links ?? []).map((link) => ({
-    id: createLinkId(),
-    label: link.label ?? '',
-    url: link.url ?? '',
-  }))
-}
-
-function createLinkId() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-
-  return `link_${Date.now()}_${Math.random().toString(16).slice(2)}`
+  loadSettings()
 }
 
 function createGalleryId() {
@@ -518,15 +431,4 @@ function createGalleryId() {
   return `gallery_${Date.now()}_${Math.random().toString(16).slice(2)}`
 }
 
-function snapshotGalleryState(items, deletedIds) {
-  return {
-    items: items.map((item) => ({
-      id: item.id,
-      isNew: Boolean(item.isNew),
-      preview_url: item.preview_url,
-      original_url: item.original_url,
-    })),
-    deletedIds: [...deletedIds].sort(),
-  }
-}
 </script>

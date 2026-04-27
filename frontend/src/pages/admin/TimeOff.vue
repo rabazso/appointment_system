@@ -247,7 +247,7 @@ function getCalendarStatusClass(status) {
   if (status === 'approved') return `${baseClass} bg-emerald-100 text-emerald-900`
   if (status === 'pending') return `${baseClass} bg-gray-200 text-gray-800`
   if (status === 'rejected') return `${baseClass} bg-rose-100 text-rose-900`
-  if (status === 'cancelled') return `${baseClass} border border-black bg-white text-black line-through`
+  if (status === 'cancelled') return `${baseClass} border border-black/10 bg-white text-black line-through`
   return `${baseClass}`
 }
 

@@ -9,15 +9,19 @@ export const useToastStore = defineStore('toast', {
     id: 0,
   }),
   actions: {
-    show(message, options = {}) {
+    show(message) {
       this.message = message
-      this.variant = options.variant || 'success'
-      this.duration = options.duration || 3000
+      this.variant = 'success'
+      this.duration = 3000
       this.visible = true
       this.id += 1
     },
-    showError(message, options = {}) {
-      this.show(message, { ...options, variant: 'error' })
+    showError(message) {
+      this.message = message
+      this.variant = 'error'
+      this.duration = 3000
+      this.visible = true
+      this.id += 1
     },
     hide() {
       this.visible = false
