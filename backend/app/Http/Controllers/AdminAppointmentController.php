@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AdminCancelAppointmentRequest;
+use App\Http\Requests\CancelAppointmentRequest;
 use App\Http\Resources\AppointmentStatusResource;
 use App\Models\Appointment;
 use Illuminate\Http\Request;
 
 class AdminAppointmentController extends Controller
 {
-    public function cancel(AdminCancelAppointmentRequest $request, Appointment $appointment)
+    public function cancel(CancelAppointmentRequest $request, Appointment $appointment)
     {
         if (! in_array($appointment->status, ['pending', 'confirmed'], true)) {
             return response()->json([

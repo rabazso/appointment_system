@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CancelEmployeeAppointmentRequest extends FormRequest
+class CancelAppointmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,7 +14,7 @@ class CancelEmployeeAppointmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cancellation_reason' => ['required', 'string', 'min:10', 'max:500'],
+            'cancellation_reason' => ['required', 'string', 'max:250'],
         ];
     }
 }
