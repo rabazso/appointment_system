@@ -20,15 +20,16 @@ onMounted(() => {
   const stateData = history.state.booking
 
   if (!stateData) {
-    const { serviceName, barberName, date, time, duration, price } = route.query
-    if (serviceName || barberName || date || time || duration || price) {
+    const { serviceName, barberName, date, time, duration, price, note } = route.query
+    if (serviceName || barberName || date || time || duration || price || note) {
       booking.value = {
         serviceName: serviceName ?? '',
         barberName: barberName ?? '',
         date: date ?? '',
         time: time ?? '',
         duration: duration ? Number(duration) : null,
-        price: price ? Number(price) : null
+        price: price ? Number(price) : null,
+        note: note ?? '',
       }
       return
     }
@@ -88,6 +89,10 @@ const handleGoHome = () => {
             <p class="font-semibold text-foreground">
               {{ booking.duration !== null && booking.duration !== undefined ? `${booking.duration} min` : '-' }}
             </p>
+          </div>
+          <div v-if="booking.note" class="flex min-h-11 items-center justify-between border-b border-accent/20 py-2 last:border-0 last:pb-0">
+            <p class="text-muted-foreground">Note:</p>
+            <p class="font-semibold text-foreground text-right whitespace-pre-line">{{ booking.note }}</p>
           </div>
 
           <div class="flex justify-between items-center pt-2">

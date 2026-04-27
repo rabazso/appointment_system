@@ -264,6 +264,7 @@ class AppointmentController extends Controller
             'time' => optional($appointment->start_datetime)->format('H:i'),
             'duration' => $appointment->total_duration,
             'price' => $appointment->total_price,
+            'note' => $appointment->customer_note,
         ];
     }
 

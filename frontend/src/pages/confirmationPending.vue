@@ -51,6 +51,10 @@ const goHome = () => router.push('/')
               {{ booking.duration !== null && booking.duration !== undefined ? `${booking.duration} min` : '-' }}
             </p>
           </div>
+          <div v-if="booking.note" class="flex min-h-12 items-center justify-between border-t border-black/10 py-1">
+            <p class="text-lg text-slate-600">Note:</p>
+            <p class="text-lg font-bold text-black text-right whitespace-pre-line">{{ booking.note }}</p>
+          </div>
         </div>
         <p class="text-center text-base text-slate-600">Once you confirm, we will show your summary.</p>
       </CardContent>

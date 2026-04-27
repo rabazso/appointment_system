@@ -2,6 +2,7 @@
     'appointment',
     'showDuration' => true,
     'showTotal' => true,
+    'showNote' => true,
 ])
 
 @php
@@ -47,3 +48,18 @@
         </td>
     </tr>
 </table>
+
+@if ($showNote && !empty($appointment->customer_note))
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px; border:1px solid #efdfcc; border-radius:16px; background-color:#ffffff;">
+        <tr>
+            <td style="padding:16px 18px;">
+                <p style="margin:0 0 8px; color:#111827; font-weight:700; font-size:14px;">
+                    Customer note:
+                </p>
+                <p style="margin:0; color:#374151; font-size:14px; line-height:1.6; white-space:pre-line;">
+                    {{ $appointment->customer_note }}
+                </p>
+            </td>
+        </tr>
+    </table>
+@endif

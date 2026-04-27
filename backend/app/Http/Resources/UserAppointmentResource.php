@@ -21,6 +21,7 @@ class UserAppointmentResource extends JsonResource
             'start_datetime' => $this->start_datetime?->toIso8601String(),
             'end_datetime' => $this->end_datetime?->toIso8601String(),
             'price' => $this->total_price,
+            'customer_note' => $this->customer_note,
             'service' => [
                 'id' => $appointmentService?->service?->id,
                 'name' => $appointmentService?->service?->name,

@@ -149,22 +149,27 @@ const handleNewBooking = () => {
           </CardHeader>
 
           <CardContent class="space-y-3 pb-6 flex-1 flex flex-col">
-            <div class="flex justify-between items-center border-b border-accent/20 pb-2">
+            <div class="flex min-h-11 justify-between items-center border-b border-accent/20 py-2">
               <p class="text-muted-foreground text-sm">Barber</p>
               <p class="font-semibold text-foreground text-sm">{{ apt.employee?.name || apt.barber?.name }}</p>
             </div>
 
-            <div class="flex justify-between items-center border-b border-accent/20 pb-2">
+            <div class="flex min-h-11 justify-between items-center border-b border-accent/20 py-2">
               <p class="text-muted-foreground text-sm">Date</p>
               <p class="font-semibold text-foreground text-sm">{{ formatDate(apt) }}</p>
             </div>
 
-            <div class="flex justify-between items-center border-b border-accent/20 pb-2">
+            <div class="flex min-h-11 justify-between items-center border-b border-accent/20 py-2">
               <p class="text-muted-foreground text-sm">Time</p>
               <p class="font-semibold text-foreground text-sm">{{ formatTime(apt) }}</p>
             </div>
 
-             <div class="flex justify-between items-center pt-2">
+            <div class="flex min-h-11 justify-between items-center border-b border-accent/20 py-2">
+              <p class="text-muted-foreground text-sm">Note</p>
+              <p class="max-w-[65%] text-right font-semibold text-foreground text-sm whitespace-pre-line break-words">{{ apt.customer_note?.trim() || '-' }}</p>
+            </div>
+
+             <div class="flex min-h-11 justify-between items-center py-2">
               <p class="text-muted-foreground text-sm font-medium">Price</p>
               <p class="font-bold text-lg text-primary">${{ apt.service?.price || apt.price }}</p>
             </div>

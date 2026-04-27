@@ -29,6 +29,7 @@ const selectedDate = ref(null)
 const calendarDate = ref(today(getLocalTimeZone()))
 const selectedTime = ref('')
 const userData = ref({ name: '', email: ''})
+const customerNote = ref('')
 const bookingErrorMessage = ref('')
 
 const openSection = ref('service')
@@ -49,6 +50,7 @@ const needsBarberRefresh = ref(false)
 
 const barberRef = ref(null)
 const dateTimeRef = ref(null)
+const noteRef = ref(null)
 const userDataRef = ref(null)
 
 const store = useAuthStore()
@@ -66,6 +68,7 @@ const selectedServiceNames = computed(() => selectedServiceObjs.value.map((servi
 const selectedBarberObj = computed(() =>
   barbers.value.find((barber) => Number(barber.id) === Number(selectedBarber.value)),
 )
+const bookingNote = computed(() => customerNote.value.trim())
 const bookingTotalDuration = computed(() => Number(bookingSummary.value.total_duration || 0))
 const bookingTotalPrice = computed(() => Number(bookingSummary.value.total_price || 0))
 const bookableDateSet = computed(() => new Set(
@@ -82,7 +85,7 @@ const selectedAppointmentStart = computed(() => {
 onMounted(async () => {
   try {
     const res = await getBookingServices()
-    services.value = apiCollection(res).filter((service) => service.is_valid !== false)
+    services.value = apiCollection(res)
   } catch (error) {
     bookingErrorMessage.value = extractBookingError(error, 'Failed to load services.')
     toast.showError('Failed to load services.')
@@ -105,6 +108,11 @@ function resetAfterServiceChange() {
 
 function toggleService(serviceId) {
   const id = Number(serviceId)
+  const service = services.value.find((item) => Number(item.id) === id)
+
+  if (service && !isServiceSelectable(service)) {
+    return
+  }
 
   if (selectedServiceIdsSet.value.has(id)) {
     selectedServices.value = selectedServices.value.filter((selectedId) => selectedId !== id)
@@ -124,7 +132,11 @@ async function loadBarbersForSelectedServices({ openAfterLoad = false } = {}) {
     const res = await getBookingEmployees(serviceIds.value)
     barbers.value = apiCollection(res)
       .filter((row) => row.is_valid !== false && row.employee)
-      .map((row) => row.employee)
+      .map((row) => ({
+        ...row.employee,
+        valid_from: row.valid_from,
+        valid_to: row.valid_to,
+      }))
 
     hasContinuedToBarber.value = true
     needsBarberRefresh.value = false
@@ -170,16 +182,37 @@ watch(selectedBarber, async (barberId) => {
   selectedTime.value = ''
   resetBookingSummary()
   bookableDaysLoaded.value = false
-  calendarDate.value = today(getLocalTimeZone())
-  selectedDate.value = today(getLocalTimeZone())
-  await loadBookableDays(calendarDate.value)
+  const todayDate = today(getLocalTimeZone())
+  calendarDate.value = todayDate
+  selectedDate.value = todayDate
 
-  const firstBookableDay = bookableDays.value.find((day) => day.is_bookable)
-  if (firstBookableDay && !bookableDateSet.value.has(dateToString(selectedDate.value))) {
-    selectedDate.value = parseDate(firstBookableDay.date)
+  let searchMonth = todayDate
+  let firstBookableDay = null
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await loadBookableDays(searchMonth)
+    firstBookableDay = bookableDays.value.find((day) => day.is_bookable)
+
+    if (firstBookableDay) {
+      break
+    }
+
+    searchMonth = searchMonth.add({ months: 1 })
+  }
+
+  if (firstBookableDay) {
+    const firstBookableDate = parseDate(firstBookableDay.date)
+    selectedDate.value = firstBookableDate
+    calendarDate.value = firstBookableDate
   }
 
   await loadTimeSlots()
+
+  const todayIso = dateToString(todayDate)
+  if (firstBookableDay && firstBookableDay.date !== todayIso && timeSlots.value.length > 0) {
+    selectedTime.value = timeSlots.value[0]
+  }
+
   openSection.value = 'datetime'
   await nextTick()
   dateTimeRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -206,6 +239,13 @@ watch(calendarDate, async (date) => {
   await loadBookableDays(date)
 })
 
+async function handleTimeSelection(time) {
+  selectedTime.value = time
+  openSection.value = 'note'
+  await nextTick()
+  noteRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 async function loadTimeSlots() {
   if (!selectedDate.value || !selectedBarber.value) return
 
@@ -228,22 +268,77 @@ async function loadTimeSlots() {
 
 const isReadyForUser = () => serviceIds.value.length > 0 && selectedBarber.value && selectedTime.value && selectedDate.value
 const canSubmitBooking = computed(() => isReadyForUser() && (isAuthenticated.value || guestDetailsReady.value))
-
-watch(
-  () => isReadyForUser(),
-  async (ready) => {
-    if (ready) {
-      if (!isAuthenticated.value) {
-        openSection.value = 'userdata'
-        await nextTick()
-        userDataRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    }
-  }
+const shouldShowBookingSummary = computed(() =>
+  isReadyForUser() && (openSection.value === 'note' || openSection.value === 'userdata')
+)
+const shouldShowConfirmButton = computed(() =>
+  isReadyForUser() && (openSection.value === 'note' || openSection.value === 'userdata')
 )
 
 function apiCollection(response) {
   return response?.data?.data || response?.data || []
+}
+
+function availabilityToDate(value) {
+  if (!value) return null
+
+  const raw = String(value)
+  const parsed = new Date(raw)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null
+  }
+
+  return parsed
+}
+
+function isServiceSelectable(service) {
+  const validFromDate = availabilityToDate(service?.valid_from)
+  if (!validFromDate) return true
+
+  return new Date() >= validFromDate
+}
+
+function normalizeAvailabilityDate(value) {
+  if (!value) return null
+
+  const raw = String(value)
+  const datePart = raw.match(/^(\d{4}-\d{2}-\d{2})/)
+  const timePart = raw.match(/(\d{2}:\d{2})(?::\d{2})?/)
+
+  if (datePart?.[1]) {
+    if (timePart?.[1]) {
+      return `${datePart[1]} ${timePart[1]}`
+    }
+
+    return datePart[1]
+  }
+
+  const parsed = availabilityToDate(raw)
+  if (!parsed) {
+    return raw
+  }
+
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`
+}
+
+function availabilityLabel(item) {
+  const validFrom = normalizeAvailabilityDate(item?.valid_from)
+  const validTo = normalizeAvailabilityDate(item?.valid_to)
+
+  if (validFrom && validTo) {
+    return `Available from ${validFrom} until ${validTo}.`
+  }
+
+  if (validFrom) {
+    return `Available from ${validFrom}.`
+  }
+
+  if (validTo) {
+    return `Available until ${validTo}.`
+  }
+
+  return ''
 }
 
 function dateToString(date) {
@@ -340,6 +435,11 @@ const handleSubmit = async () => {
       employee_id: Number(selectedBarber.value),
       appointment_start: appointmentStart,
     }
+    const trimmedCustomerNote = customerNote.value.trim()
+
+    if (trimmedCustomerNote !== '') {
+      appointmentPayload.customer_note = trimmedCustomerNote
+    }
 
     if (!isAuthenticated.value){
       appointmentPayload.guest_name = guestName.value
@@ -354,7 +454,8 @@ const handleSubmit = async () => {
       date: dateStr,
       time: selectedTime.value,
       duration: bookingTotalDuration.value,
-      price: bookingTotalPrice.value
+      price: bookingTotalPrice.value,
+      note: trimmedCustomerNote || null,
     }
 
     router.push({ 
@@ -447,19 +548,24 @@ watch(isAuthenticated, (loggedIn) => {
             <div class="grid gap-3 md:grid-cols-2">
               <Label v-for="service in services" :key="service.id"
                      class="flex gap-3 p-4 rounded-lg border-2"
+                     :disabled="!isServiceSelectable(service)"
                      :class="selectedServiceIdsSet.has(Number(service.id)) ? 'border-primary bg-primary/5' : 'border-border bg-background'">
                 <input
                   type="checkbox"
                   class="mt-1 h-4 w-4 accent-primary"
+                  :disabled="!isServiceSelectable(service)"
                   :checked="selectedServiceIdsSet.has(Number(service.id))"
                   @change="toggleService(service.id)"
                 />
-                <div class="flex-1">
+                <div class="flex-1" :class="!isServiceSelectable(service) ? 'opacity-60' : ''">
                   <div class="flex items-center gap-2">
                     <Scissors class="size-4" />
                     <p class="font-semibold">{{ service.name }}</p>
                   </div>
                   <p class="text-sm text-muted-foreground">{{ service.description || 'Available for booking' }}</p>
+                  <p v-if="availabilityLabel(service)" class="mt-1 text-xs text-muted-foreground">
+                    {{ availabilityLabel(service) }}
+                  </p>
                 </div>
               </Label>
               <p v-if="services.length === 0" class="text-sm text-muted-foreground">
@@ -515,6 +621,9 @@ watch(isAuthenticated, (loggedIn) => {
                     <p v-if="barber.total_duration" class="text-xs text-muted-foreground">
                       {{ barber.total_duration }} min
                     </p>
+                    <p v-if="availabilityLabel(barber)" class="text-xs text-muted-foreground">
+                      {{ availabilityLabel(barber) }}
+                    </p>
                   </div>
                 </Label>
                 <p v-if="barbers.length === 0" class="text-sm text-muted-foreground">
@@ -560,7 +669,7 @@ watch(isAuthenticated, (loggedIn) => {
                           variant="outline"
                           type="button" 
                           :class="selectedTime === time ? 'border-accent border-2 bg-primary/10' : 'bg-background'"
-                          @click="selectedTime = time">
+                          @click="handleTimeSelection(time)">
                     {{ time }}
                   </Button>
                   <p v-if="timeSlots.length === 0 && selectedDate" class="text-sm text-muted-foreground col-span-full mt-2">
@@ -575,12 +684,43 @@ watch(isAuthenticated, (loggedIn) => {
       </div>
     </AccordionItem>
 
+    <AccordionItem value="note" :disabled="!selectedTime">
+        <div ref="noteRef">
+      <Card>
+        <AccordionTrigger>
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white font-semibold">4</div>
+            <div>
+              <CardTitle>Note</CardTitle>
+              <CardDescription>Optional note for the barber</CardDescription>
+            </div>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent>
+          <CardContent class="space-y-3">
+            <Label class="block font-semibold">Your note</Label>
+            <textarea
+              v-model="customerNote"
+              maxlength="120"
+              rows="4"
+              placeholder="Any extra details for your appointment..."
+              class="w-full resize-none border border-border rounded-md p-3 bg-background text-foreground"
+            />
+            <p class="text-xs text-muted-foreground">
+              {{ customerNote.length }}/120
+            </p>
+          </CardContent>
+        </AccordionContent>
+      </Card>
+      </div>
+    </AccordionItem>
+
     <AccordionItem value="userdata" :disabled="!selectedTime" v-if="!isAuthenticated">
         <div ref="userDataRef">
       <Card>
         <AccordionTrigger>
           <div class="flex items-center gap-2">
-            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white font-semibold">4</div>
+            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white font-semibold">5</div>
             <div>
               <CardTitle>Your Details</CardTitle>
               <CardDescription>Enter your information to complete the booking</CardDescription>
@@ -607,7 +747,7 @@ watch(isAuthenticated, (loggedIn) => {
     {{ bookingErrorMessage }}
   </div>
 
-  <Card v-if="isReadyForUser()" class="border-accent/30 bg-accent/10" >
+  <Card v-if="shouldShowBookingSummary" class="border-accent/30 bg-accent/10" >
     <CardHeader>
       <CardTitle>Booking Summary</CardTitle>
     </CardHeader>
@@ -630,6 +770,10 @@ watch(isAuthenticated, (loggedIn) => {
         <p class="text-muted-foreground">Time:</p>
         <p class="font-semibold">{{ selectedTime }}</p>
       </div>
+      <div v-if="bookingNote" class="flex justify-between gap-4">
+        <p class="text-muted-foreground">Note:</p>
+        <p class="font-semibold text-right whitespace-pre-line">{{ bookingNote }}</p>
+      </div>
       <div class="flex justify-between">
         <p class="text-muted-foreground">Total duration:</p>
         <p v-if="bookingSummaryLoaded" class="font-semibold">{{ bookingTotalDuration }} min</p>
@@ -643,7 +787,7 @@ watch(isAuthenticated, (loggedIn) => {
     </CardContent>
   </Card>
 
-  <Button v-if="isReadyForUser()" type="submit" size="lg" class="w-full text-lg font-bold mt-3" :disabled="!canSubmitBooking">
+  <Button v-if="shouldShowConfirmButton" type="submit" size="lg" class="w-full text-lg font-bold mt-3" :disabled="!canSubmitBooking">
     Confirm Booking
   </Button>
 </form>
