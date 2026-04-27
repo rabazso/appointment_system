@@ -1,10 +1,12 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Star, X } from 'lucide-vue-next'
+import { X } from 'lucide-vue-next'
 import BaseHeader from '@components/layout/BaseHeader.vue'
 import Footer from '@components/layout/Footer.vue'
 import { Button } from '@/components/ui/button'
+import ReviewCard from '@/components/employee/ReviewCard.vue'
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel'
 import { getEmployeeById } from '@/api'
 
 const route = useRoute()
@@ -15,11 +17,9 @@ const barber = ref(null)
 const reviews = ref([])
 const errorMessage = ref('')
 const activeGalleryImage = ref(null)
-
-function resetEmployeeDetailsState() {
-  barber.value = null
-  reviews.value = []
-}
+const reviewSnapCount = ref(0)
+const reviewCarouselApi = ref(null)
+const reviewAutoScrollInterval = ref(null)
 
 async function loadEmployeeDetails() {
   errorMessage.value = ''
@@ -28,9 +28,10 @@ async function loadEmployeeDetails() {
     const response = await getEmployeeById(route.params.id)
     const payload = response.data.data
     barber.value = payload
-    reviews.value = payload?.reviews?.data ?? []
+    reviews.value = payload.reviews
   } catch (error) {
-    resetEmployeeDetailsState()
+    barber.value = null
+    reviews.value = []
 
     if (error.response?.status === 404) {
       router.push({ name: 'Barbers' })
@@ -52,26 +53,57 @@ function closeGalleryPreview() {
   activeGalleryImage.value = null
 }
 
-function reviewStars(review) {
-  const value = Number(review?.rating)
-  if (!Number.isFinite(value) || value <= 0) return 0
-  return Math.min(5, Math.max(0, Math.round(value)))
+function updateReviewCarouselState(api = reviewCarouselApi.value) {
+  if (!api) return
+  reviewSnapCount.value = api.scrollSnapList().length
 }
 
-function formatReviewDate(value) {
-  if (!value) return ''
-
-  const date = new Date(value)
-  if (!Number.isFinite(date.getTime())) return ''
-
-  return new Intl.DateTimeFormat('hu-HU', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
+function stopReviewAutoScroll() {
+  if (!reviewAutoScrollInterval.value) return
+  clearInterval(reviewAutoScrollInterval.value)
+  reviewAutoScrollInterval.value = null
 }
+
+function startReviewAutoScroll() {
+  stopReviewAutoScroll()
+
+  if (!reviewCarouselApi.value || reviewSnapCount.value <= 1) return
+
+  reviewAutoScrollInterval.value = setInterval(() => {
+    const api = reviewCarouselApi.value
+    if (!api) return
+
+    if (api.canScrollNext()) {
+      api.scrollNext()
+      return
+    }
+
+    api.scrollTo(0)
+  }, 4000)
+}
+
+function onReviewCarouselInit(api) {
+  if (reviewCarouselApi.value) {
+    reviewCarouselApi.value.off('select', updateReviewCarouselState)
+    reviewCarouselApi.value.off('reInit', updateReviewCarouselState)
+  }
+
+  reviewCarouselApi.value = api
+  api.on('select', updateReviewCarouselState)
+  api.on('reInit', updateReviewCarouselState)
+
+  updateReviewCarouselState(api)
+  startReviewAutoScroll()
+}
+
+onUnmounted(() => {
+  if (reviewCarouselApi.value) {
+    reviewCarouselApi.value.off('select', updateReviewCarouselState)
+    reviewCarouselApi.value.off('reInit', updateReviewCarouselState)
+  }
+
+  stopReviewAutoScroll()
+})
 
 watch(
   () => route.params.id,
@@ -97,12 +129,8 @@ watch(
       <template v-else-if="barber">
         <section class="grid items-start gap-8 rounded-2xl border border-border bg-white p-6 lg:grid-cols-[280px_1fr] lg:p-8">
           <div class="mx-auto h-[280px] w-full max-w-[280px] self-start overflow-hidden rounded-xl bg-muted lg:mx-0 lg:w-[280px]">
-            <img
-              :src="barber.profile_image?.preview_url || fallbackImage"
-              :alt="barber.name"
-              class="h-full w-full object-cover"
-              @error="onImageError"
-            >
+            <img :src="barber.profile_image?.preview_url || fallbackImage" :alt="barber.name" class="h-full w-full object-cover"
+              @error="onImageError">
           </div>
 
           <div class="space-y-4">
@@ -110,7 +138,7 @@ watch(
             <p class="text-sm font-medium uppercase tracking-wide text-muted-foreground">
               {{ barber.is_available ? 'Available for booking' : 'Currently unavailable' }}
             </p>
-            <p class="text-base leading-relaxed text-foreground">
+            <p class="text-base text-foreground">
               {{ barber.bio || 'No description available for this barber.' }}
             </p>
 
@@ -122,20 +150,20 @@ watch(
               <span v-if="barber.rating !== null" class="ml-1">★</span>
             </p>
 
-            <div class="space-y-1 text-sm text-muted-foreground">
-              <p>Email: {{ barber.email }}</p>
-              <p v-if="barber.phone">Phone: {{ barber.phone }}</p>
+            <div class="space-y-1 text-sm">
+              <p><span class="font-semibold">Email:</span> {{ barber.email }}</p>
+              <p v-if="barber.phone"><span class="font-semibold">Phone:</span> {{ barber.phone }}</p>
             </div>
 
             <div v-if="barber.links?.length" class="space-y-2">
-              <p class="text-sm font-semibold">Links</p>
+              <p class="font-semibold">Links</p>
               <ul class="space-y-1">
                 <li v-for="(link, index) in barber.links" :key="`${link.url}-${index}`">
                   <a
                     :href="link.url"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-sm text-accent hover:underline"
+                    class="text-sm font-semibold text-accent hover:underline"
                   >
                     {{ link.label }}
                   </a>
@@ -164,10 +192,10 @@ watch(
               class="rounded-xl border border-border bg-background p-4"
             >
               <h3 class="text-lg font-semibold">{{ service.name }}</h3>
-              <p class="mt-2 text-sm text-muted-foreground">
+              <p class="mt-2 text-sm">
                 Duration: {{ service.duration }} mins
               </p>
-              <p class="text-sm text-muted-foreground">
+              <p class="text-sm">
                 Price: ${{ service.price }}
               </p>
             </article>
@@ -188,7 +216,7 @@ watch(
               @click="openGalleryPreview(image)"
             >
               <img
-                :src="image.preview_url"
+                :src="image?.preview_url || fallbackImage"
                 :alt="`Gallery image ${image.id}`"
                 class="h-36 w-full object-cover transition-transform duration-200 hover:scale-105"
                 @error="onImageError"
@@ -202,36 +230,36 @@ watch(
 
           <p v-if="!reviews.length" class="mt-4 text-muted-foreground">No reviews yet.</p>
 
-          <div v-else class="mt-4 space-y-4">
-            <article
-              v-for="review in reviews"
-              :key="review.id"
-              class="rounded-2xl border border-border bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
-            >
-              <div class="flex items-start justify-between gap-4">
-                <div class="min-w-0">
-                  <p class="truncate text-base font-semibold text-slate-900">
-                    {{ review.customer?.name || 'Anonymous' }}
-                  </p>
-                  <p class="mt-1 text-xs text-slate-500">
-                    {{ formatReviewDate(review.created_at) }}
-                  </p>
-                </div>
+          <Carousel
+            v-else
+            class="mt-4 w-full px-11 sm:px-12"
+            @init-api="onReviewCarouselInit"
+            @mouseenter="stopReviewAutoScroll"
+            @mouseleave="startReviewAutoScroll"
+            :opts="{
+              align: 'start',
+              loop: false,
+            }"
+          >
+            <CarouselContent class="-ml-2">
+              <CarouselItem
+                v-for="review in reviews"
+                :key="review.id"
+                class="basis-full pl-2 md:basis-1/2 xl:basis-1/3"
+              >
+                <ReviewCard :review="review" />
+              </CarouselItem>
+            </CarouselContent>
 
-                <div class="flex shrink-0 items-center gap-0.5 text-accent">
-                  <Star
-                    v-for="star in reviewStars(review)"
-                    :key="`${review.id}-${star}`"
-                    class="h-4 w-4 fill-accent text-accent"
-                  />
-                </div>
-              </div>
-
-              <p class="mt-4 text-sm leading-relaxed text-slate-700">
-                {{ review.comment || '' }}
-              </p>
-            </article>
-          </div>
+            <CarouselPrevious
+              v-if="reviewSnapCount > 1"
+              class="shadow-none left-2 h-9 w-9 border-slate-300 bg-white text-slate-600 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-40"
+            />
+            <CarouselNext
+              v-if="reviewSnapCount > 1"
+              class="shadown-none right-2 h-9 w-9 border-slate-300 bg-white text-slate-600 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-40"
+            />
+          </Carousel>
 
         </section>
       </template>

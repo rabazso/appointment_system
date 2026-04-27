@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEmployeeRequest;
 use App\Http\Resources\EmployeeDetailsResource;
 use App\Http\Resources\EmployeeResource;
+use App\Http\Resources\EmployeeReviewResource;
 use App\Http\Resources\EmployeeServiceResource;
 use App\Models\Employee;
 use App\Models\EmployeeBookingRuleConfiguration;
@@ -43,7 +44,9 @@ class EmployeeController extends Controller
 
         $isAvailable = (bool) $employee->versions()->validAt($now)->latest('valid_from')->value('is_available');
 
-        $reviews = $employee->reviews()->where('is_visible', true)->with(['customer:id,name'])->latest()->get();
+        $reviews = EmployeeReviewResource::collection(
+            $employee->reviews()->where('is_visible', true)->with(['customer:id,name', 'appointment.appointmentServices.service:id,name'])
+                ->latest()->get());
 
         $serviceConfiguration = $employee->serviceConfigurations()->validAt($now)->with('services.service')->latest('valid_from')->first();
 
