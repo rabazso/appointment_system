@@ -53,10 +53,19 @@ const props = defineProps({
   class: { type: null, required: false },
   layout: { type: null, required: false, default: undefined },
   yearRange: { type: Array, required: false },
+  dayStatuses: { type: Object, required: false, default: () => ({}) },
+  onUnavailableDateClick: { type: Function, required: false },
 });
 const emits = defineEmits(["update:modelValue", "update:placeholder"]);
 
-const delegatedProps = reactiveOmit(props, "class", "layout", "placeholder");
+const delegatedProps = reactiveOmit(
+  props,
+  "class",
+  "layout",
+  "placeholder",
+  "dayStatuses",
+  "onUnavailableDateClick",
+);
 
 const placeholder = useVModel(props, "placeholder", emits, {
   passive: true,
@@ -92,6 +101,36 @@ const [DefineMonthTemplate, ReuseMonthTemplate] = createReusableTemplate();
 const [DefineYearTemplate, ReuseYearTemplate] = createReusableTemplate();
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits);
+
+const dayStatusClasses = {
+  plenty: "bg-emerald-500",
+  busy: "bg-amber-400",
+  limited: "bg-rose-500",
+  none: "bg-slate-300",
+};
+
+function pad(number) {
+  return String(number).padStart(2, "0");
+}
+
+function dateKey(dateObj) {
+  return `${dateObj.year}-${pad(dateObj.month)}-${pad(dateObj.day)}`;
+}
+
+function isInCurrentMonth(day, month) {
+  return day.month === month.month && day.year === month.year;
+}
+
+function dayStatus(day, month) {
+  if (!isInCurrentMonth(day, month)) return "";
+
+  return props.dayStatuses?.[dateKey(day)] || "";
+}
+
+function dayStatusClass(day, month) {
+  const status = dayStatus(day, month);
+  return dayStatusClasses[status] || "";
+}
 </script>
 
 <template>
@@ -226,7 +265,15 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
               :key="weekDate.toString()"
               :date="weekDate"
             >
-              <CalendarCellTrigger :day="weekDate" :month="month.value" />
+              <CalendarCellTrigger
+                :day="weekDate"
+                :month="month.value"
+                :on-unavailable-click="props.onUnavailableDateClick"
+              />
+              <div
+                v-if="dayStatus(weekDate, month.value)"
+                :class="cn('pointer-events-none absolute left-1/2 bottom-1 h-1 w-[62%] -translate-x-1/2 rounded-full', dayStatusClass(weekDate, month.value))"
+              />
             </CalendarCell>
           </CalendarGridRow>
         </CalendarGridBody>

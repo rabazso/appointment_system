@@ -388,10 +388,17 @@ class AppointmentAvailabilityService
         }
 
         $blocked = $this->blockedIntervals($employee->id, $selectedDate, $workingStart, $workingEnd, $breaks);
+        $appointmentBlocked = $this->blockedIntervals(
+            $employee->id,
+            $selectedDate,
+            $workingStart,
+            $workingEnd,
+            new Collection()
+        );
         $totalMinutes = $workingStart->diffInMinutes($workingEnd);
         $blockedMinutes = 0;
 
-        foreach ($blocked as $block) {
+        foreach ($appointmentBlocked as $block) {
             $blockedMinutes += $block['start']->diffInMinutes($block['end']);
         }
 

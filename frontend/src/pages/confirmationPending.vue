@@ -51,9 +51,9 @@ const goHome = () => router.push('/')
               {{ booking.duration !== null && booking.duration !== undefined ? `${booking.duration} min` : '-' }}
             </p>
           </div>
-          <div v-if="booking.note" class="flex min-h-12 items-center justify-between border-t border-black/10 py-1">
+          <div v-if="booking.note" class="flex min-h-12 items-start justify-between border-t border-black/10 py-2">
             <p class="text-lg text-slate-600">Note:</p>
-            <p class="text-lg font-bold text-black text-right whitespace-pre-line">{{ booking.note }}</p>
+            <p class="max-w-[70%] min-w-0 text-lg font-bold text-black text-right whitespace-pre-wrap break-all">{{ booking.note }}</p>
           </div>
         </div>
         <p class="text-center text-base text-slate-600">Once you confirm, we will show your summary.</p>

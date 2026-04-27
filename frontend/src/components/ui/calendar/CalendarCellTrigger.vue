@@ -10,11 +10,24 @@ const props = defineProps({
   asChild: { type: Boolean, required: false },
   as: { type: null, required: false, default: "button" },
   class: { type: null, required: false },
+  onUnavailableClick: { type: Function, required: false },
 });
 
-const delegatedProps = reactiveOmit(props, "class");
+const delegatedProps = reactiveOmit(props, "class", "onUnavailableClick");
 
 const forwardedProps = useForwardProps(delegatedProps);
+
+function handleClick(event) {
+  const target = event?.currentTarget
+  const isUnavailable = Boolean(target?.dataset?.unavailable !== undefined)
+
+  if (!isUnavailable || !props.onUnavailableClick) {
+    return
+  }
+
+  event.preventDefault()
+  props.onUnavailableClick(props.day)
+}
 </script>
 
 <template>
@@ -37,6 +50,7 @@ const forwardedProps = useForwardProps(delegatedProps);
       )
     "
     v-bind="forwardedProps"
+    @click="handleClick"
   >
     <slot />
   </CalendarCellTrigger>

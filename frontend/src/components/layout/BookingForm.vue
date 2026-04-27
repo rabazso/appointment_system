@@ -76,6 +76,55 @@ const bookableDateSet = computed(() => new Set(
     .filter((day) => day.is_bookable)
     .map((day) => day.date),
 ))
+const bookableDaysByDate = computed(() =>
+  bookableDays.value.reduce((accumulator, day) => {
+    if (day?.date) {
+      accumulator[day.date] = day
+    }
+    return accumulator
+  }, {}),
+)
+const calendarDayStatuses = computed(() =>
+  bookableDays.value.reduce((accumulator, day) => {
+    if (day?.date && day?.is_bookable) {
+      const status = occupancyStatus(day)
+      if (status) {
+        accumulator[day.date] = status
+      }
+    }
+    return accumulator
+  }, {}),
+)
+const selectedDayOccupancy = computed(() => {
+  if (!selectedDate.value) return null
+
+  const day = bookableDaysByDate.value[dateToString(selectedDate.value)]
+  if (!day) return null
+
+  return {
+    status: occupancyStatus(day),
+    percent: normalizeOccupancyPercent(day.occupancy_percent),
+    isBookable: Boolean(day.is_bookable),
+  }
+})
+const selectedDayOccupancyLabel = computed(() => {
+  const occupancy = selectedDayOccupancy.value
+  if (!occupancy) return ''
+
+  if (!occupancy.isBookable) {
+    return 'No availability on this day.'
+  }
+
+  if (occupancy.status === 'limited') {
+    return `${occupancy.percent}% booked - very limited availability.`
+  }
+
+  if (occupancy.status === 'busy') {
+    return `${occupancy.percent}% booked - getting busy.`
+  }
+
+  return `${occupancy.percent}% booked - plenty of availability.`
+})
 const selectedAppointmentStart = computed(() => {
   if (!selectedDate.value || !selectedTime.value) return ''
 
@@ -292,6 +341,34 @@ function availabilityToDate(value) {
   return parsed
 }
 
+function normalizeOccupancyPercent(value) {
+  const normalized = Number(value)
+
+  if (!Number.isFinite(normalized)) {
+    return 0
+  }
+
+  return Math.min(100, Math.max(0, Math.round(normalized)))
+}
+
+function occupancyStatus(day) {
+  if (!day?.is_bookable) {
+    return ''
+  }
+
+  const occupancy = normalizeOccupancyPercent(day?.occupancy_percent)
+
+  if (occupancy >= 75) {
+    return 'limited'
+  }
+
+  if (occupancy >= 50) {
+    return 'busy'
+  }
+
+  return 'plenty'
+}
+
 function isServiceSelectable(service) {
   const validFromDate = availabilityToDate(service?.valid_from)
   if (!validFromDate) return true
@@ -352,6 +429,11 @@ function isDateUnavailable(date) {
   }
 
   return !bookableDateSet.value.has(dateToString(date))
+}
+
+function handleUnavailableDateClick() {
+  selectedTime.value = ''
+  resetBookingSummary()
 }
 
 function monthValueFor(date) {
@@ -660,10 +742,29 @@ watch(isAuthenticated, (loggedIn) => {
                           layout="month-and-year"
                           :min-value="today(getLocalTimeZone())"
                           :max-value="today(getLocalTimeZone()).add({weeks:4})"
+                          :day-statuses="calendarDayStatuses"
+                          :on-unavailable-date-click="handleUnavailableDateClick"
                           :is-date-unavailable="isDateUnavailable"/>
+                <div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                  <div class="flex items-center gap-1.5">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span>Plenty of availability</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="h-2 w-2 rounded-full bg-amber-400" />
+                    <span>Getting busy</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="h-2 w-2 rounded-full bg-rose-500" />
+                    <span>Very limited</span>
+                  </div>
+                </div>
               </div>
               <div>
                 <Label class="block mb-2 font-semibold">Choose a Time Slot</Label>
+                <p v-if="selectedDayOccupancyLabel" class="mb-2 text-xs text-muted-foreground">
+                  {{ selectedDayOccupancyLabel }}
+                </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   <Button v-for="time in timeSlots" :key="time"
                           variant="outline"
@@ -770,9 +871,9 @@ watch(isAuthenticated, (loggedIn) => {
         <p class="text-muted-foreground">Time:</p>
         <p class="font-semibold">{{ selectedTime }}</p>
       </div>
-      <div v-if="bookingNote" class="flex justify-between gap-4">
+      <div v-if="bookingNote" class="flex items-start justify-between gap-4">
         <p class="text-muted-foreground">Note:</p>
-        <p class="font-semibold text-right whitespace-pre-line">{{ bookingNote }}</p>
+        <p class="max-w-[70%] min-w-0 font-semibold text-right whitespace-pre-wrap break-all">{{ bookingNote }}</p>
       </div>
       <div class="flex justify-between">
         <p class="text-muted-foreground">Total duration:</p>

@@ -48,6 +48,37 @@ const formatTime = (apt) => {
   return start ? new Date(start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : apt.time
 }
 
+const formatDuration = (apt) => {
+  const totalDuration = Number(apt?.total_duration)
+  if (Number.isFinite(totalDuration) && totalDuration > 0) {
+    return `${Math.round(totalDuration)} min`
+  }
+
+  if (apt?.start_datetime && apt?.end_datetime) {
+    const diffMs = new Date(apt.end_datetime).getTime() - new Date(apt.start_datetime).getTime()
+    const diffMinutes = Math.round(diffMs / 60000)
+
+    if (Number.isFinite(diffMinutes) && diffMinutes > 0) {
+      return `${diffMinutes} min`
+    }
+  }
+
+  return '-'
+}
+
+const getServiceNames = (apt) => {
+  const services = Array.isArray(apt?.services) ? apt.services : []
+  const names = services
+    .map((service) => service?.name?.trim())
+    .filter(Boolean)
+
+  if (names.length > 0) {
+    return names.join(', ')
+  }
+
+  return apt?.service?.name || 'Service'
+}
+
 const sortedAppointments = computed(() => {
   return [...appointments.value].sort((a, b) => {
     const aTime = getStartDate(a) ? new Date(getStartDate(a)).getTime() : 0
@@ -141,7 +172,7 @@ const handleNewBooking = () => {
         <Card v-for="apt in sortedAppointments" :key="apt.id" class="border-accent/30 bg-accent/10 shadow-sm transition-all hover:border-accent/50 flex flex-col">
           <CardHeader class="pb-3 pt-5">
             <div class="flex justify-between items-start gap-2">
-              <CardTitle class="text-xl font-bold leading-tight">{{ apt.service?.name || 'Service' }}</CardTitle>
+              <CardTitle class="text-xl font-bold leading-tight">{{ getServiceNames(apt) }}</CardTitle>
               <span :class="`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider border ${getStatusColor(apt.status)}`">
                 {{ getStatusText(apt.status) }}
               </span>
@@ -165,13 +196,18 @@ const handleNewBooking = () => {
             </div>
 
             <div class="flex min-h-11 justify-between items-center border-b border-accent/20 py-2">
+              <p class="text-muted-foreground text-sm">Duration</p>
+              <p class="font-semibold text-foreground text-sm">{{ formatDuration(apt) }}</p>
+            </div>
+
+            <div class="flex min-h-11 justify-between items-center border-b border-accent/20 py-2">
               <p class="text-muted-foreground text-sm">Note</p>
-              <p class="max-w-[65%] text-right font-semibold text-foreground text-sm whitespace-pre-line break-words">{{ apt.customer_note?.trim() || '-' }}</p>
+              <p class="max-w-[65%] min-w-0 text-right font-semibold text-foreground text-sm whitespace-pre-wrap break-all">{{ apt.customer_note?.trim() || '-' }}</p>
             </div>
 
              <div class="flex min-h-11 justify-between items-center py-2">
               <p class="text-muted-foreground text-sm font-medium">Price</p>
-              <p class="font-bold text-lg text-primary">${{ apt.service?.price || apt.price }}</p>
+              <p class="font-bold text-lg text-primary">${{ apt.price ?? apt.service?.price }}</p>
             </div>
 
             <div v-if="apt.status === 'pending' || apt.status === 'confirmed'" class="pt-4 mt-auto">
@@ -203,7 +239,7 @@ const handleNewBooking = () => {
         </div>
 
         <div class="px-6 py-4 text-sm">
-          <p class="font-medium">{{ appointmentToCancel?.service?.name || 'Service' }}</p>
+          <p class="font-medium">{{ getServiceNames(appointmentToCancel || {}) }}</p>
           <p class="mt-1 text-muted-foreground">
             {{ formatDate(appointmentToCancel || {}) }} at {{ formatTime(appointmentToCancel || {}) }}
           </p>

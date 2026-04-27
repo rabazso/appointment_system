@@ -56,7 +56,7 @@
                 <p style="margin:0 0 8px; color:#111827; font-weight:700; font-size:14px;">
                     Customer note:
                 </p>
-                <p style="margin:0; color:#374151; font-size:14px; line-height:1.6; white-space:pre-line;">
+                <p style="margin:0; color:#374151; font-size:14px; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-word;">
                     {{ $appointment->customer_note }}
                 </p>
             </td>

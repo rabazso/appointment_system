@@ -90,9 +90,9 @@ const handleGoHome = () => {
               {{ booking.duration !== null && booking.duration !== undefined ? `${booking.duration} min` : '-' }}
             </p>
           </div>
-          <div v-if="booking.note" class="flex min-h-11 items-center justify-between border-b border-accent/20 py-2 last:border-0 last:pb-0">
+          <div v-if="booking.note" class="flex min-h-11 items-start justify-between border-b border-accent/20 py-2 last:border-0 last:pb-0">
             <p class="text-muted-foreground">Note:</p>
-            <p class="font-semibold text-foreground text-right whitespace-pre-line">{{ booking.note }}</p>
+            <p class="max-w-[70%] min-w-0 font-semibold text-foreground text-right whitespace-pre-wrap break-all">{{ booking.note }}</p>
           </div>
 
           <div class="flex justify-between items-center pt-2">
