@@ -17,25 +17,6 @@ const plugin = Autoplay({
   stopOnInteraction: false,
 })
 
-function getImageSrc(barber) {
-  const backendOrigin = 'http://backend.vm1.test'
-  const byId = {
-    1: 'Blowout Ben.png',
-    2: 'Crispy Chris.png',
-    3: 'Bouncy Bella.png',
-    4: 'Loud Lucy.png',
-    5: 'Haircut Harry.png'
-  }
-
-  const fileName = byId[barber?.id]
-  if (!fileName) return '/images/barber_placeholder.png'
-  return `${backendOrigin}/storage/images/${barber.id}/${encodeURIComponent(fileName)}`
-}
-
-function onImageError(event) {
-  event.target.src = '/images/barber_placeholder.png'
-}
-
 const barbers = ref([])
 const toast = useToastStore()
 const selectedIndex = ref(0)
@@ -66,7 +47,8 @@ function scrollToDot(index) {
 
 onMounted(async () => {
   try {
-    barbers.value = (await getEmployees()).data
+    const response = await getEmployees()
+    barbers.value = response.data.data
   } catch (error) {
     console.error('Failed to load barbers preview:', error)
     toast.showError('Failed to load barbers preview.')
@@ -102,23 +84,23 @@ onUnmounted(() => {
                 <CarouselItem
                   v-for="barber in barbers"
                   :key="barber?.id"
-                  class="pl-1 md:basis-1/2 lg:basis-1/3"
+                  class="pl-1 md:basis-1/2 lg:basis-1/3 pb-12"
                 >
                   <div class="p-1 h-full">
-                    <Card class="h-full hover:scale-105 transition-transform duration-300">
-                      <CardHeader>
-                        <img
-                          :src="getImageSrc(barber)"
-                          :alt="barber?.name"
-                          class="w-full h-72 object-cover rounded-lg"
-                          @error="onImageError"
-                        >
-                      </CardHeader>
-                      <CardContent>
-                        <CardTitle class="text-xl font-bold text-primary mb-1">{{ barber.name }}</CardTitle>
-                        <CardDescription class="text-accent font-semibold">{{ barber.bio }}</CardDescription>
-                      </CardContent>
-                    </Card>
+                    <RouterLink :to="{ name: 'EmployeeDetails', params: { id: barber.id } }" class="block h-full">
+                      <Card class="h-full hover:scale-105 transition-transform duration-300">
+                        <CardHeader>
+                          <img
+                            :src="barber.profile_image?.preview_url ?? '/images/barber_placeholder.png'"
+                            :alt="barber?.name"
+                            class="w-full h-72 object-cover rounded-lg"
+                          >
+                        </CardHeader>
+                        <CardContent>
+                          <CardTitle class="text-xl text-center font-bold text-primary mb-1">{{ barber.name }}</CardTitle>
+                        </CardContent>
+                      </Card>
+                    </RouterLink>
                   </div>
                 </CarouselItem>
               </CarouselContent>
@@ -138,7 +120,7 @@ onUnmounted(() => {
               />
             </div>
             <p v-else class="text-center text-muted-foreground">Loading barbers...</p>
-            <div class="text-center mt-8">
+            <div class="text-center mt-18">
                 <Button variant="secondary" class="text-lg md:text-xl font-bold w-full" to="/barbers">
                     See More...
                 </Button>
