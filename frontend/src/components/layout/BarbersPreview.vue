@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/carousel'
 import { getEmployees } from '@/api/index'
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const plugin = Autoplay({
   delay: 4000,
@@ -36,6 +37,7 @@ function onImageError(event) {
 }
 
 const barbers = ref([])
+const toast = useToastStore()
 const selectedIndex = ref(0)
 const snapCount = ref(0)
 const carouselApiRef = ref(null)
@@ -67,6 +69,7 @@ onMounted(async () => {
     barbers.value = (await getEmployees()).data
   } catch (error) {
     console.error('Failed to load barbers preview:', error)
+    toast.showError('Failed to load barbers preview.')
   }
 })
 

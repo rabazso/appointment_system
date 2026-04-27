@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import BaseHeader from '@components/layout/BaseHeader.vue'
 import { resetPassword } from '@/api/index'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +18,7 @@ const passwordConfirmation = ref('')
 const loading = ref(false)
 const successMessage = ref('')
 const errorMessage = ref('')
+const toast = useToastStore()
 const countdown = ref(0)
 let redirectTimer = null
 let countdownTimer = null
@@ -84,6 +86,7 @@ async function submit() {
     }, 1000)
   } catch (error) {
     errorMessage.value = readApiError(error)
+    toast.showError('Failed to reset password.')
   } finally {
     loading.value = false
   }

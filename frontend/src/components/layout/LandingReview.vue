@@ -8,6 +8,7 @@ import { getReviews, getUserAppointments, postReview } from '@/api/index';
 import LeaveReviewModal from '@/components/modals/LeaveReviewModal.vue'
 import AuthModal from '@/components/auth/AuthModal.vue'
 import { useAuthStore } from '@stores/AuthStore.js'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const reviews = ref([])
 const showLeaveReviewModal = ref(false)
@@ -17,6 +18,7 @@ const reviewSubmitting = ref(false)
 const reviewError = ref('')
 const preselectedAppointmentId = ref('')
 const auth = useAuthStore()
+const toast = useToastStore()
 const route = useRoute()
 const router = useRouter()
 const isLoggedIn = computed(() => auth.isLoggedIn)
@@ -40,8 +42,13 @@ function extractReviews(response) {
 }
 
 async function loadReviews() {
-    const response = await getReviews()
-    reviews.value = extractReviews(response)
+    try {
+        const response = await getReviews()
+        reviews.value = extractReviews(response)
+    } catch (error) {
+        reviews.value = []
+        toast.showError('Failed to load reviews.')
+    }
 }
 
 async function loadReviewAppointments() {
@@ -53,6 +60,7 @@ async function loadReviewAppointments() {
     } catch (error) {
         reviewAppointments.value = []
         reviewError.value = error.response?.data?.message || 'Could not load your appointments'
+        toast.showError('Failed to load your appointments.')
     }
 }
 
@@ -112,6 +120,7 @@ async function handleReviewSubmit(payload) {
             error.response?.data?.errors?.comment?.[0] ||
             error.response?.data?.message ||
             'Could not submit your review'
+        toast.showError('Failed to submit review.')
     } finally {
         reviewSubmitting.value = false
     }

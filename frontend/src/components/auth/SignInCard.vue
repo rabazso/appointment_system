@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { login } from '@/api/index'
 import { useAuthStore } from '@stores/AuthStore.js'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const store = useAuthStore()
+const toast = useToastStore()
 const emit = defineEmits(['close', 'success', 'switch'])
 
 const data = ref({
@@ -31,6 +33,7 @@ async function submitHandler() {
     emit('close')
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'Something went wrong'
+    toast.showError('Failed to sign in.')
   } finally {
     loading.value = false
   }

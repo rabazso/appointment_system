@@ -5,11 +5,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import BaseHeader from '@components/layout/BaseHeader.vue'
 import { forgotPassword } from '@/api/index'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const email = ref('')
 const loading = ref(false)
 const successMessage = ref('')
 const errorMessage = ref('')
+const toast = useToastStore()
 
 function readApiError(error) {
   const errors = error.response?.data?.errors
@@ -33,6 +35,7 @@ async function submit() {
     successMessage.value = data?.message || 'Reset link sent. Check your inbox.'
   } catch (error) {
     errorMessage.value = readApiError(error)
+    toast.showError('Failed to send reset link.')
   } finally {
     loading.value = false
   }

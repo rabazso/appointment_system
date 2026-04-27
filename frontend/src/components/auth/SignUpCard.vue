@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardAction, CardDescription, CardContent } from '@/components/ui/card'
 import { register } from '@/api/index'
 import { Check, X } from 'lucide-vue-next'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const emit = defineEmits(['close', 'success', 'switch'])
+const toast = useToastStore()
 
 const errorMessage = ref('')
 const loading = ref(false)
@@ -27,6 +29,7 @@ async function submitHandler(formData) {
     emit('close')
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'Something went wrong'
+    toast.showError('Failed to sign up.')
   } finally {
     loading.value = false
   }

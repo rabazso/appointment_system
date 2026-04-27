@@ -18,8 +18,10 @@ import {
 } from '@/api/index'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore.js'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const router = useRouter()
+const toast = useToastStore()
 
 const selectedServices = ref([])
 const selectedBarber = ref('')
@@ -82,7 +84,8 @@ onMounted(async () => {
     const res = await getBookingServices()
     services.value = apiCollection(res).filter((service) => service.is_valid !== false)
   } catch (error) {
-    bookingErrorMessage.value = extractBookingError(error, 'Failed to load booking services.')
+    bookingErrorMessage.value = extractBookingError(error, 'Failed to load services.')
+    toast.showError('Failed to load services.')
   }
 })
 
@@ -132,7 +135,8 @@ async function loadBarbersForSelectedServices({ openAfterLoad = false } = {}) {
       barberRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   } catch (error) {
-    bookingErrorMessage.value = extractBookingError(error, 'Failed to load barbers for this service.')
+    bookingErrorMessage.value = extractBookingError(error, 'Failed to load barbers.')
+    toast.showError('Failed to load barbers.')
   }
 }
 
@@ -218,6 +222,7 @@ async function loadTimeSlots() {
   } catch (error) {
     timeSlots.value = []
     bookingErrorMessage.value = extractBookingError(error, 'Failed to load time slots.')
+    toast.showError('Failed to load time slots.')
   }
 }
 
@@ -272,7 +277,8 @@ async function loadBookableDays(startDate) {
   } catch (error) {
     bookableDays.value = []
     bookableDaysLoaded.value = true
-    bookingErrorMessage.value = extractBookingError(error, 'Failed to load bookable days.')
+    bookingErrorMessage.value = extractBookingError(error, 'Failed to load dates.')
+    toast.showError('Failed to load dates.')
   }
 }
 
@@ -306,7 +312,8 @@ async function loadBookingSummary() {
     bookingSummaryLoaded.value = true
   } catch (error) {
     resetBookingSummary()
-    bookingErrorMessage.value = extractBookingError(error, 'Failed to load booking summary.')
+    bookingErrorMessage.value = extractBookingError(error, 'Failed to load summary.')
+    toast.showError('Failed to load summary.')
   }
 }
 
@@ -358,10 +365,8 @@ const handleSubmit = async () => {
   } catch (err) {
     const wasAuthenticated = isAuthenticated.value
 
-    bookingErrorMessage.value = extractBookingError(
-      err,
-      'Failed to book appointment. Please check your details and try again.'
-    )
+    bookingErrorMessage.value = extractBookingError(err, 'Failed to book appointment.')
+    toast.showError('Failed to book appointment.')
 
     if (err?.response?.status === 401) {
       store.setToken(null)

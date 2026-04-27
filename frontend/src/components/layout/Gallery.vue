@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { getShopImages } from '@/api'
+import { useToastStore } from '@/stores/ToastStore.js'
 import {
   Carousel,
   CarouselContent,
@@ -8,6 +9,7 @@ import {
 } from '@/components/ui/carousel'
 
 const images = ref([])
+const toast = useToastStore()
 
 function shuffleImages(items) {
   const shuffled = [...items]
@@ -30,6 +32,7 @@ async function loadGallery() {
   } catch (error) {
     console.error('Failed to load shop gallery images:', error)
     images.value = []
+    toast.showError('Failed to load gallery images.')
   }
 }
 

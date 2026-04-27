@@ -7,10 +7,12 @@ import { useAuthStore } from '@stores/AuthStore.js'
 import AuthChoiceModal from '@/components/modals/AuthChoiceModal.vue'
 import AuthModal from '@/components/auth/AuthModal.vue'
 import Toast from '@/components/ui/Toast.vue'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const services = ref([])
 const router = useRouter()
 const auth = useAuthStore()
+const globalToast = useToastStore()
 
 const showAuthChoice = ref(false)
 const loginOpen = ref(false)
@@ -20,7 +22,12 @@ const toastMessage = ref('')
 const isLoggedIn = computed(() => auth.isLoggedIn)
 
 onMounted(async () => {
-  services.value = (await getServices()).data
+  try {
+    services.value = (await getServices()).data
+  } catch (error) {
+    services.value = []
+    globalToast.showError('Failed to load services.')
+  }
 })
 
 watch(isLoggedIn, (loggedIn) => {

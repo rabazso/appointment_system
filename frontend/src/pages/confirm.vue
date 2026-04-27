@@ -4,9 +4,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { confirmAppointment } from '@/api/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const route = useRoute()
 const router = useRouter()
+const toast = useToastStore()
 
 const status = ref('loading')
 const errorMessage = ref('')
@@ -37,6 +39,7 @@ onMounted(async () => {
   } catch (err) {
     status.value = 'error'
     errorMessage.value = 'We could not confirm your booking. The link may be invalid or expired.'
+    toast.showError('Failed to confirm booking.')
   }
 })
 

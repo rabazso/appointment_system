@@ -5,11 +5,13 @@ import { AlertCircle, Mail, MailCheck } from 'lucide-vue-next'
 import { verifyEmailAddress } from '@/api/index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const REDIRECT_DELAY_MS = 3000
 
 const route = useRoute()
 const router = useRouter()
+const toast = useToastStore()
 
 const status = ref('loading')
 const message = ref('We are checking your verification link now.')
@@ -77,6 +79,7 @@ onMounted(async () => {
   } catch (error) {
     status.value = 'invalid'
     message.value = error.response?.data?.message || 'We could not verify your email with this link.'
+    toast.showError('Failed to verify email.')
   }
 })
 

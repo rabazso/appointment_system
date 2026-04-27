@@ -17,11 +17,13 @@ import AuthModal from '@/components/auth/AuthModal.vue'
 import Toast from '@/components/ui/Toast.vue'
 import { useAuthStore } from '@stores/AuthStore.js'
 import { getCurrentUser } from '@/api'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const props = defineProps({ variant: String, required: false })
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const globalToast = useToastStore()
 
 const sheetOpen = ref(false)
 const loginOpen = ref(false)
@@ -95,6 +97,7 @@ async function signOut() {
     showToast.value = true
   } catch (error) {
     console.error(error)
+    globalToast.showError('Failed to sign out.')
   }
 }
 
@@ -130,6 +133,7 @@ async function hydrateAccountInfo() {
     }
   } catch (error) {
     console.error('Failed to hydrate account info', error)
+    globalToast.showError('Failed to load account info.')
   }
 }
 

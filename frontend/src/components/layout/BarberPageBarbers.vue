@@ -8,9 +8,11 @@ import { useAuthStore } from '@/stores/AuthStore'
 import AuthChoiceModal from '@/components/modals/AuthChoiceModal.vue'
 import AuthModal from '@/components/auth/AuthModal.vue'
 import Toast from '@/components/ui/Toast.vue'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const globalToast = useToastStore()
 
 const barbers = ref([])
 const showAuthChoice = ref(false)
@@ -45,6 +47,7 @@ onMounted(async () => {
     barbers.value = response.data 
   } catch (error) {
     console.error('Nem sikerült betölteni a barbereket:', error)
+    globalToast.showError('Failed to load barbers.')
   }
 })
 

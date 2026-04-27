@@ -9,8 +9,10 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const router = useRouter()
+const toast = useToastStore()
 const appointments = ref([])
 const loading = ref(true)
 const error = ref(null)
@@ -82,6 +84,7 @@ const confirmCancelAppointment = async () => {
   } catch (err) {
     console.error("Failed to cancel appointment:", err)
     error.value = err.response?.data?.message || "Failed to cancel appointment. Please try again later."
+    toast.showError('Failed to cancel appointment.')
   } finally {
     cancelling.value = false
   }
@@ -95,6 +98,7 @@ onMounted(async () => {
   } catch (err) {
     console.error("Error fetching appointments:", err)
     error.value = "Failed to load appointments. Please try again later."
+    toast.showError('Failed to load appointments.')
   } finally {
     loading.value = false
   }
