@@ -3,10 +3,44 @@
     v-if="activeSection === 'menu'"
     @close="$emit('close')"
   >
-    <ModalHeader
-      title="Employee Configuration"
-      description="Choose what you want to configure for this employee."
-    />
+    <div class="mb-5 flex items-start gap-4">
+      <div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-100">
+        <img
+          v-if="employee.profile_image?.preview_url"
+          :src="employee.profile_image.preview_url"
+          :alt="employee.name"
+          class="h-full w-full object-cover"
+        />
+        <div
+          v-else
+          class="flex h-full w-full items-center justify-center bg-slate-100"
+        >
+          <User class="h-7 w-7 text-slate-500" />
+        </div>
+      </div>
+
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h2 class="text-2xl font-semibold tracking-tight text-slate-950">{{ employee.name }}</h2>
+            <p class="mt-1 text-sm text-slate-500">Choose what you want to configure for this employee.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <div
+              class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
+              :class="employee.is_available ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'"
+            >
+              {{ employee.is_available ? 'Available' : 'Unavailable' }}
+            </div>
+
+            <div class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold">
+              ⭐ {{ formatRating(employee.rating) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="space-y-3">
       <button
@@ -62,8 +96,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { CircleCheck, Clock, Scissors, CalendarCog } from 'lucide-vue-next'
-import ModalHeader from '@/components/admin/ModalHeader.vue'
+import { CalendarCog, CircleCheck, Clock, Scissors, Star, User } from 'lucide-vue-next'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeAvailabilityModal from './EmployeeAvailabilityModal.vue'
 import EmployeeBookingRulesModal from './EmployeeBookingRulesModal.vue'
@@ -110,5 +143,10 @@ const menuItems = [
 
 function showMenu() {
   activeSection.value = 'menu'
+}
+
+function formatRating(rating) {
+  const value = Number(rating)
+  return Number.isFinite(value) ? value.toFixed(1) : '0.0'
 }
 </script>

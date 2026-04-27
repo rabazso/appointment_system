@@ -1,62 +1,101 @@
 <template>
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-    @click.self="$emit('close')"
-  >
-    <div
-      class="relative w-full max-w-2xl rounded-2xl bg-white p-5 text-slate-900 shadow-[0_24px_80px_rgba(15,23,42,0.18)]"
-    >
-      <button
-        type="button"
-        class="absolute right-3 top-3 text-slate-500 transition hover:text-slate-900"
-        @click="$emit('close')"
-      >
-        <X class="h-6 w-6" />
-      </button>
+  <ModalShell content-class="max-w-lg" @close="$emit('close')">
+    <div class="space-y-5">
+      <div class="flex flex-col gap-4">
+        <div class="flex items-start gap-4">
+          <div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-100">
+            <img
+              v-if="employee.profile_image?.preview_url"
+              :src="employee.profile_image.preview_url"
+              :alt="employee.name"
+              class="h-full w-full object-cover"
+            />
+            <div
+              v-else
+              class="flex h-full w-full items-center justify-center bg-slate-100"
+            >
+              <User class="h-8 w-8 text-slate-500" />
+            </div>
+          </div>
 
-      <div class="mb-5 flex items-center gap-3">
-        <div class="h-14 w-14 overflow-hidden rounded-xl bg-slate-100">
-          <img
-            v-if="employee.avatar || employee.photo_url"
-            :src="employee.avatar || employee.photo_url"
-            :alt="employee.name"
-            class="h-full w-full object-cover"
-          />
-          <div
-            v-else
-            class="flex h-full w-full items-center justify-center bg-slate-100"
-          >
-            <User class="h-6 w-6 text-slate-500" />
+          <div class="min-w-0 flex-1">
+            <div class="space-y-3">
+              <div class="min-w-0">
+                <h2 class="text-2xl font-semibold tracking-tight text-slate-950">{{ employee.name }}</h2>
+                <p class="mt-1 text-sm text-slate-500">Quick overview of this employee.</p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-4">
+                <div
+                  class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
+                  :class="employee.is_available ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-900'"
+                >
+                  <span class="h-2 w-2 rounded-full" :class="employee.is_available ? 'bg-emerald-500' : 'bg-rose-500'" />
+                  {{ employee.is_available ? 'Available' : 'Unavailable' }}
+                </div>
+
+                <div class="inline-flex items-center gap-1 text-sm font-semibold text-slate-950">
+                  <Star class="h-4 w-4 fill-amber-400 text-amber-400" />
+                  {{ formatRating(employee.rating) }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div>
-          <h2 class="text-2xl font-semibold tracking-tight text-slate-950">{{ employee.name }}</h2>
-          <p class="mt-1 text-sm text-slate-500">{{ employeeMeta.role }}</p>
-        </div>
-      </div>
+        <div class="space-y-3">
+          <RouterLink
+            :to="'/barbers/' + employee.id"
+            class="flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-4 transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600">
+              <ContactRound class="h-5 w-5" />
+            </div>
+            <div>
+              <p class="text-lg font-semibold text-slate-900">Profile</p>
+              <p class="mt-1 text-sm text-slate-500">
+                {{ employee.is_available ? 'Currently available for bookings.' : 'Currently unavailable for bookings.' }}
+              </p>
+            </div>
+          </RouterLink>
 
-      <div class="grid gap-3 md:grid-cols-2">
-        <div class="rounded-xl border border-slate-200 bg-white p-3.5">
-          <p class="text-xl font-semibold text-slate-950">Profile</p>
-          <p class="mt-1 text-base text-slate-500">{{ employeeMeta.experience }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white p-3.5">
-          <p class="text-xl font-semibold text-slate-950">Appointments</p>
-          <p class="mt-1 text-base text-slate-500">{{ employeeMeta.appointments }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white p-3.5 md:col-span-2">
-          <p class="text-xl font-semibold text-slate-950">Time off</p>
-          <p class="mt-1 text-base text-slate-500">{{ employeeMeta.timeOff }}</p>
+          <RouterLink
+            :to="{name: 'Appointments', query:{employeeId: employee.id}}"
+            type="button"
+            class="flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-4 text-left transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600">
+              <CalendarDays class="h-5 w-5" />
+            </div>
+            <div>
+              <p class="text-lg font-semibold text-slate-900">Appointments</p>
+              <p class="mt-1 text-sm text-slate-500">Review and manage this employee's appointments.</p>
+            </div>
+          </RouterLink>
+
+          <RouterLink
+            :to="{ name: 'AdminReviews', query: { employeeId: employee.id } }"
+            type="button"
+            class="flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-4 text-left transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600">
+              <MessageSquareText class="h-5 w-5" />
+            </div>
+            <div>
+              <p class="text-lg font-semibold text-slate-900">Reviews</p>
+              <p class="mt-1 text-sm text-slate-500">Review and manage customer feedback for this employee.</p>
+            </div>
+          </RouterLink>
         </div>
       </div>
     </div>
-  </div>
+  </ModalShell>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { User, X } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
+import { CalendarDays, ContactRound, MessageSquareText, Star, User } from 'lucide-vue-next'
+import ModalShell from '@/components/admin/ModalShell.vue'
 
 defineEmits(['close'])
 
@@ -67,45 +106,9 @@ const props = defineProps({
   },
 })
 
-const employeeMeta = computed(() => {
-  const employeeMetaMap = {
-    'Haircut Harry': {
-      role: 'Senior barber',
-      experience: '6 years experience',
-      appointments: '8 upcoming',
-      timeOff: 'No time off scheduled',
-    },
-    'Bouncy Bella': {
-      role: 'Color specialist',
-      experience: '8 years experience',
-      appointments: '12 upcoming',
-      timeOff: '2 upcoming leave days',
-    },
-    'Blowout Ben': {
-      role: 'Senior stylist',
-      experience: '9 years experience',
-      appointments: '10 upcoming',
-      timeOff: 'No time off scheduled',
-    },
-    'Loud Lucy': {
-      role: 'Junior barber',
-      experience: '3 years experience',
-      appointments: '4 upcoming',
-      timeOff: '1 upcoming leave',
-    },
-    'Crispy Chris': {
-      role: 'Fade specialist',
-      experience: '7 years experience',
-      appointments: '7 upcoming',
-      timeOff: 'No time off scheduled',
-    },
-  }
+function formatRating(rating) {
+  const value = Number(rating)
+  return Number.isFinite(value) ? value.toFixed(1) : '0.0'
+}
 
-  return employeeMetaMap[props.employee.name] ?? {
-    role: 'Senior barber',
-    experience: '5 years experience',
-    appointments: '5 upcoming',
-    timeOff: 'No time off scheduled',
-  }
-})
 </script>
