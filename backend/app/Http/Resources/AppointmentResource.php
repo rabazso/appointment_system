@@ -21,6 +21,10 @@ class AppointmentResource extends JsonResource
             ])
             ->values();
         $firstService = $services->first();
+        $serviceIds = $services
+            ->pluck('id')
+            ->filter()
+            ->values();
 
         return [
             'id' => $this->id,
@@ -29,12 +33,14 @@ class AppointmentResource extends JsonResource
             'created_at' => $this->created_at?->toIso8601String(),
             'start_datetime' => $this->start_datetime?->toIso8601String(),
             'end_datetime' => $this->end_datetime?->toIso8601String(),
+            'total_duration' => $this->total_duration,
             'price' => $this->total_price,
             'customer_id' => $this->customer_id,
             'employee_id' => $this->employee_id,
             'cancellation_reason' => $this->cancellation_reason,
             'cancelled_by' => $this->cancelled_by,
             'service_id' => $firstService['id'] ?? null,
+            'service_ids' => $serviceIds,
             'service' => $firstService,
             'services' => $services,
             'employee' => [
