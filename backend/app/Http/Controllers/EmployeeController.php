@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EmployeeTemporaryPasswordMail;
 use App\Http\Requests\StoreEmployeeRequest;
 use App\Http\Resources\EmployeeDetailsResource;
 use App\Http\Resources\EmployeeResource;
@@ -13,11 +14,10 @@ use App\Models\EmployeeScheduleConfiguration;
 use App\Models\EmployeeServiceConfiguration;
 use App\Models\User;
 use App\Models\EmployeeVersion;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
@@ -66,10 +66,13 @@ class EmployeeController extends Controller
     public function store(StoreEmployeeRequest $request): EmployeeResource
     {
         $employee = DB::transaction(function () use ($request) {
+            $temporaryPassword = Str::random(12);
+
             $user = User::create([
                 'email' => $request->validated('email'),
-                'password' => Hash::make(Str::random(40)),
+                'password' => Hash::make($temporaryPassword),
                 'role' => 'employee',
+                'email_verified_at' => now(),
             ]);
 
             $employee = Employee::create([
@@ -80,14 +83,22 @@ class EmployeeController extends Controller
 
             $this->createDefaultConfigurations($employee);
 
-            event(new Registered($user));
-            Password::sendResetLink(['email' => $user->email]);
-
-            return $employee;
+            return [
+                'employee' => $employee,
+                'user_email' => $user->email,
+                'temporary_password' => $temporaryPassword,
+            ];
         });
 
+        Mail::to($employee['user_email'])->send(new EmployeeTemporaryPasswordMail(
+            employeeName: $employee['employee']->name,
+            email: $employee['user_email'],
+            temporaryPassword: $employee['temporary_password'],
+            loginUrl: config('app.frontend_url') . '/employee/login',
+        ));
+
         return new EmployeeResource(
-            $employee->load([
+            $employee['employee']->load([
                 'profileImage',
                 'user',
                 'versions' => fn ($query) => $query->validAt(now()),
