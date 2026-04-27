@@ -6,6 +6,7 @@ use App\Http\Requests\CancelEmployeeAppointmentRequest;
 use App\Http\Resources\AppointmentStatusResource;
 use App\Http\Resources\EmployeeAppointmentResource;
 use App\Models\Appointment;
+use App\Services\Booking\AppointmentCancellationNotificationService;
 use Illuminate\Http\Request;
 
 class EmployeeDashboardController extends Controller
@@ -25,7 +26,7 @@ class EmployeeDashboardController extends Controller
         return EmployeeAppointmentResource::collection($appointments->get());
     }
 
-    public function cancelAppointment(CancelEmployeeAppointmentRequest $request, Appointment $appointment)
+    public function cancelAppointment(CancelEmployeeAppointmentRequest $request, Appointment $appointment, AppointmentCancellationNotificationService $cancellationNotificationService)
     {
         $employee = $request->user()->employee;
         if ($appointment->employee_id !== $employee->id) {
@@ -39,6 +40,7 @@ class EmployeeDashboardController extends Controller
         $reason = trim($request->validated('cancellation_reason'));
 
         $appointment->update(['status' => 'cancelled', 'cancellation_reason' => $reason ? $reason : null, 'cancelled_by' => 'employee']);
+        $cancellationNotificationService->send($appointment);
 
         return new AppointmentStatusResource($appointment);
     }

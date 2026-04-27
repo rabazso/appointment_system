@@ -8,12 +8,12 @@ use App\Http\Resources\AppointmentResource;
 use App\Http\Resources\AppointmentStatusResource;
 use App\Http\Resources\EmployeeAppointmentResource;
 use App\Http\Resources\UserAppointmentResource;
-use App\Mail\AppointmentCancelled;
 use App\Mail\Booking;
 use App\Mail\BookingSummary;
 use App\Mail\ReviewRequest;
 use App\Models\Appointment;
 use App\Models\Review;
+use App\Services\Booking\AppointmentCancellationNotificationService;
 use App\Services\Booking\AppointmentAvailabilityService;
 use App\Services\Booking\AppointmentCreationService;
 use Illuminate\Support\Facades\Mail;
@@ -128,7 +128,7 @@ class AppointmentController extends Controller
         return redirect()->away($frontendBase . "/summary" . ($query ? "?{$query}" : ''));
     }
 
-    public function cancelUserAppointment(Request $request, Appointment $appointment)
+    public function cancelUserAppointment(Request $request, Appointment $appointment, AppointmentCancellationNotificationService $cancellationNotificationService)
     {
         $customer = $request->user()->customer;
         if (!$customer || $appointment->customer_id !== $customer->id) {
@@ -147,6 +147,7 @@ class AppointmentController extends Controller
             'status' => 'cancelled',
             'cancelled_by' => 'customer',
         ])->save();
+        $cancellationNotificationService->send($appointment);
 
         return response()->json([
             'message' => 'Appointment cancelled',
@@ -187,7 +188,7 @@ class AppointmentController extends Controller
         return response()->json($payload);
     }
 
-    public function cancelEmployeeAppointment(Request $request, Appointment $appointment)
+    public function cancelEmployeeAppointment(Request $request, Appointment $appointment, AppointmentCancellationNotificationService $cancellationNotificationService)
     {
         $employee = $request->user()->employee;
         if (!$employee || $appointment->employee_id !== $employee->id) {
@@ -218,7 +219,7 @@ class AppointmentController extends Controller
             'cancellation_reason' => $reason !== '' ? $reason : null,
             'cancelled_by' => 'employee',
         ])->save();
-        $this->sendEmployeeCancellationEmail($appointment);
+        $cancellationNotificationService->send($appointment);
 
         return response()->json([
             'message' => 'Appointment cancelled',
@@ -320,22 +321,6 @@ class AppointmentController extends Controller
         Mail::to($appointment->customer->email)->send(
             new ReviewRequest($appointment, $reviewLink)
         );
-    }
-
-    private function sendEmployeeCancellationEmail(Appointment $appointment): void
-    {
-        $appointment->loadMissing([
-            'customer:id,name,email',
-            'appointmentServices.service:id,name',
-            'employee:id,name',
-        ]);
-
-        $recipientEmail = $appointment->customer?->email;
-        if (!$recipientEmail) {
-            return;
-        }
-
-        Mail::to($recipientEmail)->send(new AppointmentCancelled($appointment));
     }
 
     private function addServiceIdsToRequest(Request $request): void
