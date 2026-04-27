@@ -1,9 +1,36 @@
 <script setup>
+import { computed, onMounted } from 'vue'
 import { Clock3, Mail, MapPin, Phone } from 'lucide-vue-next'
+import { usePublicShopStore } from '@stores/PublicShopStore.js'
 
-const address = 'Budapest, Clark Ádám tér'
-const encodedAddress = encodeURIComponent(address)
-const mapURL = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+const publicShop = usePublicShopStore()
+onMounted(() => {
+  publicShop.fetchPublicShopData()
+})
+
+const fallbackAddress = 'Budapest, Clark Ádám tér'
+const address = computed(() => publicShop.contact.address || fallbackAddress)
+const phone = computed(() => publicShop.contact.phone || 'Phone not set')
+const email = computed(() => publicShop.contact.email || 'Email not set')
+const phoneHref = computed(() => {
+  if (!publicShop.contact.phone) return null
+  return `tel:${publicShop.contact.phone.replace(/\s+/g, '')}`
+})
+const emailHref = computed(() => {
+  if (!publicShop.contact.email) return null
+  return `mailto:${publicShop.contact.email}`
+})
+const mapURL = computed(() => {
+  const encodedAddress = encodeURIComponent(address.value)
+  return `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+})
+const openingHours = computed(() => publicShop.openingHours)
+
+function formatHours(day) {
+  if (!day?.isOpen) return 'Closed'
+  if (!day.openTime || !day.closeTime) return 'Closed'
+  return `${day.openTime} - ${day.closeTime}`
+}
 </script>
 
 <template>
@@ -26,7 +53,7 @@ const mapURL = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8
             </div>
             <div>
               <p class="font-semibold text-foreground">Address</p>
-              <p class="text-muted-foreground">Budapest 1234 Barber utca 67</p>
+              <p class="text-muted-foreground">{{ address }}</p>
             </div>
           </div>
 
@@ -36,9 +63,14 @@ const mapURL = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8
             </div>
             <div>
               <p class="font-semibold text-foreground">Phone</p>
-              <a href="tel:012345678" class="text-muted-foreground transition-colors hover:text-foreground">
-                012345678
+              <a
+                v-if="phoneHref"
+                :href="phoneHref"
+                class="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {{ phone }}
               </a>
+              <p v-else class="text-muted-foreground">{{ phone }}</p>
             </div>
           </div>
 
@@ -48,9 +80,14 @@ const mapURL = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8
             </div>
             <div>
               <p class="font-semibold text-foreground">Email</p>
-              <a href="mailto:barber@shop.com" class="text-muted-foreground transition-colors hover:text-foreground">
-                barber@shop.com
+              <a
+                v-if="emailHref"
+                :href="emailHref"
+                class="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {{ email }}
               </a>
+              <p v-else class="text-muted-foreground">{{ email }}</p>
             </div>
           </div>
 
@@ -60,21 +97,26 @@ const mapURL = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8
             </div>
             <div>
               <p class="font-semibold text-foreground">Opening Hours</p>
-              <p class="text-muted-foreground">Mon-Fri: 9am-8pm</p>
-              <p class="text-muted-foreground">Sat: 10am-5pm</p>
-              <p class="text-muted-foreground">Sun: Closed</p>
+              <p
+                v-for="day in openingHours"
+                :key="day.weekday"
+                class="text-muted-foreground"
+              >
+                <span class="font-medium">{{ day.label }}: </span>
+                <span> {{ formatHours(day) }}</span>
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="overflow-hidden rounded-xl border bg-background p-2 shadow-sm">
+      <div class="relative min-h-[360px] overflow-hidden rounded-xl border bg-background shadow-sm md:min-h-[420px]">
         <iframe
           :src="mapURL"
           title="Barbershop location map"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
-          class="h-[360px] w-full rounded-lg md:h-[420px]"
+          class="absolute inset-0 h-full w-full border-0"
         ></iframe>
       </div>
     </div>

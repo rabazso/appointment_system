@@ -61,6 +61,7 @@ Route::get('/shop-images/{shopImage}/preview', [ShopImageController::class, 'sho
 Route::get('/services', [ServiceController::class, 'index']);
 
 Route::get('/shop-opening-hours', [ShopOpeningHourController::class, 'index']);
+Route::get('/shop-information', [ShopInformationController::class, 'show']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
 Route::post('/appointments', [AppointmentController::class, 'store'])->middleware('optional.api-token');
 
@@ -176,7 +177,6 @@ Route::middleware('auth.api-token')->group(function () {
         Route::get('/employee-time-off-requests', [EmployeeTimeOffRequestController::class, 'index']);
         Route::get('/employee-service-configurations', [EmployeeServiceConfigurationController::class, 'index']);
         Route::get('/employee-services', [EmployeeServiceController::class, 'index']);
-        Route::get('/shop-information', [ShopInformationController::class, 'show']);
         Route::get('/shop-settings', [ShopSettingController::class, 'show']);
         Route::get('/shop-special-days/date', [ShopSpecialDayController::class, 'showByDate']);
         Route::get('/shop-special-days/month', [ShopSpecialDayController::class, 'indexForMonth']);

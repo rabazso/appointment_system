@@ -1,7 +1,8 @@
 <script setup>
-import {ref, nextTick} from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {Clock, Mail, Phone, MapPin} from 'lucide-vue-next'
+import { usePublicShopStore } from '@stores/PublicShopStore.js'
 const title = import.meta.env.VITE_APP_NAME
 const props = defineProps({
   variant: { type: String, required: false }
@@ -12,6 +13,29 @@ let textcolor = ref('text-primary-foreground')
 if (props.variant === 'background') {
   bgcolor = ref('bg-background')
   textcolor = ref('text-foreground')
+}
+
+const publicShop = usePublicShopStore()
+onMounted(() => {
+  publicShop.fetchPublicShopData()
+})
+
+const contactAddress = computed(() => publicShop.contact.address || 'Address not set')
+const contactPhone = computed(() => publicShop.contact.phone || 'Phone not set')
+const contactEmail = computed(() => publicShop.contact.email || 'Email not set')
+const openingHours = computed(() => publicShop.openingHours)
+const phoneHref = computed(() => {
+  if (!publicShop.contact.phone) return null
+  return `tel:${publicShop.contact.phone.replace(/\s+/g, '')}`
+})
+const emailHref = computed(() => {
+  if (!publicShop.contact.email) return null
+  return `mailto:${publicShop.contact.email}`
+})
+const formatHours = (day) => {
+  if (!day?.isOpen) return 'Closed'
+  if (!day.openTime || !day.closeTime) return 'Closed'
+  return `${day.openTime} - ${day.closeTime}`
 }
 
 const router = useRouter()
@@ -33,7 +57,7 @@ const scrollToLink = async (link) => {
 }
 </script>
 <template>
-    <footer class="p-8 md:grid md:grid-cols-3 md:gap-8 flex flex-col items-start gap-8" :class="bgcolor, textcolor">
+    <footer class="p-8 md:grid md:grid-cols-3 md:gap-8 flex flex-col items-start gap-8" :class="[bgcolor, textcolor]">
         <div class="col-span-1 mx-auto mt-5 md:mt-0">
             <h2 class="text-2xl font-bold mb-4">Contact</h2>
             <div class="flex space-x-2">
@@ -41,7 +65,7 @@ const scrollToLink = async (link) => {
                     <MapPin/>
                 </div>
                 <div class="items-start">
-                    <p>Budapest 1234 Barber utca 67</p>
+                    <p>{{ contactAddress }}</p>
                 </div>
             </div>
 
@@ -50,7 +74,8 @@ const scrollToLink = async (link) => {
                     <Phone/>
                 </div>
                 <div class="items-start">
-                    <p> 012345678</p>
+                    <a v-if="phoneHref" :href="phoneHref" class="hover:underline">{{ contactPhone }}</a>
+                    <p v-else>{{ contactPhone }}</p>
                 </div>
             </div>
             
@@ -59,19 +84,22 @@ const scrollToLink = async (link) => {
                     <Mail/>
                 </div>
                 <div class="items-start">
-                    <p>barber@shop.com</p>
+                    <a v-if="emailHref" :href="emailHref" class="hover:underline">{{ contactEmail }}</a>
+                    <p v-else>{{ contactEmail }}</p>
                 </div>
             </div>
 
-            <div class="mt-4 flex space-x-2">
+            <div class="mt-4 flex items-start space-x-2">
                 <div class="items-end">
                     <Clock/>
                 </div>
                 <div class="items-start">
-                    <p>
-                        Mon-Fri: 9am-8pm<br>
-                        Sat: 10am-5pm<br>
-                        Sun: closed
+                    <p
+                      v-for="day in openingHours"
+                      :key="day.weekday"
+                    >
+                      <span class="font-medium">{{ day.label }}: </span>
+                      <span> {{ formatHours(day) }}</span>
                     </p>
                 </div>
             </div>
