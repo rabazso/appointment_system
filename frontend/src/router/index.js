@@ -19,6 +19,7 @@ import AdminSignIn from '@pages/admin/AdminSignIn.vue'
 import EmployeeSignIn from '@pages/employee/EmployeeSignIn.vue'
 //import AppointmentsPage from '@pages/employee/Appointments.vue'
 import ProfilePage from '@pages/employee/Profile.vue'
+import ReviewsPage from '@pages/employee/Reviews.vue'
 import TimeOffPage from '@pages/employee/TimeOff.vue'
 import TimeOff from '@pages/admin/TimeOff.vue'
 import ShopProfile from '@pages/admin/ShopProfile.vue'
@@ -115,6 +116,15 @@ const routes = [
     component: ProfilePage,
     meta: {
       title: 'Employee Profile',
+      requiresEmployee: true,
+    },
+  },
+  {
+    path: '/employee/reviews',
+    name: 'EmployeeReviews',
+    component: ReviewsPage,
+    meta: {
+      title: 'Employee Reviews',
       requiresEmployee: true,
     },
   },

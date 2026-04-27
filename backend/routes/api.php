@@ -19,6 +19,7 @@ use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\EmployeeImageController;
 use App\Http\Controllers\EmployeeOwnTimeOffRequestController;
 use App\Http\Controllers\EmployeeProfileController;
+use App\Http\Controllers\EmployeeReviewsController;
 use App\Http\Controllers\EmployeeScheduleConfigurationController;
 use App\Http\Controllers\EmployeeScheduleController;
 use App\Http\Controllers\EmployeeTimeOffRequestController;
@@ -185,6 +186,8 @@ Route::middleware('auth.api-token')->group(function () {
 
     Route::middleware('role:employee')->prefix('/employee')->group(function () { 
         Route::get("/appointments", [EmployeeDashboardController::class, "index"]);
+        Route::get("/reviews", [EmployeeReviewsController::class, "index"]);
+        Route::patch("/reviews/{review}", [EmployeeReviewsController::class, "updateVisibility"]);
         Route::get("/profile", [EmployeeProfileController::class, 'show']);
         Route::post("/appointments/{appointment}/cancel", [EmployeeDashboardController::class, 'cancelAppointment']);
         Route::post("/appointments/{appointment}/complete", [EmployeeDashboardController::class, 'completeAppointment']);

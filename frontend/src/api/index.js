@@ -90,6 +90,8 @@ export const deleteEmployeeProfileGalleryImage = (galleryId) => API.delete(`/emp
 export const getEmployeeOwnTimeOffRequests = () => API.get('/employee/time-off-requests');
 export const postEmployeeOwnTimeOffRequest = (payload) => API.post('/employee/time-off-requests', payload);
 export const cancelEmployeeOwnTimeOffRequest = (id) => API.delete(`/employee/time-off-requests/${id}`);
+export const getEmployeeReviews = () => API.get('/employee/reviews');
+export const patchEmployeeReviewVisibility = (id, payload) => API.patch(`/employee/reviews/${id}`, payload);
 
 export const getBarberReviews = () => API.get('/reviews');
 
