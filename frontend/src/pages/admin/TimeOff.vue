@@ -171,6 +171,7 @@ import TimeOffCreateModal from '@/components/admin/TimeOffCreateModal.vue'
 import TimeOffDayModal from '@/components/admin/TimeOffDayModal.vue'
 import { formatYearMonth, shiftMonth, toISO } from '@/utils/date'
 import { useTimeOff } from '@/composables/useTimeOff'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const sidebarOpen = ref(false)
 const viewMode = ref('calendar')
@@ -185,6 +186,7 @@ const showTimeOffCreateModal = ref(false)
 const selectedTimeOffs = ref([])
 const selectedDate = ref('')
 const todayISO = toISO(new Date())
+const toast = useToastStore()
 const {
   fetchEmployees,
   fetchPendingTimeOffRequests,
@@ -308,10 +310,15 @@ function closeTimeOffModals() {
 }
 
 async function saveTimeOff(timeOff) {
-  await saveTimeOffRequests(timeOff)
-  await loadTimeOffRequests()
-  await loadPendingRequests()
-  closeTimeOffModals()
+  try {
+    await saveTimeOffRequests(timeOff)
+    await loadTimeOffRequests()
+    await loadPendingRequests()
+    closeTimeOffModals()
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
+  }
 }
 
 async function changeTimeOffStatus({ id, status }) {
@@ -319,24 +326,41 @@ async function changeTimeOffStatus({ id, status }) {
     return
   }
 
-  await updateTimeOffStatus(id, status)
-  await loadTimeOffRequests()
-  await loadPendingRequests()
-  selectedTimeOffs.value = selectedTimeOffs.value.map((timeOff) => (
-    timeOff.id === id ? { ...timeOff, status } : timeOff
-  ))
+  try {
+    await updateTimeOffStatus(id, status)
+    await loadTimeOffRequests()
+    await loadPendingRequests()
+    selectedTimeOffs.value = selectedTimeOffs.value.map((timeOff) => (
+      timeOff.id === id ? { ...timeOff, status } : timeOff
+    ))
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
+  }
 }
 
 async function loadEmployees() {
-  employeeOptions.value = await fetchEmployees()
+  try {
+    employeeOptions.value = await fetchEmployees()
+  } catch (error) {
+    toast.showError('Failed to load data.')
+  }
 }
 
 async function loadTimeOffRequests() {
-  calendarTimeOffs.value = await fetchTimeOffRequests(formatYearMonth(displayMonth.value))
+  try {
+    calendarTimeOffs.value = await fetchTimeOffRequests(formatYearMonth(displayMonth.value))
+  } catch (error) {
+    toast.showError('Failed to load data.')
+  }
 }
 
 async function loadPendingRequests() {
-  pendingRequests.value = await fetchPendingTimeOffRequests()
+  try {
+    pendingRequests.value = await fetchPendingTimeOffRequests()
+  } catch (error) {
+    toast.showError('Failed to load data.')
+  }
 }
 
 watch(monthLabel, loadTimeOffRequests)

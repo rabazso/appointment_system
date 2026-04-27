@@ -305,7 +305,7 @@ async function loadSettings() {
   try {
     await fetchShopInformation()
   } catch (error) {
-    toast.showError('Failed to load shop information.')
+    toast.showError('Failed to load data.')
   }
 }
 
@@ -323,9 +323,9 @@ async function saveSettings() {
         .filter((link) => link.label || link.url),
     })
 
-    toast.show('Shop information saved.')
+    toast.show('Changes saved successfully.')
   } catch (error) {
-    toast.showError('Failed to save shop information.')
+    toast.showError('Failed to save changes.')
   }
 }
 
@@ -333,7 +333,7 @@ async function loadGallery() {
   try {
     await fetchShopImages()
   } catch (error) {
-    toast.showError('Failed to load gallery.')
+    toast.showError('Failed to load data.')
   }
 }
 
@@ -400,9 +400,9 @@ async function saveGalleryWithValidation() {
   try {
     validateGalleryImages()
     await saveGallery()
-    toast.show('Gallery saved.')
+    toast.show('Changes saved successfully.')
   } catch (error) {
-    toast.showError(error instanceof Error ? error.message : 'Failed to save gallery.')
+    toast.showError('Failed to save changes.')
   }
 }
 

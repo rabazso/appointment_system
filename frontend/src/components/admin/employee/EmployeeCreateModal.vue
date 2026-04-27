@@ -76,6 +76,7 @@
 import { computed, reactive, ref } from 'vue'
 import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const emit = defineEmits(['close', 'save'])
 
@@ -94,10 +95,14 @@ const form = reactive({
 
 const submitted = ref(false)
 const errors = computed(() => getErrors())
+const toast = useToastStore()
 
 function handleSave() {
   submitted.value = true
-  if (Object.keys(errors.value).length) return
+  if (Object.keys(errors.value).length) {
+    toast.showError('Failed to save changes.')
+    return
+  }
   emit('save', { ...form })
 }
 

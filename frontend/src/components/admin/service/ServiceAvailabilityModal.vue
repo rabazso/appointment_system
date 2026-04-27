@@ -90,6 +90,7 @@ import ServiceAvailabilityEditModal from './ServiceAvailabilityEditModal.vue'
 import { addDays, maxDate, parseISODate, toISO } from '@utils/date'
 import AffectedAppointmentsPreviewModal from '@/components/admin/AffectedAppointmentsPreviewModal.vue'
 import { cancelAdminAppointment, previewServiceAvailabilityAffectedAppointments } from '@/api/index'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 defineEmits(['back', 'close'])
 
@@ -112,10 +113,17 @@ const activeView = ref('list')
 const selectedAvailability = ref(null)
 const affectedPreview = ref(null)
 const pendingPayload = ref(null)
+const toast = useToastStore()
 
 const createValidFromPolicy = computed(() => getCreateValidFromPolicy(availability.value))
 
-onMounted(fetchAvailability)
+onMounted(async () => {
+  try {
+    await fetchAvailability()
+  } catch (error) {
+    toast.showError('Failed to load data.')
+  }
+})
 
 function openCreate() {
   activeView.value = 'editor'
@@ -133,19 +141,23 @@ function closeEditor() {
 }
 
 async function saveAvailability(payload) {
-  const response = await previewServiceAvailabilityAffectedAppointments({
-    ...payload,
-    service_id: props.service.id,
-    valid_from: payload.valid_from ?? selectedAvailability.value?.valid_from,
-  })
+  try {
+    const response = await previewServiceAvailabilityAffectedAppointments({
+      ...payload,
+      service_id: props.service.id,
+      valid_from: payload.valid_from ?? selectedAvailability.value?.valid_from,
+    })
 
-  if (!response.data.affected_count) {
-    await persistAvailability(payload)
-    return
+    if (!response.data.affected_count) {
+      await persistAvailability(payload)
+      return
+    }
+
+    pendingPayload.value = payload
+    affectedPreview.value = response.data
+  } catch (error) {
+    toast.showError('Failed to save changes.')
   }
-
-  pendingPayload.value = payload
-  affectedPreview.value = response.data
 }
 
 async function persistAvailability(payload, cancellations = {}) {
@@ -160,6 +172,7 @@ async function persistAvailability(payload, cancellations = {}) {
   await cancelPendingAppointments(cancellations)
   closeAffectedPreview()
   closeEditor()
+  toast.show('Changes saved successfully.')
 }
 
 async function cancelPendingAppointments({ appointment_ids: appointmentIds = [], cancellation_reason: reason = '' } = {}) {
@@ -178,7 +191,12 @@ function closeAffectedPreview() {
 }
 
 async function deleteSelectedAvailability(availabilityVersion) {
-  await deleteAvailability(availabilityVersion.id)
+  try {
+    await deleteAvailability(availabilityVersion.id)
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
+  }
 }
 
 function getCreateValidFromPolicy(versions) {

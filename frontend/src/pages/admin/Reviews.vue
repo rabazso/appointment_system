@@ -162,9 +162,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useAdminReviews } from '@/composables/useAdminReviews'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const sidebarOpen = ref(false)
 const selectedReview = ref(null)
+const toast = useToastStore()
 
 const {
   employeeOptions,
@@ -247,17 +249,22 @@ function onResetChanges() {
 }
 
 async function onSaveChanges() {
-  await saveChanges(dirtyReviews.value)
+  try {
+    await saveChanges(dirtyReviews.value)
 
-  reviews.value = reviews.value.map((review) => ({
-    ...review,
-    _dirty: false,
-  }))
+    reviews.value = reviews.value.map((review) => ({
+      ...review,
+      _dirty: false,
+    }))
 
-  initializeOriginalReviews()
+    initializeOriginalReviews()
 
-  if (selectedReview.value) {
-    syncSelectedReview(selectedReview.value.id)
+    if (selectedReview.value) {
+      syncSelectedReview(selectedReview.value.id)
+    }
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
   }
 }
 

@@ -86,7 +86,7 @@ export function useAdminReviews() {
   }
 
   onMounted(async () => {
-    await Promise.all([loadReviews(), loadEmployees()])
+    await Promise.all([loadReviews(), loadEmployees()]).catch(() => {})
   })
 
   watch(
@@ -95,7 +95,7 @@ export function useAdminReviews() {
       syncingFromRoute.value = true
       syncFiltersFromQuery(query)
       syncingFromRoute.value = false
-      loadReviews()
+      loadReviews().catch(() => {})
     },
     { immediate: true },
   )
@@ -106,7 +106,7 @@ export function useAdminReviews() {
       if (syncingFromRoute.value) return
       const nextQuery = buildQueryFromFilters()
       router.replace({ query: nextQuery })
-      loadReviews()
+      loadReviews().catch(() => {})
     },
     { deep: true },
   )

@@ -65,6 +65,7 @@ import { computed, ref, watch } from 'vue'
 import { patchService } from '@/api/index'
 import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const emit = defineEmits(['back', 'close'])
 
@@ -79,6 +80,7 @@ const saving = ref(false)
 const submitted = ref(false)
 const form = ref(getDefaultForm(props.service))
 const errors = computed(() => getErrors())
+const toast = useToastStore()
 
 watch(
   () => props.service,
@@ -103,7 +105,10 @@ async function saveService() {
 
   try {
     await patchService(props.service.id, form.value)
+    toast.show('Changes saved successfully.')
     emit('back')
+  } catch {
+    toast.showError('Failed to save changes.')
   } finally {
     saving.value = false
   }

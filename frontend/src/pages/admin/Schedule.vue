@@ -162,6 +162,7 @@ import CalendarView from '@/components/admin/calendar/CalendarView.vue'
 import SpecialDayModal from '@/components/admin/SpecialDayModal.vue'
 import { shiftMonth, toISO, formatYearMonth } from '@/utils/date'
 import { useShopSchedule } from '@/composables/useShopSchedule'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const sidebarOpen = ref(false)
 const viewMode = ref('calendar')
@@ -193,6 +194,7 @@ const specialDays = ref([])
 const showSpecialDayModal = ref(false)
 const selectedDay = ref(null)
 const specialDayModalMode = ref('create')
+const toast = useToastStore()
 const {
   fetchSpecialDayByDate,
   fetchSpecialDays,
@@ -277,13 +279,22 @@ function closeSpecialDayModal() {
 }
 
 async function saveSpecialDay(payload) {
-  await saveSpecialDays(payload, specialDays.value)
-  await loadSpecialDays()
-  closeSpecialDayModal()
+  try {
+    await saveSpecialDays(payload, specialDays.value)
+    await loadSpecialDays()
+    closeSpecialDayModal()
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
+  }
 }
 
 async function loadSpecialDays() {
-  specialDays.value = await fetchSpecialDays(formatYearMonth(displayMonth.value))
+  try {
+    specialDays.value = await fetchSpecialDays(formatYearMonth(displayMonth.value))
+  } catch (error) {
+    toast.showError('Failed to load data.')
+  }
 }
 
 async function loadOpeningHours() {
@@ -293,6 +304,8 @@ async function loadOpeningHours() {
   try {
     openingHours.value = await fetchOpeningHours()
     savedOpeningHoursSnapshot.value = normalizeOpeningHours(openingHours.value)
+  } catch (error) {
+    toast.showError('Failed to load data.')
   } finally {
     isOpeningHoursLoading.value = false
   }
@@ -314,8 +327,10 @@ async function saveOpeningHours() {
   try {
     await persistOpeningHours(changedDays)
     await loadOpeningHours()
+    toast.show('Changes saved successfully.')
   } catch (error) {
     applyBackendOpeningHourErrors(error)
+    toast.showError('Failed to save changes.')
   }
 }
 

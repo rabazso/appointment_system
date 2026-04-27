@@ -121,6 +121,7 @@ import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import { getServices } from '@/api/index'
 import EmployeeServicePicker from './EmployeeServicePicker.vue'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const emit = defineEmits(['back', 'cancel', 'close', 'save'])
 
@@ -150,6 +151,7 @@ const pendingServicesToAdd = ref([])
 const serviceOptions = ref([])
 const availableServiceOptions = computed(() => serviceOptions.value.map((service) => ({ ...service })))
 const errors = computed(() => getErrors())
+const toast = useToastStore()
 
 onMounted(fetchServiceOptions)
 
@@ -169,7 +171,12 @@ function createForm(services) {
 }
 
 async function fetchServiceOptions() {
-  serviceOptions.value = (await getServices()).data.data
+  try {
+    serviceOptions.value = (await getServices()).data.data
+  } catch {
+    toast.showError('Failed to load data.')
+    serviceOptions.value = []
+  }
 }
 
 function openServicePicker() {

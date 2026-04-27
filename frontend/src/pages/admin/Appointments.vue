@@ -111,10 +111,12 @@ import {
   noShowAdminAppointment,
 } from '@/api/index'
 import { useAdminAppointments } from '@/composables/useAdminAppointments'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const sidebarOpen = ref(false)
 const mobileFiltersOpen = ref(false)
 const selectedAppointmentId = ref(null)
+const toast = useToastStore()
 
 const adminAppointments = useAdminAppointments()
 const {
@@ -122,8 +124,6 @@ const {
   employees,
   filters,
   loadAppointments,
-  loadEmployees,
-  loadServices,
   resetFilters,
   stats,
   statusOptions,
@@ -148,21 +148,26 @@ async function runAction(action, reason = '') {
 
   const appointmentId = selectedAppointment.value.id
 
-  if (action === 'cancel') {
-    await cancelAdminAppointment(appointmentId, {
-      cancellation_reason: reason || 'Cancelled from admin dashboard',
-    })
-  }
+  try {
+    if (action === 'cancel') {
+      await cancelAdminAppointment(appointmentId, {
+        cancellation_reason: reason || 'Cancelled from admin dashboard',
+      })
+    }
 
-  if (action === 'complete') {
-    await completeAdminAppointment(appointmentId)
-  }
+    if (action === 'complete') {
+      await completeAdminAppointment(appointmentId)
+    }
 
-  if (action === 'no-show') {
-    await noShowAdminAppointment(appointmentId)
-  }
+    if (action === 'no-show') {
+      await noShowAdminAppointment(appointmentId)
+    }
 
-  selectedAppointmentId.value = null
-  await loadAppointments()
+    selectedAppointmentId.value = null
+    await loadAppointments()
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
+  }
 }
 </script>

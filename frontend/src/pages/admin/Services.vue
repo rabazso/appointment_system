@@ -94,6 +94,7 @@ import Sidebar from '@/components/admin/Sidebar.vue'
 import ServiceCreateModal from '@/components/admin/service/ServiceCreateModal.vue'
 import ServiceConfigureModal from '@/components/admin/service/ServiceConfigureModal.vue'
 import ServiceDeleteModal from '@/components/admin/service/ServiceDeleteModal.vue'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const services = ref([])
 const sidebarOpen = ref(false)
@@ -102,13 +103,18 @@ const showServiceCreateModal = ref(false)
 const showServiceDeleteModal = ref(false)
 const showServiceConfigModal = ref(false)
 const savingService = ref(false)
+const toast = useToastStore()
 
 onMounted(async () => {
   await fetchServices()
 })
 
 async function fetchServices() {
-  services.value = (await getServices()).data.data
+  try {
+    services.value = (await getServices()).data.data
+  } catch (error) {
+    toast.showError('Failed to load data.')
+  }
 }
 
 function closeServiceCreateModal() {
@@ -145,6 +151,9 @@ async function saveService(payload) {
     await postService(payload)
     await fetchServices()
     closeServiceCreateModal()
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
   } finally {
     savingService.value = false
   }
@@ -153,8 +162,13 @@ async function saveService(payload) {
 async function removeSelectedService() {
   if (!selectedService.value) return
 
-  await deleteService(selectedService.value.id)
-  await fetchServices()
-  await closeServiceDeleteModal()
+  try {
+    await deleteService(selectedService.value.id)
+    await fetchServices()
+    await closeServiceDeleteModal()
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
+  }
 }
 </script>

@@ -90,6 +90,7 @@ import ModalHeader from '@/components/admin/ModalHeader.vue'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeBookingRulesEditModal from './EmployeeBookingRulesEditModal.vue'
 import { addDays, maxDate, parseISODate, toISO } from '@utils/date'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 defineEmits(['back', 'close'])
 
@@ -110,6 +111,7 @@ const {
 
 const creatingBookingRules = ref(false)
 const editingBookingRules = ref(null)
+const toast = useToastStore()
 
 const isEditorOpen = computed(() => creatingBookingRules.value || editingBookingRules.value !== null)
 const activeTitle = computed(() => {
@@ -120,7 +122,13 @@ const activeDescription = computed(() => {
 })
 const createValidFromPolicy = computed(() => getCreateValidFromPolicy(bookingRuleVersions.value))
 
-onMounted(fetchBookingRules)
+onMounted(async () => {
+  try {
+    await fetchBookingRules()
+  } catch (error) {
+    toast.showError('Failed to load data.')
+  }
+})
 
 function openCreate() {
   creatingBookingRules.value = true
@@ -138,17 +146,27 @@ function closeEditor() {
 }
 
 async function saveSelectedBookingRules(payload) {
-  if (editingBookingRules.value) {
-    await saveExistingBookingRules(editingBookingRules.value.id, payload)
-  } else {
-    await createBookingRules(payload)
-  }
+  try {
+    if (editingBookingRules.value) {
+      await saveExistingBookingRules(editingBookingRules.value.id, payload)
+    } else {
+      await createBookingRules(payload)
+    }
 
-  closeEditor()
+    closeEditor()
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
+  }
 }
 
 async function deleteSelectedBookingRules(bookingRules) {
-  await deleteBookingRules(bookingRules.id)
+  try {
+    await deleteBookingRules(bookingRules.id)
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
+  }
 }
 
 function getCreateValidFromPolicy(versions) {

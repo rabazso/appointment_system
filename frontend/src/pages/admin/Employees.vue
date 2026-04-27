@@ -22,6 +22,7 @@
           v-for="employee in employees"
           :key="employee.id"
           class="flex min-h-64 cursor-pointer flex-col rounded-2xl bg-white p-4 shadow-lg transition hover:shadow-xl"
+          @click="openEmployeeOverviewModal(employee)"
         >
           <div class="mb-3 flex items-center justify-between">
             <span
@@ -88,6 +89,12 @@
     @close="closeEmployeeConfigModal"
   />
 
+  <EmployeeOverviewModal
+    v-if="showEmployeeOverviewModal && selectedEmployee"
+    :employee="selectedEmployee"
+    @close="closeEmployeeOverviewModal"
+  />
+
   <EmployeeCreateModal
     v-if="showCreateEmployeeModal"
     :saving="savingEmployee"
@@ -111,24 +118,43 @@ import Button from '@/components/admin/Button.vue'
 import EmployeeCreateModal from '@/components/admin/employee/EmployeeCreateModal.vue'
 import EmployeeDeleteModal from '@/components/admin/employee/EmployeeDeleteModal.vue'
 import EmployeeConfigurationsModal from '@/components/admin/employee/EmployeeConfigureModal.vue'
+import EmployeeOverviewModal from '@/components/admin/employee/EmployeeOverviewModal.vue'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import { createEmployee, deleteEmployee, getEmployees } from '@/api'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const employees = ref([])
 const sidebarOpen = ref(false)
 const selectedEmployee = ref(null)
 const showEmployeeConfigModal = ref(false)
+const showEmployeeOverviewModal = ref(false)
 const showCreateEmployeeModal = ref(false)
 const showEmployeeDeleteModal = ref(false)
 const savingEmployee = ref(false)
+const toast = useToastStore()
 
 onMounted(async () => {
   await fetchEmployees()
 })
 
 async function fetchEmployees() {
-  employees.value = (await getEmployees()).data.data
+  try {
+    employees.value = (await getEmployees()).data.data
+  } catch (error) {
+    toast.showError('Failed to load data.')
+  }
+}
+
+function openEmployeeOverviewModal(employee) {
+  selectedEmployee.value = employee
+  showEmployeeOverviewModal.value = true
+}
+
+async function closeEmployeeOverviewModal() {
+  showEmployeeOverviewModal.value = false
+  await nextTick()
+  selectedEmployee.value = null
 }
 
 function openEmployeeConfigModal(employee) {
@@ -164,6 +190,9 @@ async function saveEmployee(payload) {
     await createEmployee(payload)
     await fetchEmployees()
     closeCreateEmployeeModal()
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
   } finally {
     savingEmployee.value = false
   }
@@ -172,9 +201,14 @@ async function saveEmployee(payload) {
 async function removeSelectedEmployee() {
   if (!selectedEmployee.value) return
 
-  await deleteEmployee(selectedEmployee.value.id)
-  await fetchEmployees()
-  await closeEmployeeDeleteModal()
+  try {
+    await deleteEmployee(selectedEmployee.value.id)
+    await fetchEmployees()
+    await closeEmployeeDeleteModal()
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
+  }
 }
 
 function formatRating(rating) {

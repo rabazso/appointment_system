@@ -115,6 +115,7 @@
 import { computed, reactive, ref } from 'vue'
 import { X } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 const props = defineProps({
   initialDate: {
@@ -132,6 +133,7 @@ const todayISO = new Date().toISOString().slice(0, 10)
 
 const form = reactive(createForm())
 const submitted = ref(false)
+const toast = useToastStore()
 
 const filledDays = computed(() => form.days.filter(Boolean))
 const filledEmployees = computed(() => form.employees.filter(Boolean))
@@ -176,7 +178,10 @@ function removeEmployee(index) {
 function saveTimeOff() {
   submitted.value = true
 
-  if (!hasRequiredFields.value) return
+  if (!hasRequiredFields.value) {
+    toast.showError('Failed to save changes.')
+    return
+  }
 
   emit('save', {
     employees: filledEmployees.value,

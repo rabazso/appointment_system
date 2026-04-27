@@ -118,7 +118,7 @@ export function useAdminAppointments() {
       syncingFromRoute.value = true
       syncFiltersFromQuery(query)
       syncingFromRoute.value = false
-      loadAppointments()
+      loadAppointments().catch(() => {})
     },
     { immediate: true },
   )
@@ -129,13 +129,13 @@ export function useAdminAppointments() {
       if (syncingFromRoute.value) return
       const nextQuery = buildQueryFromFilters()
       router.replace({ query: nextQuery })
-      loadAppointments()
+      loadAppointments().catch(() => {})
     },
     { deep: true },
   )
 
   onMounted(async () => {
-    await Promise.all([loadServices(), loadEmployees()])
+    await Promise.all([loadServices(), loadEmployees()]).catch(() => {})
   })
 
   return {

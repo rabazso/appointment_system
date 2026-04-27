@@ -69,6 +69,7 @@ import EmployeeServicesView from './EmployeeServicesView.vue'
 import { addDays, maxDate, parseISODate, toISO } from '@utils/date'
 import AffectedAppointmentsPreviewModal from '@/components/admin/AffectedAppointmentsPreviewModal.vue'
 import { cancelAdminAppointment, previewEmployeeServicesAffectedAppointments } from '@/api/index'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 defineEmits(['back', 'close'])
 
@@ -91,6 +92,7 @@ const activeView = ref('list')
 const selectedServices = ref(null)
 const affectedPreview = ref(null)
 const pendingPayload = ref(null)
+const toast = useToastStore()
 
 const activeTitle = computed(() => {
   return 'Services'
@@ -100,7 +102,13 @@ const activeDescription = computed(() => {
 })
 const createValidFromPolicy = computed(() => getCreateValidFromPolicy(services.value))
 
-onMounted(fetchServices)
+onMounted(async () => {
+  try {
+    await fetchServices()
+  } catch (error) {
+    toast.showError('Failed to load data.')
+  }
+})
 
 function openView(services) {
   activeView.value = 'view'
@@ -128,24 +136,33 @@ function closeEditor() {
 }
 
 async function deleteSelectedServices(services) {
-  await deleteService(services.id)
-  closeView()
+  try {
+    await deleteService(services.id)
+    closeView()
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
+  }
 }
 
 async function saveServices(payload) {
-  const response = await previewEmployeeServicesAffectedAppointments({
-    ...payload,
-    employee_id: props.employee.id,
-    valid_from: payload.valid_from ?? selectedServices.value?.valid_from,
-  })
+  try {
+    const response = await previewEmployeeServicesAffectedAppointments({
+      ...payload,
+      employee_id: props.employee.id,
+      valid_from: payload.valid_from ?? selectedServices.value?.valid_from,
+    })
 
-  if (!response.data.affected_count) {
-    await persistServices(payload)
-    return
+    if (!response.data.affected_count) {
+      await persistServices(payload)
+      return
+    }
+
+    pendingPayload.value = payload
+    affectedPreview.value = response.data
+  } catch (error) {
+    toast.showError('Failed to save changes.')
   }
-
-  pendingPayload.value = payload
-  affectedPreview.value = response.data
 }
 
 async function persistServices(payload, cancellations = {}) {
@@ -160,6 +177,7 @@ async function persistServices(payload, cancellations = {}) {
   await cancelPendingAppointments(cancellations)
   closeAffectedPreview()
   closeEditor()
+  toast.show('Changes saved successfully.')
 }
 
 async function cancelPendingAppointments({ appointment_ids: appointmentIds = [], cancellation_reason: reason = '' } = {}) {
