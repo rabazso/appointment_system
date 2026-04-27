@@ -47,6 +47,7 @@ class AppointmentStoreRequest extends FormRequest
 
             'employee_id' => ['required', 'integer', 'exists:employees,id'],
             'appointment_start' => ['required', 'date_format:Y-m-d H:i'],
+            'customer_note' => ['nullable', 'string', 'max:120'],
 
             'guest_name' => [$isGuest ? 'required' : 'nullable', 'string', 'max:255'],
 

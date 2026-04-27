@@ -23,8 +23,10 @@ class EmployeeAppointmentResource extends JsonResource
             'client' => $this->customer?->name ?? 'Guest',
             'email' => $this->customer?->email,
             'phone' => $this->customer?->phone,
+            'customer_note' => $this->customer_note,
             'service' => $serviceName ?: null,
-            'price' => $this->total_price,
+            'total_duration' => $this->total_duration,
+            'total_price' => $this->total_price,
             'start_datetime' => $this->start_datetime?->toIso8601String(),
             'end_datetime' => $this->end_datetime?->toIso8601String(),
         ];

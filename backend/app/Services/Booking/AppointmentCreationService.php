@@ -24,6 +24,7 @@ class AppointmentCreationService
         $guestName = $request->get('guest_name');
         $guestEmail = $request->get('guest_email');
         $guestPhone = $request->get('guest_phone');
+        $customerNote = trim((string) $request->get('customer_note', ''));
         $slotStart = Carbon::createFromFormat('Y-m-d H:i', $appointmentStart, $timezone);
 
         if (!$this->availability->isSlotBookable($serviceIds, $employeeId, $appointmentStart)) {
@@ -51,6 +52,7 @@ class AppointmentCreationService
             'total_duration' => $totalDuration,
             'total_price' => $totalPrice,
             'status' => 'pending',
+            'customer_note' => $customerNote !== '' ? $customerNote : null,
             'start_datetime' => $slotStart->toDateTimeString(),
             'end_datetime' => $slotEnd->toDateTimeString(),
         ]);
