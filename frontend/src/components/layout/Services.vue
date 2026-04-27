@@ -23,7 +23,9 @@ const isLoggedIn = computed(() => auth.isLoggedIn)
 
 onMounted(async () => {
   try {
-    services.value = (await getServices()).data
+    const response = await getServices()
+    const payload = response.data.data
+    services.value = payload
   } catch (error) {
     services.value = []
     globalToast.showError('Failed to load services.')
