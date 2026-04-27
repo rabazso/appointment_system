@@ -29,6 +29,7 @@ use App\Http\Controllers\EmployeeServicesController;
 use App\Http\Controllers\EmployeeServiceController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\AdminReviewsController;
 use App\Http\Controllers\ServiceAvailabilityController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ShopImageController;
@@ -96,6 +97,8 @@ Route::middleware('auth.api-token')->group(function () {
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/admin/appointments', [AdminAppointmentIndexController::class, 'index']);
+        Route::get('/admin/reviews', [AdminReviewsController::class, 'index']);
+        Route::patch('/admin/reviews/{review}', [AdminReviewsController::class, 'updateVisibility']);
         Route::post('/services', [ServiceController::class, 'store']);
         Route::post('/admin/appointments/affected-preview/employee-schedule', [AppointmentAffectedPreviewController::class, 'employeeSchedule']);
         Route::post('/admin/appointments/affected-preview/employee-services', [AppointmentAffectedPreviewController::class, 'employeeServices']);

@@ -93,6 +93,8 @@ export const postEmployeeOwnTimeOffRequest = (payload) => API.post('/employee/ti
 export const cancelEmployeeOwnTimeOffRequest = (id) => API.delete(`/employee/time-off-requests/${id}`);
 export const getEmployeeReviews = () => API.get('/employee/reviews');
 export const patchEmployeeReviewVisibility = (id, payload) => API.patch(`/employee/reviews/${id}`, payload);
+export const getAdminReviews = (params = {}) => API.get('/admin/reviews', { params });
+export const patchAdminReviewVisibility = (id, payload) => API.patch(`/admin/reviews/${id}`, payload);
 
 
 export const getServices = () => API.get('/services');

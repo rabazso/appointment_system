@@ -1,4 +1,5 @@
 <script setup>
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { Eye, EyeOff, Star } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -13,6 +14,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['open', 'toggle-visibility'])
+const servicesWrap = ref(null)
+const availableWidth = ref(0)
 
 function openReview() {
   emit('open', props.review)
@@ -28,15 +31,64 @@ function formatReviewDate(value) {
   return text.includes('T') ? text.slice(0, 10) : text.slice(0, 10)
 }
 
-function getVisibleServices(services = []) {
-  if (!Array.isArray(services) || services.length === 0) return []
-  return services.slice(0, 1)
+function measureWidth() {
+  availableWidth.value = servicesWrap.value?.clientWidth ?? 0
 }
 
-function getHiddenServiceCount(services = []) {
-  if (!Array.isArray(services) || services.length <= 1) return 0
-  return services.length - 1
+function estimateChipWidth(text) {
+  return Math.ceil(text.length * 6) + 18
 }
+
+const visibleServices = computed(() => {
+  const services = Array.isArray(props.review.services) ? props.review.services : []
+  if (!services.length) return []
+  if (!availableWidth.value) return services.slice(0, 1)
+
+  const gap = 8
+  const moreChipWidth = estimateChipWidth(`+${Math.max(services.length - 1, 0)}`)
+  let used = 0
+  const visible = []
+
+  for (let index = 0; index < services.length; index += 1) {
+    const service = services[index]
+    const chipWidth = estimateChipWidth(service)
+    const remaining = services.length - index - 1
+    const reserve = remaining > 0 ? moreChipWidth + gap : 0
+    const nextUsed = visible.length === 0 ? chipWidth : used + gap + chipWidth
+
+    if (nextUsed + reserve > availableWidth.value) break
+
+    visible.push(service)
+    used = nextUsed
+  }
+
+  return visible.length ? visible : services.slice(0, 1)
+})
+
+const hiddenServiceCount = computed(() => {
+  const services = Array.isArray(props.review.services) ? props.review.services : []
+  return Math.max(services.length - visibleServices.value.length, 0)
+})
+
+let resizeObserver
+
+onMounted(async () => {
+  await nextTick()
+  measureWidth()
+
+  if (typeof ResizeObserver !== 'undefined' && servicesWrap.value) {
+    resizeObserver = new ResizeObserver(() => {
+      measureWidth()
+    })
+    resizeObserver.observe(servicesWrap.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+  }
+})
 </script>
 
 <template>
@@ -78,24 +130,8 @@ function getHiddenServiceCount(services = []) {
       </button>
     </div>
 
-    <p class="mt-3 min-h-[3rem] line-clamp-2 text-sm leading-6 text-slate-700">
+    <p class="mt-3 line-clamp-3 text-sm leading-6 text-slate-700">
       {{ review.comment || 'No comment.' }}
     </p>
-
-    <div v-if="review.services?.length" class="mt-3 flex flex-wrap gap-2">
-      <span
-        v-for="service in getVisibleServices(review.services)"
-        :key="service"
-        class="rounded-full border border-black/10 px-2.5 py-1 text-xs font-medium text-slate-600"
-      >
-        {{ service }}
-      </span>
-      <span
-        v-if="getHiddenServiceCount(review.services) > 0"
-        class="rounded-full border border-black/10 px-2.5 py-1 text-xs font-medium text-slate-500"
-      >
-        +{{ getHiddenServiceCount(review.services) }}
-      </span>
-    </div>
   </article>
 </template>

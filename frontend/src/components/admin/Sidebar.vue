@@ -25,7 +25,7 @@
     <nav class="flex-1 overflow-auto px-4">
       <div class="space-y-2">
         <router-link
-          v-for="item in menuItems.slice(0, 3)"
+          v-for="item in menuItems.slice(0, 2)"
           :key="item.to"
           :to="item.to"
           class="flex items-center gap-3 rounded-md border border-transparent px-3 py-2 transition hover:border-black"
@@ -41,7 +41,7 @@
 
       <div class="space-y-2">
         <router-link
-          v-for="item in menuItems.slice(3, 5)"
+          v-for="item in menuItems.slice(2, 5)"
           :key="item.to"
           :to="item.to"
           class="flex items-center gap-3 rounded-md border border-transparent px-3 py-2 transition hover:border-black"
@@ -55,14 +55,14 @@
 
       <hr class="my-6 border-black/10">
 
-      <div class="space-y-2">
-        <router-link
-          v-for="item in menuItems.slice(5)"
-          :key="item.to"
-          :to="item.to"
-          class="flex items-center gap-3 rounded-md border border-transparent px-3 py-2 transition hover:border-black"
-          active-class="bg-secondary shadow-sm hover:border-transparent hover:shadow-lg"
-          @click="$emit('close')"
+    <div class="space-y-2">
+      <router-link
+        v-for="item in menuItems.slice(5,7)"
+        :key="item.to"
+        :to="item.to"
+        class="flex items-center gap-3 rounded-md border border-transparent px-3 py-2 transition hover:border-black"
+        active-class="bg-secondary shadow-sm hover:border-transparent hover:shadow-lg"
+        @click="$emit('close')"
         >
           <component :is="item.icon" class="h-5 w-5" />
           <span class="text-base font-medium">{{ item.label }}</span>
@@ -95,7 +95,8 @@ import {
   User,
   SquareUserRound,
   X,
-  Clock
+  Clock,
+  Star,
 } from 'lucide-vue-next'
 
 defineProps({
@@ -112,10 +113,11 @@ const auth = useAuthStore()
 const menuItems = [
   { id: 1, label: 'Services', to: '/admin/services', icon: Scissors },
   { id: 2, label: 'Employees', to: '/admin/employees', icon: User },
-  { id: 3, label: 'Appointments', to: '/admin/appointments', icon: Calendar },
-  { id: 4, label: 'Schedule', to: '/admin/schedule', icon: Clock },
-  { id: 5, label: 'Time offs', to: '/admin/time-offs', icon: Plane },
-  { id: 6, label: 'Shop Profile', to: '/admin/shop-profile', icon: SquareUserRound },
+  { id: 3, label: 'Time offs', to: '/admin/time-offs', icon: Plane },
+  { id: 4, label: 'Appointments', to: '/admin/appointments', icon: Calendar },
+  { id: 5, label: 'Reviews', to: '/admin/reviews', icon: Star },
+  { id: 6, label: 'Schedule', to: '/admin/schedule', icon: Clock },
+  { id: 7, label: 'Shop Profile', to: '/admin/shop-profile', icon: SquareUserRound },
 ]
 
 async function handleSignOut() {

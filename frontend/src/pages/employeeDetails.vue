@@ -5,7 +5,7 @@ import { X } from 'lucide-vue-next'
 import BaseHeader from '@components/layout/BaseHeader.vue'
 import Footer from '@components/layout/Footer.vue'
 import { Button } from '@/components/ui/button'
-import ReviewCard from '@/components/employee/ReviewCard.vue'
+import ReviewCard from '@components/ReviewCard.vue'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel'
 import { getEmployeeById } from '@/api'
 
