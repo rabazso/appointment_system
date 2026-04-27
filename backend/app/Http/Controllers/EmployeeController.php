@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEmployeeRequest;
+use App\Http\Resources\EmployeeDetailsResource;
 use App\Http\Resources\EmployeeResource;
+use App\Http\Resources\EmployeeServiceResource;
 use App\Models\Employee;
 use App\Models\EmployeeBookingRuleConfiguration;
 use App\Models\EmployeeScheduleConfiguration;
@@ -32,6 +34,30 @@ class EmployeeController extends Controller
                 ->withAvg('reviews as rating', 'rating')
                 ->get()
         );
+    }
+
+    public function show(Employee $employee): EmployeeDetailsResource
+    {
+        $now = now();
+        $employee->load(['profileImage','images','user:id,email'])->loadAvg('reviews as rating', 'rating');
+
+        $isAvailable = (bool) $employee->versions()->validAt($now)->latest('valid_from')->value('is_available');
+
+        $reviews = $employee->reviews()->where('is_visible', true)->with(['customer:id,name'])->latest()->get();
+
+        $serviceConfiguration = $employee->serviceConfigurations()->validAt($now)->with('services.service')->latest('valid_from')->first();
+
+        $services = EmployeeServiceResource::collection($serviceConfiguration?->services ?? collect());
+
+        $gallery = $employee->images->where('id', '!=', $employee->profile_image_id)->values();
+
+        return new EmployeeDetailsResource([
+            'employee' => $employee,
+            'is_available' => $isAvailable,
+            'gallery' => $gallery,
+            'services' => $services,
+            'reviews' => $reviews,
+        ]);
     }
 
     public function store(StoreEmployeeRequest $request): EmployeeResource

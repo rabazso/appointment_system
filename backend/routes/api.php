@@ -50,6 +50,7 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
     ->name('verification.verify');
 
 Route::get('/employees', [EmployeeController::class, 'index']);
+Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->whereNumber('employee');
 Route::get('/employee-images', [EmployeeImageController::class, 'index']);
 Route::get('/employee-images/{employeeImage}', [EmployeeImageController::class, 'showOriginal'])->name('employee-images.original');
 Route::get('/employee-images/{employeeImage}/preview', [EmployeeImageController::class, 'showPreview'])->name('employee-images.preview');
