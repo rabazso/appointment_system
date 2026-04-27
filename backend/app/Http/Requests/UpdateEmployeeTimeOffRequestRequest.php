@@ -17,7 +17,7 @@ class UpdateEmployeeTimeOffRequestRequest extends FormRequest
             'employee_id' => ['integer', 'exists:employees,id'],
             'date' => ['date', 'after_or_equal:today'],
             'status' => ['in:pending,approved,rejected,cancelled'],
-            'note' => ['required', 'string'],
+            'note' => ['nullable', 'string'],
         ];
     }
 }
