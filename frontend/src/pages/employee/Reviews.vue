@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { Eye, EyeOff, Star, ChevronDown } from 'lucide-vue-next'
 import PageLayout from '@/components/employee/PageLayout.vue'
+import ReviewCard from '@/components/employee/ReviewCard.vue'
 import { getEmployeeReviews, patchEmployeeReviewVisibility } from '@/api/index.js'
 
 const loading = ref(true)
@@ -38,7 +39,8 @@ async function loadReviews() {
 
   try {
     const response = await getEmployeeReviews()
-    reviews.value = (response.data ?? []).map((review) => ({
+    const list = response.data.data
+    reviews.value = list.map((review) => ({
       ...review,
       is_visible: Boolean(review.is_visible),
     }))
@@ -60,11 +62,6 @@ function toggleVisibility(reviewId) {
   if (selectedReview.value?.id === reviewId) {
     selectedReview.value = reviews.value.find((review) => review.id === reviewId) ?? null
   }
-}
-
-function clearFilters() {
-  visibilityFilter.value = 'all'
-  minRating.value = 'all'
 }
 
 function resetChanges() {
@@ -97,22 +94,6 @@ function snapshotReviews(items) {
     id: review.id,
     is_visible: Boolean(review.is_visible),
   }))
-}
-
-function getVisibleServices(services = []) {
-  if (!Array.isArray(services) || services.length === 0) {
-    return []
-  }
-
-  return services.slice(0, 1)
-}
-
-function getHiddenServiceCount(services = []) {
-  if (!Array.isArray(services) || services.length <= 1) {
-    return 0
-  }
-
-  return services.length - 1
 }
 
 function openReview(review) {
@@ -180,65 +161,14 @@ function formatReviewDate(value) {
 
           <div class="min-h-0 flex-1 overflow-auto pr-1">
             <div v-if="filteredReviews.length" class="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-              <article
+              <ReviewCard
                 v-for="review in filteredReviews"
                 :key="review.id"
-                class="flex min-h-[12.5rem] flex-col rounded-2xl border border-black/10 p-3 transition hover:border-black/20 hover:bg-slate-50/60"
-                role="button"
-                tabindex="0"
-                @click="openReview(review)"
-                @keydown.enter="openReview(review)"
-                @keydown.space.prevent="openReview(review)"
-              >
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <div class="mb-1 flex items-center gap-1">
-                      <Star
-                        v-for="star in 5"
-                        :key="star"
-                        class="h-4 w-4 shrink-0"
-                        :class="star <= Number(review.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'"
-                      />
-                    </div>
-                    <h3 class="truncate text-base font-semibold text-black">
-                      {{ review.client }}
-                    </h3>
-                    <p class="mt-1 text-xs text-slate-500">
-                      {{ formatReviewDate(review.created_at) }}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-slate-700 transition hover:border-black"
-                    :aria-label="review.is_visible ? 'Visible review' : 'Hidden review'"
-                    @click.stop="toggleVisibility(review.id)"
-                  >
-                    <Eye v-if="review.is_visible" class="h-4 w-4" />
-                    <EyeOff v-else class="h-4 w-4" />
-                  </button>
-                </div>
-
-                <p class="mt-3 min-h-[3rem] line-clamp-2 text-sm leading-6 text-slate-700">
-                  {{ review.comment || 'No comment.' }}
-                </p>
-
-                <div v-if="review.services?.length" class="mt-3 flex flex-wrap gap-2">
-                  <span
-                    v-for="service in getVisibleServices(review.services)"
-                    :key="service"
-                    class="rounded-full border border-black/10 px-2.5 py-1 text-xs font-medium text-slate-600"
-                  >
-                    {{ service }}
-                  </span>
-                  <span
-                    v-if="getHiddenServiceCount(review.services) > 0"
-                    class="rounded-full border border-black/10 px-2.5 py-1 text-xs font-medium text-slate-500"
-                  >
-                    +{{ getHiddenServiceCount(review.services) }}
-                  </span>
-                </div>
-              </article>
+                :review="review"
+                :show-visibility-toggle="true"
+                @open="openReview"
+                @toggle-visibility="toggleVisibility"
+              />
             </div>
 
             <div
