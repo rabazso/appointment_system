@@ -72,6 +72,7 @@ export const logout = async () => {
 export const getCurrentUser = () => API.get('/user');
 
 export const getEmployeeAppointments = (params = {}) => API.get('/employee/appointments', { params });
+export const getAdminAppointments = (params = {}) => API.get('/admin/appointments', { params });
 export const cancelEmployeeAppointment = (appointmentId, payload) =>
     API.post(`/employee/appointments/${appointmentId}/cancel`, payload);
 export const completeEmployeeAppointment = (appointmentId) => API.post(`/employee/appointments/${appointmentId}/complete`);
@@ -159,7 +160,8 @@ export const previewEmployeeAvailabilityAffectedAppointments = (payload) => API.
 export const previewEmployeeBookingRulesAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-booking-rules', payload);
 export const previewServiceAvailabilityAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/service-availability', payload);
 export const cancelAdminAppointment = (appointmentId, payload) => API.post(`/appointments/${appointmentId}/cancel`, payload);
-
+export const completeAdminAppointment = (appointmentId) => API.post(`/appointments/${appointmentId}/complete`);
+export const noShowAdminAppointment = (appointmentId) => API.post(`/appointments/${appointmentId}/no-show`);
 export const postService = (payload) => API.post('/services', payload);
 export const putService = (id, payload) => API.put(`/services/${id}`, payload);
 export const patchService = (id, payload) => API.patch(`/services/${id}`, payload)

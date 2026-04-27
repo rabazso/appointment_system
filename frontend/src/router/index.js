@@ -23,6 +23,7 @@ import ReviewsPage from '@pages/employee/Reviews.vue'
 import TimeOffPage from '@pages/employee/TimeOff.vue'
 import TimeOff from '@pages/admin/TimeOff.vue'
 import ShopProfile from '@pages/admin/ShopProfile.vue'
+import Appointments from '@pages/admin/Appointments.vue'
 
 const routes = [
   {
@@ -219,6 +220,15 @@ const routes = [
     component: ShopProfile,
     meta: {
       title: 'Shop Profile',
+      requiresAdmin: true,
+    }
+  },
+  {
+    path: '/admin/appointments',
+    name: 'Appointments',
+    component: Appointments,
+    meta: {
+      title: 'Appointments',
       requiresAdmin: true,
     }
   },
