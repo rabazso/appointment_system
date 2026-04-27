@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { setTitle } from '@/router/guards/SetTitleGuard.mjs'
 import Index from '@pages/index.vue'
-import Barbers from '@pages/barbers.vue'
+import PublicEmployees from '@pages/Employees.vue'
 import EmployeeDetails from '@pages/employeeDetails.vue'
 import Contact from '@pages/contact.vue'
 import Booking from '@pages/booking.vue'
@@ -12,7 +12,7 @@ import YourAppointments from '@pages/yourAppointments.vue'
 import ForgotPassword from '@pages/forgotPassword.vue'
 import ResetPassword from '@pages/resetPassword.vue'
 import Services from '@pages/admin/Services.vue'
-import Employees from '@pages/admin/Employees.vue'
+import AdminEmployees from '@pages/admin/Employees.vue'
 import Schedule from '@pages/admin/Schedule.vue'
 import VerifyEmail from '@pages/verifyEmail.vue'
 import AdminSignIn from '@pages/admin/AdminSignIn.vue'
@@ -37,7 +37,7 @@ const routes = [
   {
     path: '/barbers',
     name: 'Barbers',
-    component: Barbers,
+    component: PublicEmployees,
     meta: {
       title: 'Barbers'
     }
@@ -166,7 +166,7 @@ const routes = [
   {
     path: '/admin/employees',
     name: 'Employees',
-    component: Employees,
+    component: AdminEmployees,
     meta: {
       title: 'Employees',
       requiresAdmin: true,
