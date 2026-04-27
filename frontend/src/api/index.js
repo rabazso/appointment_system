@@ -94,7 +94,6 @@ export const cancelEmployeeOwnTimeOffRequest = (id) => API.delete(`/employee/tim
 export const getEmployeeReviews = () => API.get('/employee/reviews');
 export const patchEmployeeReviewVisibility = (id, payload) => API.patch(`/employee/reviews/${id}`, payload);
 
-export const getBarberReviews = () => API.get('/reviews');
 
 export const getServices = () => API.get('/services');
 export const getEmployees = () => API.get('/employees');
@@ -153,7 +152,6 @@ export const getUserAppointments = () => API.get('/user/appointments');
 export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointments/${appointmentId}/cancel`);
 export const forgotPassword = (email) => API.post('/forgot-password', { email });
 export const resetPassword = (payload) => API.post('/reset-password', payload);
-export const completeBarberAppointment = (appointmentId) => API.post(`/employee/appointments/${appointmentId}/complete`);
 export const previewEmployeeScheduleAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-schedule', payload);
 export const previewEmployeeServicesAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-services', payload);
 export const previewEmployeeAvailabilityAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-availability', payload);

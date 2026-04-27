@@ -48,15 +48,12 @@ if (props.variant === 'background') {
   bgcolor = ref('bg-background')
   textcolor = ref('text-foreground')
 }
-// let buttonStyle = ref(props.variant === 'background'
-//   ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-//   : 'bg-background text-foreground hover:bg-background/90')
 
 const title = import.meta.env.VITE_APP_NAME || 'MyApp'
 const links = [
   { label: 'Services', to: '/', hash: '#services' },
   { label: 'Our Barbers', to: '/', hash: '#barbers' },
-  { label: 'Reviews', to: '/', hash: '#reviews' },
+  { label: 'Gallery', to: '/', hash: '#gallery' },
   { label: 'Contact', to: '/contact' }
 ]
 
