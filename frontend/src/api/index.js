@@ -145,14 +145,13 @@ export const getBookingSlots = (serviceIds, employeeId, selectedDate) => API.get
         selected_date: selectedDate,
     },
 });
-export const getReviews = () => API.get('/reviews');
-export const postReview = (payload) => API.post('/reviews', payload, withAuth('customer'));
 export const postAppointment = (payload) => API.post('/appointments', payload, withAuth('customer'));
 export const confirmAppointment = (appointmentId, expires, signature) => API.get(`/appointments/confirm/${appointmentId}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
 export const verifyEmailAddress = (userId, hash, expires, signature) =>
     API.get(`/email/verify/${userId}/${hash}?expires=${encodeURIComponent(expires)}&signature=${encodeURIComponent(signature)}`);
 export const getUserAppointments = () => API.get('/user/appointments', withAuth('customer'));
 export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointments/${appointmentId}/cancel`, null, withAuth('customer'));
+export const postAppointmentReview = (appointmentId, payload) => API.post(`/user/appointments/${appointmentId}/review`, payload, withAuth('customer'));
 export const forgotPassword = (email) => API.post('/forgot-password', { email });
 export const resetPassword = (payload) => API.post('/reset-password', payload);
 

@@ -80,6 +80,7 @@ class AppointmentController extends Controller
             ->with([
                 'appointmentServices.service:id,name',
                 'employee:id,name',
+                'review:id,appointment_id,rating,comment,is_visible,created_at',
             ])
             ->orderByDesc('start_datetime')
             ->get();

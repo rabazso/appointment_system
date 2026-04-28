@@ -68,6 +68,18 @@ function selectRating(star) {
   rating.value = star
 }
 
+function getAppointmentLabel(appointment) {
+  const services = Array.isArray(appointment.services)
+    ? appointment.services.map((service) => service?.name).filter(Boolean)
+    : []
+  const serviceLabel = services.length ? services.join(', ') : appointment.service?.name || 'Service'
+  const start = appointment.start_datetime
+    ? appointment.start_datetime.slice(0, 16).replace('T', ' ')
+    : ''
+
+  return `#${appointment.id} - ${serviceLabel}${start ? ` - ${start}` : ''}`
+}
+
 function handleSubmit() {
   if (!appointmentId.value || props.loading) {
     return
@@ -111,7 +123,7 @@ function handleSubmit() {
               :key="appointment.id"
               :value="String(appointment.id)"
             >
-              #{{ appointment.id }} - {{ appointment.service?.name || 'Service' }} - {{ appointment.start_datetime?.slice(0, 16).replace('T', ' ') }}
+              {{ getAppointmentLabel(appointment) }}
             </option>
           </select>
           <p v-if="appointments.length === 0" class="mt-2 text-xs text-muted-foreground">
@@ -154,8 +166,7 @@ function handleSubmit() {
           {{ errorMessage }}
         </p>
 
-        <div class="flex justify-end gap-3">
-          <Button type="button" variant="outlinebackground" :disabled="loading" @click="closeModal">Cancel</Button>
+        <div class="flex justify-end">
           <Button type="submit" :disabled="loading || appointments.length === 0">
             {{ loading ? 'Submitting...' : 'Submit review' }}
           </Button>

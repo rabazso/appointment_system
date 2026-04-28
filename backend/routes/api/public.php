@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Public\AppointmentController;
+use App\Http\Controllers\Public\AppointmentReviewController;
 use App\Http\Controllers\Public\AuthController;
 use App\Http\Controllers\Public\BookingController;
 use App\Http\Controllers\Public\CurrentUserController;
@@ -60,6 +61,7 @@ Route::middleware('auth.api-token')->group(function () {
     Route::middleware('role:customer')->group(function () {
         Route::get('/user/appointments', [AppointmentController::class, 'userAppointments']);
         Route::post('/user/appointments/{appointment}/cancel', [AppointmentController::class, 'cancelUserAppointment']);
+        Route::post('/user/appointments/{appointment}/review', [AppointmentReviewController::class, 'store']);
     });
 });
 

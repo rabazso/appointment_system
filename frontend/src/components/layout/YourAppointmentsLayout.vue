@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { cancelUserAppointment, getUserAppointments } from '@/api'
+import { Star, X } from 'lucide-vue-next'
+import { cancelUserAppointment, getUserAppointments, postAppointmentReview } from '@/api'
 import {
   Card,
   CardContent,
@@ -9,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import LeaveReviewModal from '@/components/modals/LeaveReviewModal.vue'
 import { useToastStore } from '@/stores/ToastStore.js'
 
 const router = useRouter()
@@ -19,6 +21,11 @@ const error = ref(null)
 const cancelModalOpen = ref(false)
 const cancelling = ref(false)
 const pendingCancelId = ref(null)
+const reviewModalOpen = ref(false)
+const reviewSubmitting = ref(false)
+const reviewError = ref('')
+const pendingReviewAppointmentId = ref(null)
+const viewReviewAppointmentId = ref(null)
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -91,6 +98,14 @@ const appointmentToCancel = computed(() =>
   appointments.value.find((apt) => apt.id === pendingCancelId.value) || null
 )
 
+const reviewableAppointments = computed(() =>
+  appointments.value.filter((apt) => apt.status === 'completed' && !apt.review)
+)
+
+const appointmentToViewReview = computed(() =>
+  appointments.value.find((apt) => apt.id === viewReviewAppointmentId.value) || null
+)
+
 const openCancelModal = (id) => {
   pendingCancelId.value = id
   cancelModalOpen.value = true
@@ -119,6 +134,84 @@ const confirmCancelAppointment = async () => {
   } finally {
     cancelling.value = false
   }
+}
+
+const openLeaveReviewModal = (id) => {
+  pendingReviewAppointmentId.value = id
+  reviewError.value = ''
+  reviewModalOpen.value = true
+}
+
+const closeLeaveReviewModal = (force = false) => {
+  if (reviewSubmitting.value && !force) {
+    return
+  }
+
+  reviewModalOpen.value = false
+  pendingReviewAppointmentId.value = null
+  reviewError.value = ''
+}
+
+const openViewReviewModal = (id) => {
+  viewReviewAppointmentId.value = id
+}
+
+const closeViewReviewModal = () => {
+  viewReviewAppointmentId.value = null
+}
+
+const submitReview = async (payload) => {
+  const appointmentId = payload?.appointment_id
+  if (!appointmentId || reviewSubmitting.value) {
+    return
+  }
+
+  reviewSubmitting.value = true
+  reviewError.value = ''
+
+  try {
+    const response = await postAppointmentReview(appointmentId, {
+      rating: payload.rating,
+      comment: payload.comment,
+    })
+    const review = response.data?.data ?? response.data
+    const appointment = appointments.value.find((apt) => apt.id === appointmentId)
+
+    if (appointment) {
+      appointment.review = review
+    }
+
+    toast.show('Review submitted.')
+    closeLeaveReviewModal(true)
+  } catch (err) {
+    console.error('Failed to submit review:', err)
+    reviewError.value = err.response?.data?.message
+      || err.response?.data?.errors?.rating?.[0]
+      || err.response?.data?.errors?.comment?.[0]
+      || 'Failed to submit review.'
+    toast.showError('Failed to submit review.')
+  } finally {
+    reviewSubmitting.value = false
+  }
+}
+
+const formatReviewDate = (value) => {
+  if (!value) {
+    return ''
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  return date.toLocaleString([], {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 onMounted(async () => {
@@ -210,7 +303,27 @@ const handleNewBooking = () => {
               <p class="font-bold text-lg text-primary">${{ apt.price ?? apt.service?.price }}</p>
             </div>
 
-            <div v-if="apt.status === 'pending' || apt.status === 'confirmed'" class="pt-4 mt-auto">
+            <div v-if="apt.status === 'completed'" class="pt-4 mt-auto">
+              <Button
+                v-if="apt.review"
+                variant="outline"
+                class="w-full"
+                size="sm"
+                @click="openViewReviewModal(apt.id)"
+              >
+                View Review
+              </Button>
+              <Button
+                v-else
+                class="w-full"
+                size="sm"
+                @click="openLeaveReviewModal(apt.id)"
+              >
+                Leave Review
+              </Button>
+            </div>
+
+            <div v-else-if="apt.status === 'pending' || apt.status === 'confirmed'" class="pt-4 mt-auto">
               <Button 
                 variant="destructive" 
                 class="w-full" 
@@ -257,6 +370,75 @@ const handleNewBooking = () => {
           <Button variant="destructive" :disabled="cancelling" @click="confirmCancelAppointment">
             {{ cancelling ? 'Cancelling...' : 'Yes, Cancel' }}
           </Button>
+        </div>
+      </div>
+    </div>
+
+    <LeaveReviewModal
+      v-if="reviewModalOpen"
+      :appointments="reviewableAppointments"
+      :initial-appointment-id="pendingReviewAppointmentId"
+      :loading="reviewSubmitting"
+      :error-message="reviewError"
+      @close="closeLeaveReviewModal"
+      @submit="submitReview"
+    />
+
+    <div
+      v-if="appointmentToViewReview && appointmentToViewReview.review"
+      class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+      @click.self="closeViewReviewModal"
+    >
+      <div class="w-full max-w-md rounded-xl border bg-background shadow-2xl">
+        <div class="flex items-start justify-between gap-4 border-b px-6 py-4">
+          <div>
+            <h2 class="text-lg font-semibold">Your review</h2>
+            <p class="mt-1 text-sm text-muted-foreground">
+              {{ getServiceNames(appointmentToViewReview) }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="text-muted-foreground transition-colors hover:text-primary"
+            aria-label="Close review"
+            @click="closeViewReviewModal"
+          >
+            <X class="h-5 w-5" />
+          </button>
+        </div>
+
+        <div class="space-y-5 px-6 py-5">
+          <div class="rounded-lg bg-accent/10 px-4 py-3 text-sm">
+            <p class="font-medium">
+              {{ formatDate(appointmentToViewReview) }} at {{ formatTime(appointmentToViewReview) }}
+            </p>
+            <p v-if="formatReviewDate(appointmentToViewReview.review.created_at)" class="mt-1 text-muted-foreground">
+              Reviewed {{ formatReviewDate(appointmentToViewReview.review.created_at) }}
+            </p>
+          </div>
+
+          <div>
+            <p class="mb-2 text-sm font-semibold text-primary">Rating</p>
+            <div class="flex items-center gap-2">
+              <Star
+                v-for="star in 5"
+                :key="star"
+                class="h-6 w-6"
+                :class="star <= Number(appointmentToViewReview.review.rating) ? 'fill-accent text-accent' : 'text-muted-foreground/40'"
+              />
+            </div>
+          </div>
+
+          <div>
+            <p class="mb-2 text-sm font-semibold text-primary">Comment</p>
+            <p class="whitespace-pre-wrap rounded-lg border bg-background px-3 py-3 text-sm text-foreground">
+              {{ appointmentToViewReview.review.comment || 'No comment.' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex justify-end border-t px-6 py-4">
+          <Button @click="closeViewReviewModal">Close</Button>
         </div>
       </div>
     </div>

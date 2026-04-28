@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Appointment;
 
+use App\Http\Resources\Review\CustomerReviewResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -41,6 +42,9 @@ class UserAppointmentResource extends JsonResource
                 'id' => $this->employee?->id,
                 'name' => $this->employee?->name,
             ],
+            'review' => $this->relationLoaded('review') && $this->review
+                ? new CustomerReviewResource($this->review)
+                : null,
         ];
     }
 
