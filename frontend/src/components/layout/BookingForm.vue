@@ -372,13 +372,8 @@ function normalizeAvailabilityDate(value) {
 
   const raw = String(value)
   const datePart = raw.match(/^(\d{4}-\d{2}-\d{2})/)
-  const timePart = raw.match(/(\d{2}:\d{2})(?::\d{2})?/)
 
   if (datePart?.[1]) {
-    if (timePart?.[1]) {
-      return `${datePart[1]} ${timePart[1]}`
-    }
-
     return datePart[1]
   }
 
@@ -387,7 +382,7 @@ function normalizeAvailabilityDate(value) {
     return raw
   }
 
-  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`
 }
 
 function availabilityLabel(item) {
