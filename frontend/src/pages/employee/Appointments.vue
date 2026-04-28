@@ -9,32 +9,30 @@ import {
   getEmployeeAppointments,
   markEmployeeAppointmentNoShow,
 } from '@/api/index.js'
+import { useToastStore } from '@/stores/ToastStore.js'
 
-const errorMessage = ref('')
 const cancelModalOpen = ref(false)
 const cancellingAppointment = ref(false)
 const cancelAppointmentId = ref(null)
 const cancellationReason = ref('')
-const cancelModalError = ref('')
 const appointments = ref([])
 const workingHours = ref([])
+const toast = useToastStore()
 
 const CANCELLABLE_STATUSES = ['pending', 'confirmed']
 const MAX_CANCELLATION_REASON_LENGTH = 250
 
 const loadData = async () => {
-  errorMessage.value = ''
-
   try {
     const appointmentsResponse = await getEmployeeAppointments({
       statuses: ['pending', 'confirmed', 'completed', 'no_show', 'cancelled'],
     })
     workingHours.value = appointmentsResponse.data.working_hours
     appointments.value = appointmentsResponse.data.data
-  } catch (error) {
+  } catch {
     appointments.value = []
     workingHours.value = []
-    errorMessage.value = error.response?.data?.message || 'Failed to load dashboard data.'
+    toast.showError('Failed to load data.')
   }
 }
 
@@ -55,13 +53,12 @@ const openCancelModal = (appointmentId) => {
 
   const timestamp = getAppointmentTimestamp(appointment)
   if (!Number.isFinite(timestamp) || timestamp <= Date.now()) {
-    errorMessage.value = 'Appointment can only be cancelled before it starts.'
+    toast.showError('Appointment can only be cancelled before it starts.')
     return
   }
 
   cancelAppointmentId.value = appointmentId
   cancellationReason.value = ''
-  cancelModalError.value = ''
   cancelModalOpen.value = true
 }
 
@@ -69,13 +66,7 @@ const closeCancelModal = () => {
   cancelModalOpen.value = false
   cancelAppointmentId.value = null
   cancellationReason.value = ''
-  cancelModalError.value = ''
 }
-
-const extractCancellationError = (error) =>
-  error.response?.data?.errors?.cancellation_reason?.[0]
-  || error.response?.data?.message
-  || 'Failed to cancel appointment.'
 
 const formatAppointmentTime = (appointment) => {
   const timestamp = getAppointmentTimestamp(appointment)
@@ -97,8 +88,6 @@ const confirmCancelAppointment = async () => {
   }
 
   cancellingAppointment.value = true
-  cancelModalError.value = ''
-  errorMessage.value = ''
 
   try {
     const reason = trimmedCancellationReason.value
@@ -112,8 +101,9 @@ const confirmCancelAppointment = async () => {
     }
 
     closeCancelModal()
-  } catch (error) {
-    cancelModalError.value = extractCancellationError(error)
+    toast.show('Changes saved successfully.')
+  } catch {
+    toast.showError('Failed to save changes.')
   } finally {
     cancellingAppointment.value = false
   }
@@ -126,8 +116,9 @@ const onCompleteAppointment = async (appointmentId) => {
     if (appointment) {
       appointment.status = 'completed'
     }
-  } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Failed to complete appointment.'
+    toast.show('Changes saved successfully.')
+  } catch {
+    toast.showError('Failed to save changes.')
   }
 }
 
@@ -138,8 +129,9 @@ const onMarkNoShow = async (appointmentId) => {
     if (appointment) {
       appointment.status = 'no_show'
     }
-  } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Failed to mark appointment as no-show.'
+    toast.show('Changes saved successfully.')
+  } catch {
+    toast.showError('Failed to save changes.')
   }
 }
 
@@ -155,10 +147,6 @@ onMounted(() => {
     description="Manage your appointments and daily workflow."
   >
     <div class="flex min-h-0 flex-1 flex-col gap-6">
-      <p v-if="errorMessage" class="rounded-md bg-red-100 px-4 py-2 text-sm text-red-700">
-        {{ errorMessage }}
-      </p>
-
       <AppointmentSchedule
         :appointments="appointments"
         :working-hours="workingHours"
@@ -173,7 +161,6 @@ onMounted(() => {
         :reason="cancellationReason"
         :reason-length="cancellationReasonLength"
         :max-reason-length="MAX_CANCELLATION_REASON_LENGTH"
-        :error-message="cancelModalError"
         :close-disabled="cancellingAppointment"
         :format-appointment-time="formatAppointmentTime"
         @update:reason="cancellationReason = $event"

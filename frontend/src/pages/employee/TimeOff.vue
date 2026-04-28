@@ -6,6 +6,7 @@ import { X, Calendar as CalendarIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import PageLayout from '@/components/PageLayout.vue'
+import { useToastStore } from '@/stores/ToastStore.js'
 import {
   cancelEmployeeOwnTimeOffRequest,
   getEmployeeOwnTimeOffRequests,
@@ -13,8 +14,6 @@ import {
   postEmployeeOwnTimeOffRequest,
 } from '@/api/index.js'
 
-const errorMessage = ref('')
-const successMessage = ref('')
 const requests = ref([])
 const holidays = ref([])
 const showRequestModal = ref(false)
@@ -28,6 +27,7 @@ const form = reactive(createForm())
 const submitted = ref(false)
 const calendarPlaceholders = ref({})
 const calendarDateCache = new Map()
+const toast = useToastStore()
 
 const hasRequests = computed(() => requests.value.length > 0)
 const visibleRequests = computed(() => {
@@ -71,9 +71,9 @@ async function loadRequests() {
   try {
     const response = await getEmployeeOwnTimeOffRequests()
     requests.value = response.data.data ?? []
-  } catch (error) {
+  } catch {
     requests.value = []
-    errorMessage.value = error.response?.data?.message || 'Failed to load time off requests.'
+    toast.showError('Failed to load data.')
   }
 }
 
@@ -96,22 +96,19 @@ async function loadHolidays() {
     holidays.value = [...byId.values()].sort((a, b) => String(a.date).localeCompare(String(b.date)))
   } catch {
     holidays.value = []
-    errorMessage.value = 'Failed to load holidays.'
+    toast.showError('Failed to load data.')
   }
 }
 
 async function cancelRequest(request) {
   if (request?.status !== 'pending') return
 
-  errorMessage.value = ''
-  successMessage.value = ''
-
   try {
     await cancelEmployeeOwnTimeOffRequest(request.id)
-    successMessage.value = 'Pending request cancelled.'
+    toast.show('Changes saved successfully.')
     await loadRequests()
-  } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'Failed to cancel request.'
+  } catch {
+    toast.showError('Failed to save changes.')
   }
 }
 
@@ -119,25 +116,19 @@ async function submitRequest() {
   submitted.value = true
 
   if (!filledDays.value.length) {
-    errorMessage.value = 'Please select at least one day.'
-    successMessage.value = ''
+    toast.showError('Please select at least one day.')
     return
   }
 
   if (requestHasConflict.value) {
-    errorMessage.value = 'Please remove days that already have a time off request.'
-    successMessage.value = ''
+    toast.showError('Please remove days that already have a time off request.')
     return
   }
 
   if (!form.note.trim()) {
-    errorMessage.value = 'Please add a reason.'
-    successMessage.value = ''
+    toast.showError('Please add a reason.')
     return
   }
-
-  errorMessage.value = ''
-  successMessage.value = ''
 
   try {
     for (const date of filledDays.value) {
@@ -151,12 +142,10 @@ async function submitRequest() {
     form.note = ''
     submitted.value = false
     calendarPlaceholders.value = {}
-    successMessage.value = 'Time off request submitted.'
+    toast.show('Changes saved successfully.')
     await loadRequests()
-  } catch (error) {
-    errorMessage.value = error.response?.data?.errors?.date?.[0]
-      || error.response?.data?.message
-      || 'Failed to submit time off request.'
+  } catch {
+    toast.showError('Failed to save changes.')
   }
 }
 
@@ -232,8 +221,6 @@ function dayErrorMessage(day) {
 
 function openRequestModal() {
   submitted.value = false
-  errorMessage.value = ''
-  successMessage.value = ''
   form.days = [todayISO]
   form.note = ''
   calendarPlaceholders.value = {}
@@ -243,8 +230,6 @@ function openRequestModal() {
 
 function closeRequestModal() {
   showRequestModal.value = false
-  errorMessage.value = ''
-  successMessage.value = ''
   submitted.value = false
   calendarPlaceholders.value = {}
   isRequestDatePickerOpen.value = null
@@ -264,13 +249,6 @@ onMounted(async () => {
     :show-action="true"
     @action-click="openRequestModal"
   >
-    <p v-if="errorMessage" class="mb-4 rounded-md bg-red-100 px-4 py-2 text-sm text-red-700">
-      {{ errorMessage }}
-    </p>
-    <p v-if="successMessage" class="mb-4 rounded-md bg-green-100 px-4 py-2 text-sm text-green-700">
-      {{ successMessage }}
-    </p>
-
     <div class="mx-auto mb-4 flex rounded-2xl bg-white p-1 shadow-sm 2xl:hidden">
       <button
         type="button"

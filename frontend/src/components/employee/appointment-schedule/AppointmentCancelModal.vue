@@ -8,7 +8,6 @@ const props = defineProps({
   reason: { type: String, default: '' },
   reasonLength: { type: Number, default: 0 },
   maxReasonLength: { type: Number, default: 250 },
-  errorMessage: { type: String, default: '' },
   closeDisabled: { type: Boolean, default: false },
   formatAppointmentTime: { type: Function, required: true },
 })
@@ -44,10 +43,6 @@ function onReasonInput(event) {
           {{ props.reasonLength }} / {{ props.maxReasonLength }} characters
         </p>
       </div>
-
-      <p v-if="props.errorMessage" class="rounded-md bg-red-100 px-3 py-2 text-sm text-red-700">
-        {{ props.errorMessage }}
-      </p>
     </div>
 
     <template #footer>
