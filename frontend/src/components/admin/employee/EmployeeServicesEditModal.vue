@@ -55,9 +55,6 @@
                   <span class="shrink-0 text-sm font-medium text-slate-400">Ft</span>
                 </div>
               </div>
-              <p v-if="fieldError(service, 'price')" class="mt-1 text-xs text-red-500">
-                {{ fieldError(service, 'price') }}
-              </p>
             </div>
 
             <div>
@@ -75,9 +72,6 @@
                   <span class="shrink-0 text-sm font-medium text-slate-400">min</span>
                 </div>
               </div>
-              <p v-if="fieldError(service, 'duration')" class="mt-1 text-xs text-red-500">
-                {{ fieldError(service, 'duration') }}
-              </p>
             </div>
 
             <button
@@ -87,6 +81,22 @@
             >
               <Trash class="h-4 w-4" />
             </button>
+          </div>
+
+          <div
+            v-if="fieldError(service, 'price') || fieldError(service, 'duration')"
+            class="mt-1 grid gap-3 sm:grid-cols-[minmax(0,1fr)_110px_110px_32px]"
+          >
+            <div></div>
+            <p v-if="fieldError(service, 'price')" class="text-xs leading-4 text-red-500">
+              {{ fieldError(service, 'price') }}
+            </p>
+            <div v-else></div>
+            <p v-if="fieldError(service, 'duration')" class="text-xs leading-4 text-red-500">
+              {{ fieldError(service, 'duration') }}
+            </p>
+            <div v-else></div>
+            <div></div>
           </div>
         </div>
       </div>

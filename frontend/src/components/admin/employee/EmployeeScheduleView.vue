@@ -28,7 +28,6 @@
             <span class="text-sm font-medium text-slate-700">{{ day.fullLabel }}</span>
             <span
               class="text-sm font-semibold"
-              :class="schedule?.weeklyHours?.[day.weekday]?.isOpen ? 'text-slate-900' : 'text-slate-400'"
             >
               {{
                 schedule?.weeklyHours?.[day.weekday]?.isOpen
@@ -40,14 +39,14 @@
 
           <div
             v-if="schedule?.weeklyHours?.[day.weekday]?.isOpen && getBreaksForWeekday(day.weekday).length"
-            class="mt-2 flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5"
+            class="mt-2 flex flex-wrap items-center gap-2 rounded-lg px-3 py-1.5"
           >
-            <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Breaks</span>
+            <span class="text-sm">Breaks:</span>
             <div class="flex flex-wrap gap-1">
               <span
                 v-for="(breakItem, breakIndex) in getBreaksForWeekday(day.weekday)"
                 :key="`${breakItem.weekday}-${breakIndex}`"
-                class="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-600"
+                class="inline-flex items-center rounded-md border border-black/10 bg-white px-2 py-0.5 text-xs font-semibold"
               >
                 {{ breakItem.start }} - {{ breakItem.end }}
               </span>

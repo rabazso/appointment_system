@@ -24,9 +24,9 @@
           class="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 px-5 py-4"
           :class="index !== services.services.length - 1 ? 'border-b border-slate-100' : ''"
         >
-          <span class="text-sm font-medium text-slate-700">{{ service.name }}</span>
-          <span class="text-sm font-semibold text-slate-900">{{ service.price }} Ft</span>
-          <span class="text-sm font-medium text-slate-500">{{ service.duration }} min</span>
+          <span class="text-sm">{{ service.name }}</span>
+          <span class="text-sm font-semibold">{{ service.price }} Ft</span>
+          <span class="text-sm font-semibold">{{ service.duration }} min</span>
         </div>
       </template>
 
