@@ -35,6 +35,8 @@ Ugyanez hosszú kapcsolóval:
 bash start.sh --fresh-seed
 ```
 
+Az oldalt ezen a linken keresztul eri el: http://frontend.vm1.test
+
 Súgó:
 
 ```bash
