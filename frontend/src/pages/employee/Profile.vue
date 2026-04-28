@@ -59,7 +59,7 @@
 
                       <div class="flex min-w-0 flex-1 flex-col gap-2 pt-1">
                         <p class="max-w-xs text-xs leading-5 text-slate-500">
-                          Accepted types: JPG, PNG or WEBP. <br> Max size 5MB
+                          Accepted types: JPG, PNG or WEBP. <br> Max size 4MB
                         </p>
 
                         <div class="flex flex-wrap gap-2">
@@ -206,81 +206,14 @@
           :class="[viewMode === 'gallery' ? 'flex' : 'hidden', 'xl:flex']"
           class="flex min-h-0 flex-1 flex-col rounded-2xl bg-white p-4 shadow-sm"
         >
-          <div class="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <h2 class="text-2xl font-semibold text-black">Gallery</h2>
-              <p class="mt-1 text-sm text-slate-500">Upload and manage the images customers see first.</p>
-            </div>
-
-            <button
-              type="button"
-              class="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              @click="triggerGalleryUpload"
-            >
-              + Upload images
-            </button>
-          </div>
-
-          <div class="flex min-h-0 flex-1 flex-col rounded-2xl border border-black/10 bg-white p-3">
-            <div v-if="galleryDraft.length" class="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3 overflow-auto pr-1">
-              <div
-                v-for="image in galleryDraft"
-                :key="image.id"
-                class="group relative aspect-square cursor-pointer overflow-hidden rounded-xl border border-black/10 bg-slate-100"
-                @click="openGalleryImagePreview(image)"
-              >
-                <img :src="image.preview_url" alt="Work sample" class="h-full w-full object-cover">
-                <button
-                  type="button"
-                  class="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-slate-900 transition hover:bg-white"
-                  @click.stop="openDeleteGalleryModal(image)"
-                >
-                  <X class="h-4 w-4" />
-                </button>
-              </div>
-
-            </div>
-
-            <div
-              v-else
-              class="flex min-h-0 flex-1 items-center justify-center rounded-xl border-black/15 text-sm text-slate-400"
-            >
-              No images uploaded
-            </div>
-
-            <input
-              ref="galleryInput"
-              type="file"
-              accept="image/*"
-              multiple
-              class="hidden"
-              @change="onGalleryFilesSelected"
-            >
-          </div>
-
+          <ImageGalleryManager
+            :images="galleryDraft"
+            helper-text="JPG, PNG, WebP. Max 4 MB each."
+            empty-text="No images uploaded"
+            @upload="onGalleryFilesSelected"
+            @delete="confirmDeleteGallery"
+          />
         </section>
-      </div>
-
-      <div
-        v-if="galleryImagePreviewTarget"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6"
-        @click="closeGalleryImagePreview"
-      >
-        <div class="relative max-h-full max-w-6xl" @click.stop>
-          <button
-            type="button"
-            class="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-sm transition hover:bg-white"
-            @click="closeGalleryImagePreview"
-          >
-            <X class="h-5 w-5" />
-          </button>
-
-          <img
-            :src="galleryImagePreviewTarget.original_url || galleryImagePreviewTarget.preview_url"
-            alt="Gallery image preview"
-            class="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
-          >
-        </div>
       </div>
 
       <div
@@ -315,24 +248,16 @@
         @confirm="confirmDeleteProfilePhoto"
       />
 
-      <ConfirmDeleteModal
-        v-if="galleryDeleteTarget"
-        title="Delete image"
-    description="This will remove the image from your public gallery."
-        question-prefix="Are you sure you want to delete "
-        target-name="this image"
-        @close="closeDeleteGalleryModal"
-        @confirm="confirmDeleteGallery"
-      />
     </div>
   </PageLayout>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { Upload, Trash, X } from 'lucide-vue-next'
+import { Upload, Trash } from 'lucide-vue-next'
 import PageLayout from '@/components/PageLayout.vue'
 import ConfirmDeleteModal from '@/components/admin/ConfirmDeleteModal.vue'
+import ImageGalleryManager from '@/components/gallery/ImageGalleryManager.vue'
 import { useToastStore } from '@/stores/ToastStore.js'
 import {
   deleteEmployeeProfileGalleryImage,
@@ -346,14 +271,11 @@ const profileLoading = ref(true)
 const profileSaving = ref(false)
 const viewMode = ref('contact')
 const profileImageInput = ref(null)
-const galleryInput = ref(null)
 const avatarFile = ref(null)
 const profileImagePreviewOpen = ref(false)
-const galleryImagePreviewTarget = ref(null)
 const links = ref([])
 const galleryDraft = ref([])
 const savedProfileSnapshot = ref('')
-const galleryDeleteTarget = ref(null)
 const profilePhotoDeleteTarget = ref(null)
 const fieldErrors = ref({
   name: '',
@@ -361,6 +283,7 @@ const fieldErrors = ref({
   links: {},
 })
 const toast = useToastStore()
+const MAX_GALLERY_IMAGE_SIZE_BYTES = 4096 * 1024
 
 const profile = ref({
   name: '',
@@ -424,19 +347,6 @@ const closeProfileImagePreview = () => {
   profileImagePreviewOpen.value = false
 }
 
-const triggerGalleryUpload = () => {
-  galleryInput.value?.click()
-}
-
-const openGalleryImagePreview = (image) => {
-  if (!image?.preview_url && !image?.original_url) return
-  galleryImagePreviewTarget.value = image
-}
-
-const closeGalleryImagePreview = () => {
-  galleryImagePreviewTarget.value = null
-}
-
 const onProfileImageSelected = (event) => {
   const [file] = event.target.files || []
   if (!file) return
@@ -492,9 +402,13 @@ function normalizeLinks(value) {
   }))
 }
 
-const onGalleryFilesSelected = async (event) => {
-  const files = Array.from(event.target.files || [])
+const onGalleryFilesSelected = async (files) => {
   if (!files.length) return
+  const oversizedFile = files.find((file) => file && file.size > MAX_GALLERY_IMAGE_SIZE_BYTES)
+  if (oversizedFile) {
+    toast.showError('One or more images are too large. Maximum size is 4 MB.')
+    return
+  }
 
   try {
     for (const file of files) {
@@ -505,30 +419,15 @@ const onGalleryFilesSelected = async (event) => {
     await loadProfile()
   } catch {
     toast.showError('Failed to save image.')
-  } finally {
-    event.target.value = ''
   }
 }
-
-const openDeleteGalleryModal = (image) => {
-  galleryDeleteTarget.value = image
-}
-
-const closeDeleteGalleryModal = () => {
-  galleryDeleteTarget.value = null
-}
-
-const confirmDeleteGallery = async () => {
-  if (!galleryDeleteTarget.value?.id) return
+const confirmDeleteGallery = async (image) => {
+  if (!image?.id) return
 
   try {
-    const deletingImageId = galleryDeleteTarget.value.id
-    await deleteEmployeeProfileGalleryImage(deletingImageId)
+    await deleteEmployeeProfileGalleryImage(image.id)
     await loadProfile()
-    if (galleryImagePreviewTarget.value?.id === deletingImageId) {
-      closeGalleryImagePreview()
-    }
-    closeDeleteGalleryModal()
+    toast.show('Changes saved successfully.')
   } catch {
     toast.showError('Failed to delete image.')
   }
