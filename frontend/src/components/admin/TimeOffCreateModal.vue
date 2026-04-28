@@ -61,12 +61,38 @@
               class="grid items-center gap-2"
               :class="{ '[grid-template-columns:minmax(0,1fr)_30px]': form.days.length > 1 }"
             >
-              <input
-                v-model="form.days[index]"
-                type="date"
-                :min="todayISO"
-                class="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-base outline-none transition hover:border-black [font-variant-numeric:tabular-nums]"
-              />
+              <PopoverRoot
+                :open="openDayPickerIndex === index"
+                @update:open="(open) => setDayPickerOpen(index, open)"
+              >
+                <PopoverTrigger as-child>
+                  <button
+                    type="button"
+                    class="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-base outline-none transition hover:border-black [font-variant-numeric:tabular-nums] flex items-center justify-between"
+                  >
+                    <span>{{ form.days[index] || 'YYYY-MM-DD' }}</span>
+                    <CalendarIcon class="h-4 w-4 text-slate-500" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverPortal>
+                  <PopoverContent
+                    side="bottom"
+                    align="start"
+                    :side-offset="6"
+                    :collision-padding="12"
+                    position-strategy="fixed"
+                    class="z-[90] w-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+                  >
+                    <Calendar
+                      :model-value="calendarValue(form.days[index])"
+                      layout="month-and-year"
+                      class="rounded-md"
+                      :min-value="todayDateValue"
+                      @update:model-value="(value) => setDayAtIndex(index, value)"
+                    />
+                  </PopoverContent>
+                </PopoverPortal>
+              </PopoverRoot>
               <button
                 v-if="form.days.length > 1"
                 type="button"
@@ -112,9 +138,12 @@
 </template>
 
 <script setup>
+import { parseDate } from '@internationalized/date'
 import { computed, reactive, ref } from 'vue'
-import { X } from 'lucide-vue-next'
+import { Calendar as CalendarIcon, X } from 'lucide-vue-next'
+import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import Button from '@/components/admin/Button.vue'
+import { Calendar } from '@/components/ui/calendar'
 import { useToastStore } from '@/stores/ToastStore.js'
 
 const props = defineProps({
@@ -130,10 +159,12 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save'])
 const todayISO = new Date().toISOString().slice(0, 10)
+const todayDateValue = parseDate(todayISO)
 
 const form = reactive(createForm())
 const submitted = ref(false)
 const toast = useToastStore()
+const openDayPickerIndex = ref(null)
 
 const filledDays = computed(() => form.days.filter(Boolean))
 const filledEmployees = computed(() => form.employees.filter(Boolean))
@@ -165,6 +196,12 @@ function addDay() {
 
 function removeDay(index) {
   form.days.splice(index, 1)
+
+  if (openDayPickerIndex.value === index) {
+    openDayPickerIndex.value = null
+  } else if (openDayPickerIndex.value > index) {
+    openDayPickerIndex.value -= 1
+  }
 }
 
 function addEmployee() {
@@ -173,6 +210,29 @@ function addEmployee() {
 
 function removeEmployee(index) {
   form.employees.splice(index, 1)
+}
+
+function calendarValue(value) {
+  if (!value) return undefined
+
+  try {
+    return parseDate(value)
+  } catch {
+    return undefined
+  }
+}
+
+function toIsoDate(value) {
+  return value?.toString?.() || ''
+}
+
+function setDayAtIndex(index, value) {
+  form.days[index] = toIsoDate(value)
+  openDayPickerIndex.value = null
+}
+
+function setDayPickerOpen(index, isOpen) {
+  openDayPickerIndex.value = isOpen ? index : (openDayPickerIndex.value === index ? null : openDayPickerIndex.value)
 }
 
 function saveTimeOff() {
