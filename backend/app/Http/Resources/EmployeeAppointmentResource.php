@@ -12,14 +12,13 @@ class EmployeeAppointmentResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $serviceName = $this->appointmentServices
-            ->map(fn ($appointmentService) => $appointmentService->service?->name)
-            ->filter()
-            ->join(', ');
+        $serviceName = $this->appointmentServices->pluck('service.name')->filter()->implode(', ');
 
         return [
             'id' => $this->id,
             'status' => $this->status,
+            'cancellation_reason' => $this->cancellation_reason,
+            'cancelled_by' => $this->cancelled_by,
             'client' => $this->customer?->name ?? 'Guest',
             'email' => $this->customer?->email,
             'phone' => $this->customer?->phone,

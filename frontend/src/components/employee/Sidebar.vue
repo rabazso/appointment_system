@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="isOpen"
-    class="fixed inset-0 z-1 bg-black/50 md:hidden"
+    class="fixed inset-0 z-2 bg-black/50 xl:hidden"
     @click="$emit('close')"
   />
 
@@ -9,10 +9,10 @@
     :class="[
       'fixed top-0 left-0 z-2 flex h-screen w-64 shrink-0 flex-col border-r border-black/10 bg-white transition-transform duration-300',
       isOpen ? 'translate-x-0' : '-translate-x-full',
-      'lg:sticky lg:translate-x-0'
+      'xl:sticky xl:translate-x-0'
     ]"
   >
-    <div class="flex justify-end p-4 md:hidden">
+    <div class="flex justify-end p-4 xl:hidden">
       <button type="button" @click="$emit('close')">
         <X class="h-6 w-6" />
       </button>

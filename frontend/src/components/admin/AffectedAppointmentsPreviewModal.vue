@@ -92,9 +92,13 @@
           <textarea
             v-model="cancellationReason"
             rows="3"
+            :maxlength="MAX_CANCELLATION_REASON_LENGTH"
             placeholder="Cancellation reason"
             class="w-full rounded-lg border border-slate-200 bg-white p-2 text-sm outline-none transition focus:border-black"
           />
+          <p class="mt-1 text-xs text-slate-500">
+            {{ cancellationReasonLength }} / {{ MAX_CANCELLATION_REASON_LENGTH }} characters
+          </p>
         </div>
         <div class="mt-3 flex justify-end gap-3">
           <button
@@ -118,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { ChevronDown, X } from 'lucide-vue-next'
 import AppointmentSelectionList from '@/components/admin/AppointmentSelectionList.vue'
 import ModalHeader from '@/components/admin/ModalHeader.vue'
@@ -136,6 +140,8 @@ const localPreview = ref(clonePreview(props.preview))
 const selectedAppointmentIds = ref([])
 const openSection = ref('conflicts')
 const cancellationReason = ref('Schedule change made this appointment unavailable.')
+const MAX_CANCELLATION_REASON_LENGTH = 250
+const cancellationReasonLength = computed(() => cancellationReason.value.trim().length)
 
 watch(
   () => props.preview,
