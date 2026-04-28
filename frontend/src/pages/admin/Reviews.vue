@@ -16,7 +16,7 @@
           </div>
 
           <div v-else class="flex min-h-0 flex-1 flex-col">
-            <div class="mb-4 grid gap-3 xl:grid-cols-[max-content_max-content_max-content] xl:justify-start">
+            <div class="mb-4 grid gap-3 xl:grid-cols-[max-content_max-content_max-content_1fr_max-content_max-content] xl:items-end">
               <div>
                 <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Rating</span>
                 <label class="block">
@@ -69,6 +69,18 @@
                     </SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div></div>
+
+              <div class="inline-flex items-center gap-1 rounded-xl border border-black/10 bg-white p-1">
+                <p class="p-1 text-sm text-slate-500">Average:</p>
+                <p class="text-sm font-semibold text-slate-900">{{ averageRating }}</p>
+              </div>
+
+              <div class="inline-flex items-center gap-1 rounded-xl border border-black/10 bg-white p-1">
+                <p class="p-1 text-sm text-slate-500">Count:</p>
+                <p class="text-sm font-semibold text-slate-900">{{ reviewedCount }}</p>
               </div>
             </div>
 
@@ -167,6 +179,12 @@ const dirtyReviews = computed(() =>
 )
 
 const isDirty = computed(() => dirtyReviews.value.length > 0)
+const reviewedCount = computed(() => filteredReviews.value.length)
+const averageRating = computed(() => {
+  if (!filteredReviews.value.length) return '0.0'
+  const sum = filteredReviews.value.reduce((acc, review) => acc + Number(review.rating || 0), 0)
+  return (sum / filteredReviews.value.length).toFixed(1)
+})
 
 function initializeOriginalReviews() {
   originalReviews.value = reviews.value.map((review) => ({
