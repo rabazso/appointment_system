@@ -21,7 +21,11 @@ services:
       - docs
       - mailcatcher
     networks:
-      - fullstack
+      fullstack:
+        aliases:
+          - frontend.vm1.test
+          - backend.vm1.test
+          - api.vm1.test
     ports:
       - 80:80
     volumes:
@@ -134,5 +138,16 @@ services:
   
   mailcatcher:
     image: dockage/mailcatcher:0.9.0
+    networks:
+      - fullstack
+
+  cypress:
+    image: cypress/included:15.14.1
+    depends_on:
+      - proxy
+      - frontend
+    working_dir: /e2e
+    volumes:
+      - ./frontend:/e2e
     networks:
       - fullstack
