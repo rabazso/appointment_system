@@ -13,7 +13,7 @@ class ForgotPasswordController extends Controller
 {
     public function __invoke(ForgotPasswordRequest $request): JsonResponse
     {
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->where('role', 'customer')->first();
 
         if ($user) {
             Password::sendResetLink(['email' => $user->email]);
