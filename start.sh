@@ -1,5 +1,22 @@
 #!/bin/bash
 
+set -e
+
+MODE="${1:-none}"
+
+case "$MODE" in
+  none|--migrate|-m|--fresh-seed|-fs) ;;
+  -h|--help)
+    echo "Használat: bash start.sh [--migrate|--fresh-seed|-m|-fs]"
+    exit 0
+    ;;
+  *)
+    echo "Ismeretlen kapcsoló: $MODE"
+    echo "Használat: bash start.sh [--migrate|--fresh-seed|-m|-fs]"
+    exit 1
+    ;;
+esac
+
 if [ -f ".env" ]; then
     echo "A .env fájl már létezik"
 else
@@ -21,7 +38,15 @@ docker compose up -d
 
 docker compose exec backend composer install
 
-docker compose exec backend php artisan migrate:fresh --seed
+if [ "$MODE" = "--fresh-seed" ] || [ "$MODE" = "-fs" ]; then
+  echo "Adatbázis újraépítése és seedelése..."
+  docker compose exec backend php artisan migrate:fresh --seed
+elif [ "$MODE" = "--migrate" ] || [ "$MODE" = "-m" ]; then
+  echo "Adatbázis migráció futtatása..."
+  docker compose exec backend php artisan migrate
+else
+  echo "Adatbázis migráció és seeding kihagyva."
+fi
 
 if [ -z "${APP_KEY}" ]; then
     docker compose exec backend php artisan key:generate
