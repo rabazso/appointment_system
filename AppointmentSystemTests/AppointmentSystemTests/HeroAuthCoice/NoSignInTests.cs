@@ -1,8 +1,5 @@
 ﻿using OpenQA.Selenium;
 using SeleniumExtras.WaitHelpers;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace AppointmentSystemTests.HeroAuthCoice
 {
@@ -11,9 +8,9 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [Test]
         public void BookNow_WhenNotLoggedIn_ShouldShowAuthChoiceModal()
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            ClickTestId("book-now-btn");
 
-            var guestButton = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='guest-btn']")));
+            var guestButton = VisibleTestId("guest-btn");
 
             Assert.That(guestButton.Displayed, Is.True);
         }
@@ -21,9 +18,9 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [Test]
         public void SignInBtnThroughHeaderShouldShowAuthChoiceModal()
         {
-            driver.FindElement(By.CssSelector("[data-testid='headerbtn']")).Click();
+            ClickTestId("headerbtn");
 
-            var modal = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='auth-modal']")));
+            var modal = VisibleTestId("auth-modal");
 
             Assert.That(modal.Displayed, Is.True);
         }
@@ -31,9 +28,9 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [Test]
         public void ContinueAsGuest_ShouldNavigateToBooking()
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            ClickTestId("book-now-btn");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='guest-btn']"))).Click();
+            ClickTestId("guest-btn");
 
             wait.Until(ExpectedConditions.UrlContains("/booking"));
 

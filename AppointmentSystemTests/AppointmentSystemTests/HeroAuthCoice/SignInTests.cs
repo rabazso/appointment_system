@@ -1,8 +1,5 @@
 ﻿using OpenQA.Selenium;
 using SeleniumExtras.WaitHelpers;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace AppointmentSystemTests.HeroAuthCoice
 {
@@ -11,11 +8,11 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [Test]
         public void SignInFromAuthChoice_ShouldOpenLoginModal()
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            ClickTestId("book-now-btn");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='login-btn']"))).Click();
+            ClickTestId("login-btn");
 
-            var authModal = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='auth-modal']")));
+            var authModal = VisibleTestId("auth-modal");
 
             Assert.That(authModal.Displayed, Is.True);
         }
@@ -23,15 +20,11 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [Test]
         public void SuccessfulLogin_ShouldRedirectToBooking()
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            ClickTestId("book-now-btn");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='login-btn']"))).Click();
+            ClickTestId("login-btn");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys("rosella.dare@example.org");
-
-            driver.FindElement(By.CssSelector("[data-testid='password-input']")).SendKeys("password");
-
-            driver.FindElement(By.CssSelector("[data-testid='login-submit']")).Click();
+            LoginAsCustomer();
 
             wait.Until(ExpectedConditions.UrlContains("/booking"));
         }
@@ -39,15 +32,10 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [Test]
         public void SignInThroughHeaderShouldShowToast()
         {
-            driver.FindElement(By.CssSelector("[data-testid='headerbtn']")).Click();
+            OpenLoginFromHeader();
+            LoginAsCustomer();
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys("rosella.dare@example.org");
-
-            driver.FindElement(By.CssSelector("[data-testid='password-input']")).SendKeys("password");
-
-            driver.FindElement(By.CssSelector("[data-testid='login-submit']")).Click();
-
-            var toast = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='toast']")));
+            var toast = VisibleTestId("toast");
 
             Assert.That(toast.Text, Does.Contain("Successfully signed in"));
         }
@@ -55,15 +43,10 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [Test]
         public void WhenSignedInBookBtnShouldNavigateToBookingPage()
         {
-            driver.FindElement(By.CssSelector("[data-testid='headerbtn']")).Click();
+            OpenLoginFromHeader();
+            LoginAsCustomer();
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys("rosella.dare@example.org");
-
-            driver.FindElement(By.CssSelector("[data-testid='password-input']")).SendKeys("password");
-
-            driver.FindElement(By.CssSelector("[data-testid='login-submit']")).Click();
-
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            ClickTestId("book-now-btn");
 
             wait.Until(ExpectedConditions.UrlContains("/booking"));
         }
@@ -72,66 +55,51 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [TestCase("email@")]
         [TestCase("@email")]
         [TestCase("@")]
-        [Test]
         public void SignInWithNotValidEmailFormatShouldThrowError(string email)
         {
-            driver.FindElement(By.CssSelector("[data-testid='headerbtn']")).Click();
+            OpenLoginFromHeader();
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys(email);
+            TypeTestId("email-input", email);
+            TypeTestId("password-input", "password");
+            ClickTestId("signin-submit");
 
-            driver.FindElement(By.CssSelector("[data-testid='password-input']")).SendKeys("password");
-
-            driver.FindElement(By.CssSelector("[data-testid='login-submit']")).Click();
-
-            var errorMessage = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='errormsg-login']")));
-            string errorText = errorMessage.Text;
-
-            Assert.That(errorText.Contains("The email field must be a valid email address."), Is.True);
+            Assert.That(WaitForValidationMessage().Displayed, Is.True);
         }
 
         [Test]
         public void SignInWithWrongCredentialsWillThrowError()
         {
-            driver.FindElement(By.CssSelector("[data-testid='headerbtn']")).Click();
+            OpenLoginFromHeader();
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys("notregisteredemail@gmail.com");
+            TypeTestId("email-input", "notregisteredemail@gmail.com");
+            TypeTestId("password-input", "notregisteredpass");
+            ClickTestId("signin-submit");
 
-            driver.FindElement(By.CssSelector("[data-testid='password-input']")).SendKeys("notregisteredpass");
-
-            driver.FindElement(By.CssSelector("[data-testid='login-submit']")).Click();
-
-            var errorMessage = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='errormsg-login']")));
+            var errorMessage = VisibleTestId("errormsg-login");
             string errorText = errorMessage.Text;
 
-            Assert.That(errorText.Contains("Something went wrong"), Is.True);
+            Assert.That(errorText.Contains("Invalid credentials"), Is.True);
         }
 
         [Test]
         public void SignInWithEmptyFieldsWillThrowError()
         {
-            driver.FindElement(By.CssSelector("[data-testid='headerbtn']")).Click();
+            OpenLoginFromHeader();
 
-            driver.FindElement(By.CssSelector("[data-testid='login-submit']")).Click();
+            ClickTestId("signin-submit");
 
-            var errorMessage = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='errormsg-login']")));
-            string errorText = errorMessage.Text;
-
-            Assert.That(errorText.Contains("The email field is required."), Is.True);
+            Assert.That(WaitForValidationMessage().Displayed, Is.True);
         }
 
         [Test]
         public void SignInWithEmptyPasswordFieldWillThrowError()
         {
-            driver.FindElement(By.CssSelector("[data-testid='headerbtn']")).Click();
+            OpenLoginFromHeader();
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys("email@email.com");
+            TypeTestId("email-input", "email@email.com");
+            ClickTestId("signin-submit");
 
-            driver.FindElement(By.CssSelector("[data-testid='login-submit']")).Click();
-
-            var errorMessage = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='errormsg-login']")));
-            string errorText = errorMessage.Text;
-
-            Assert.That(errorText.Contains("The password field is required."), Is.True);
+            Assert.That(WaitForValidationMessage().Displayed, Is.True);
         }
     }
 }

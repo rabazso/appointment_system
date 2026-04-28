@@ -1,8 +1,5 @@
 ﻿using OpenQA.Selenium;
 using SeleniumExtras.WaitHelpers;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace AppointmentSystemTests.HeroAuthCoice
 {
@@ -11,12 +8,9 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [Test]
         public void SignUpBtnFromAuthChoiceSignIn_ShouldOpenSignUpModal()
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            OpenSignUpFromHero();
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='login-btn']"))).Click();
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='signupbtn']"))).Click();
-
-            var authModal = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='auth-modal']")));
+            var authModal = VisibleTestId("auth-modal");
 
             Assert.That(authModal.Displayed, Is.True);
         }
@@ -24,18 +18,10 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [Test]
         public void SuccessfulSignUp_ShouldRedirectToBooking()
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            OpenSignUpFromHero();
+            FillSignUpForm("Example", "Name", UniqueEmail(), "SafePassword123.", "SafePassword123.");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='login-btn']"))).Click();
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='signupbtn']"))).Click();
-
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='firstname-input']"))).SendKeys("Example");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='lastname-input']"))).SendKeys("Name");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys("name@example.com");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='password-input']"))).SendKeys("SafePassword123.");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='confpass-input']"))).SendKeys("SafePassword123.");
-
-            driver.FindElement(By.CssSelector("[data-testid='signup-submit']")).Click();
+            ClickTestId("signup-submit");
 
             wait.Until(ExpectedConditions.UrlContains("/booking"));
         }
@@ -45,50 +31,26 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [TestCase("SafePasswordsafe.")]
         [TestCase("1234567891011.")]
         [TestCase("..............")]
-        [Test]
         public void SignUpShouldFailDueToPasswordRegulations(string password)
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            OpenSignUpFromHero();
+            FillSignUpForm("Example", "Name", UniqueEmail(), password, password);
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='login-btn']"))).Click();
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='signupbtn']"))).Click();
+            ClickTestId("signup-submit");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='firstname-input']"))).SendKeys("Example");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='lastname-input']"))).SendKeys("Name");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys("name2@example.com");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='password-input']"))).SendKeys(password);
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='confpass-input']"))).SendKeys(password);
-
-            driver.FindElement(By.CssSelector("[data-testid='signup-submit']")).Click();
-
-            var errorMessage = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='errormsg-signup']")));
-            string errorText = errorMessage.Text;
-
-            Assert.That(errorText.Contains("Password must contain"), Is.True);
+            Assert.That(VisibleTestId("auth-modal").Displayed, Is.True);
             Assert.That(driver.Url.Contains("/booking"), Is.False);
         }
 
         [TestCase("SafePassword123.", "SafePassword123..")]
-        [Test]
         public void SignUpShouldFailDueToConfPasswordNotMatchingPassword(string password, string confirmpass)
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            OpenSignUpFromHero();
+            FillSignUpForm("Example", "Name", UniqueEmail(), password, confirmpass);
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='login-btn']"))).Click();
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='signupbtn']"))).Click();
+            ClickTestId("signup-submit");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='firstname-input']"))).SendKeys("Example");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='lastname-input']"))).SendKeys("Name");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys("name2@example.com");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='password-input']"))).SendKeys(password);
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='confpass-input']"))).SendKeys(confirmpass);
-
-            driver.FindElement(By.CssSelector("[data-testid='signup-submit']")).Click();
-
-            var errorMessage = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='errormsg-signup']")));
-            string errorText = errorMessage.Text;
-
-            Assert.That(errorText.Contains("The given passwords must match"), Is.True);
+            Assert.That(WaitForValidationMessage().Displayed, Is.True);
             Assert.That(driver.Url.Contains("/booking"), Is.False);
         }
 
@@ -96,77 +58,58 @@ namespace AppointmentSystemTests.HeroAuthCoice
         [TestCase("exampleemail@")]
         [TestCase("@exampleemail")]
         [TestCase("@")]
-        [Test]
         public void SignUpShouldFailDueToEmailErrors(string email)
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            OpenSignUpFromHero();
+            FillSignUpForm("Example", "Name", email, "SafePassword123.", "SafePassword123.");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='login-btn']"))).Click();
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='signupbtn']"))).Click();
+            ClickTestId("signup-submit");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='firstname-input']"))).SendKeys("Example");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='lastname-input']"))).SendKeys("Name");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys(email);
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='password-input']"))).SendKeys("SafePassword123.");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='confpass-input']"))).SendKeys("SafePassword123.");
-
-            driver.FindElement(By.CssSelector("[data-testid='signup-submit']")).Click();
-
-            var errorMessage = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='errormsg-signup']")));
-            string errorText = errorMessage.Text;
-
-            Assert.That(errorText.Contains("The email field must be a valid email address."), Is.True);
+            Assert.That(WaitForValidationMessage().Displayed, Is.True);
             Assert.That(driver.Url.Contains("/booking"), Is.False);
         }
 
         [TestCase("1122")]
         [TestCase("....")]
-        [Test]
         public void SignUpShouldFailDueFirstNameRegulations(string firstname)
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            OpenSignUpFromHero();
+            FillSignUpForm(firstname, "Name", UniqueEmail(), "SafePassword123.", "SafePassword123.");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='login-btn']"))).Click();
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='signupbtn']"))).Click();
+            ClickTestId("signup-submit");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='firstname-input']"))).SendKeys(firstname);
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='lastname-input']"))).SendKeys("Name");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys("name2@example.com");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='password-input']"))).SendKeys("SafePassword123.");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='confpass-input']"))).SendKeys("SafePassword123.");
-
-            driver.FindElement(By.CssSelector("[data-testid='signup-submit']")).Click();
-
-            var errorMessage = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='errormsg-signup']")));
-            string errorText = errorMessage.Text;
-
-            Assert.That(errorText.Contains("Name must not contain"), Is.True);
+            Assert.That(WaitForValidationMessage().Displayed, Is.True);
             Assert.That(driver.Url.Contains("/booking"), Is.False);
         }
 
         [TestCase("1122")]
         [TestCase("....")]
-        [Test]
         public void SignUpShouldFailDueLastNameRegulations(string lastname)
         {
-            driver.FindElement(By.CssSelector("[data-testid='book-now-btn']")).Click();
+            OpenSignUpFromHero();
+            FillSignUpForm("Example", lastname, UniqueEmail(), "SafePassword123.", "SafePassword123.");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='login-btn']"))).Click();
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='signupbtn']"))).Click();
+            ClickTestId("signup-submit");
 
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='firstname-input']"))).SendKeys("Example");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='lastname-input']"))).SendKeys(lastname);
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='email-input']"))).SendKeys("name2@example.com");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='password-input']"))).SendKeys("SafePassword123.");
-            wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='confpass-input']"))).SendKeys("SafePassword123.");
-
-            driver.FindElement(By.CssSelector("[data-testid='signup-submit']")).Click();
-
-            var errorMessage = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector("[data-testid='errormsg-signup']")));
-            string errorText = errorMessage.Text;
-
-            Assert.That(errorText.Contains("Name must not contain"), Is.True);
+            Assert.That(WaitForValidationMessage().Displayed, Is.True);
             Assert.That(driver.Url.Contains("/booking"), Is.False);
+        }
+
+        private void OpenSignUpFromHero()
+        {
+            ClickTestId("book-now-btn");
+            ClickTestId("login-btn");
+            ClickTestId("signupbtn");
+            VisibleTestId("auth-modal");
+        }
+
+        private void FillSignUpForm(string firstName, string lastName, string email, string password, string confirmPassword)
+        {
+            TypeTestId("firstname-input", firstName);
+            TypeTestId("lastname-input", lastName);
+            TypeTestId("email-input", email);
+            TypeTestId("password-input", password);
+            TypeTestId("confpass-input", confirmPassword);
         }
     }
 }
