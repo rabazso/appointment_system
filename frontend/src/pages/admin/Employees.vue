@@ -65,7 +65,8 @@
           </div>
 
           <p class="text-center text-sm font-semibold text-black">
-            ⭐ {{ formatRating(employee.rating) }}
+            <Star class="inline-block h-4 w-4 text-yellow-500 fill-current" />
+            {{ formatRating(employee.rating) }}
           </p>
 
           <div class="mt-auto flex justify-end pt-3">
@@ -123,6 +124,7 @@ import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import { createEmployee, deleteEmployee, getEmployees } from '@/api'
 import { useToastStore } from '@/stores/ToastStore.js'
+import { Star } from 'lucide-vue-next'
 
 const employees = ref([])
 const sidebarOpen = ref(false)
