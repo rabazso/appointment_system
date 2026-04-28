@@ -1,4 +1,4 @@
-# Fullstack 2025
+# Barbershop Appointment System
 
 Figyelem! Mivel a Docker Compose és több container is igényt tart a `.env` fájlra, így az eredetileg a backendben lévő `.env.example` a projekt gyökerében található. Ezt kell lemásolni `.env` néven, majd igény szerint beállítani. Ezután a Docker Compose felcsatolja a szükséges containerekhez. 
 ## Indítás
@@ -87,3 +87,13 @@ docker compose down -v
 
 - Az admin képes változtatni az árakat, a nyitvatartást, hozzátud adni új barbereket és a barberekhez hozzá tud adni és el tud venni szolgáltatásokat, illetve tudja engedélyezni és elutasítani a szabadság kérelmeket.
 - Az admin fiókokba ugyan úgy a login gomb megnyomását követően a szükséges adatok megoldásával tudunk bejelentkezni. 
+
+**Figma**
+
+- **Linkek**
+    - https://www.figma.com/design/fkwYRHOaqkNhVo9R4FrSKF/Admin-and-Employee-pages?node-id=8-997&t=TP6Fy3jCglv6U5nU-1
+    - https://www.figma.com/design/RCk9qOHnUlyXwd3OEAtfnp/Appointment_system?node-id=0-1&t=RvMz3niXW4j1vxl2-1
+    - https://www.figma.com/design/hNLsYS1BujHypjAPD2R9ls/Appointment_system_barbersPage?node-id=0-1&t=QL1vbQrz0hs0erJ6-1
+    - https://www.figma.com/design/N1b9XKxpfRqADkj0BSPut2/Appointment_system_Contacts?node-id=0-1&t=JKIQJ3ntb9OVvsOd-1
+    - https://www.figma.com/design/RCk9qOHnUlyXwd3OEAtfnp/Appointment_system?node-id=106-2&t=42EUqwyHLpQoSOQw-1
+    - https://www.figma.com/design/OExiQWelH4z2fcJBK4kptC/Appointment_system_mobile_view?node-id=0-1&t=ipiEFPSaM4f2PNXq-1
