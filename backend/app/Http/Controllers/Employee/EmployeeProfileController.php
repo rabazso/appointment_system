@@ -43,6 +43,7 @@ class EmployeeProfileController extends Controller
 
     public function storeProfilePic(StoreEmployeeGalleryImageRequest $request, ImagePreviewService $imagePreviewService): JsonResponse {
         $employee = $request->user()->employee;
+        $previousProfileImageId = $employee->profile_image_id;
         $file = $request->file('image');
 
         $employeeImage = EmployeeImage::create([
@@ -55,6 +56,10 @@ class EmployeeProfileController extends Controller
         $employee->update([
             'profile_image_id' => $employeeImage->id,
         ]);
+
+        if ($previousProfileImageId) {
+            $employee->images()->whereKey($previousProfileImageId)->delete();
+        }
 
         return response()->json(
             (new EmployeeProfileResource($employee->load(['profileImage', 'images'])))->toArray($request)

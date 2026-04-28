@@ -30,9 +30,6 @@
           class="min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-sm"
         >
           <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <div v-if="profileError" class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700">
-                {{ profileError }}
-              </div>
               <div v-if="profileLoading" class="text-sm text-slate-500">
                 Loading profile...
               </div>
@@ -77,7 +74,7 @@
                           <button
                             type="button"
                             class="inline-flex items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-black transition hover:border-black"
-                            @click="removeProfilePhoto"
+                            @click="openDeleteProfilePhotoModal"
                           >
                             <Trash class="h-4 w-4" />
                             Remove
@@ -102,10 +99,12 @@
                         <input
                           v-model="profile.name"
                           type="text"
-                          class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 pr-12 text-sm text-black outline-none transition focus:border-black"
+                          class="w-full rounded-xl border bg-white px-4 py-3 pr-12 text-sm text-black outline-none transition focus:border-black"
+                          :class="fieldErrors.name ? 'border-rose-500 focus:border-rose-500' : 'border-black/10'"
                           placeholder="Your name"
                         >
                       </div>
+                      <p v-if="fieldErrors.name" class="text-xs text-rose-600">{{ fieldErrors.name }}</p>
                     </div>
                     <div class="space-y-3">
                       <label class="block text-sm font-semibold tracking-wide text-black">Description</label>
@@ -113,10 +112,12 @@
                         <textarea
                           v-model="profile.description"
                           rows="4"
-                          class="w-full rounded-xl border border-black/10 bg-white px-4 py-3 pr-12 text-sm leading-6 text-black outline-none transition focus:border-black resize-none"
+                          class="w-full rounded-xl border bg-white px-4 py-3 pr-12 text-sm leading-6 text-black outline-none transition focus:border-black resize-none"
+                          :class="fieldErrors.description ? 'border-rose-500 focus:border-rose-500' : 'border-black/10'"
                           placeholder="Write a short bio about your work"
                         ></textarea>
                       </div>
+                      <p v-if="fieldErrors.description" class="text-xs text-rose-600">{{ fieldErrors.description }}</p>
                     </div>
                   </div>
 
@@ -147,16 +148,20 @@
                             v-model="link.label"
                             type="text"
                             placeholder="Instagram"
-                            class="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+                            class="w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+                            :class="linkErrorById(link.id)?.label ? 'border-rose-500' : 'border-black/10'"
                           >
+                          <p v-if="linkErrorById(link.id)?.label" class="mt-1 text-xs text-rose-600">{{ linkErrorById(link.id)?.label }}</p>
                         </div>
                         <div class="min-w-0">
                           <input
                             v-model="link.url"
                             type="url"
                             placeholder="https://..."
-                            class="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+                            class="w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+                            :class="linkErrorById(link.id)?.url ? 'border-rose-500' : 'border-black/10'"
                           >
+                          <p v-if="linkErrorById(link.id)?.url" class="mt-1 text-xs text-rose-600">{{ linkErrorById(link.id)?.url }}</p>
                         </div>
                         <div class="flex items-start sm:items-center">
                           <button
@@ -221,13 +226,14 @@
               <div
                 v-for="image in galleryDraft"
                 :key="image.id"
-                class="group relative aspect-square overflow-hidden rounded-xl border border-black/10 bg-slate-100"
+                class="group relative aspect-square cursor-pointer overflow-hidden rounded-xl border border-black/10 bg-slate-100"
+                @click="openGalleryImagePreview(image)"
               >
                 <img :src="image.preview_url" alt="Work sample" class="h-full w-full object-cover">
                 <button
                   type="button"
                   class="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-slate-900 transition hover:bg-white"
-                  @click="openDeleteGalleryModal(image)"
+                  @click.stop="openDeleteGalleryModal(image)"
                 >
                   <X class="h-4 w-4" />
                 </button>
@@ -256,6 +262,28 @@
       </div>
 
       <div
+        v-if="galleryImagePreviewTarget"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6"
+        @click="closeGalleryImagePreview"
+      >
+        <div class="relative max-h-full max-w-6xl" @click.stop>
+          <button
+            type="button"
+            class="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-sm transition hover:bg-white"
+            @click="closeGalleryImagePreview"
+          >
+            <X class="h-5 w-5" />
+          </button>
+
+          <img
+            :src="galleryImagePreviewTarget.original_url || galleryImagePreviewTarget.preview_url"
+            alt="Gallery image preview"
+            class="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
+          >
+        </div>
+      </div>
+
+      <div
         v-if="profileImagePreviewOpen"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6"
         @click.self="closeProfileImagePreview"
@@ -278,6 +306,16 @@
       </div>
 
       <ConfirmDeleteModal
+        v-if="profilePhotoDeleteTarget"
+        title="Delete image"
+        description="This will remove your current profile photo."
+        question-prefix="Are you sure you want to delete "
+        target-name="this image"
+        @close="closeDeleteProfilePhotoModal"
+        @confirm="confirmDeleteProfilePhoto"
+      />
+
+      <ConfirmDeleteModal
         v-if="galleryDeleteTarget"
         title="Delete image"
         description="This will remove the image from your public gallery."
@@ -295,6 +333,7 @@ import { computed, onMounted, ref } from 'vue'
 import { Upload, Trash, X } from 'lucide-vue-next'
 import PageLayout from '@/components/employee/PageLayout.vue'
 import ConfirmDeleteModal from '@/components/admin/ConfirmDeleteModal.vue'
+import { useToastStore } from '@/stores/ToastStore.js'
 import {
   deleteEmployeeProfileGalleryImage,
   getEmployeeProfile,
@@ -305,16 +344,23 @@ import {
 
 const profileLoading = ref(true)
 const profileSaving = ref(false)
-const profileError = ref('')
 const viewMode = ref('contact')
 const profileImageInput = ref(null)
 const galleryInput = ref(null)
 const avatarFile = ref(null)
 const profileImagePreviewOpen = ref(false)
+const galleryImagePreviewTarget = ref(null)
 const links = ref([])
 const galleryDraft = ref([])
 const savedProfileSnapshot = ref('')
 const galleryDeleteTarget = ref(null)
+const profilePhotoDeleteTarget = ref(null)
+const fieldErrors = ref({
+  name: '',
+  description: '',
+  links: {},
+})
+const toast = useToastStore()
 
 const profile = ref({
   name: '',
@@ -348,7 +394,7 @@ const unwrapResourceItem = (payload) => payload?.data ?? payload
 
 const loadProfile = async () => {
   profileLoading.value = true
-  profileError.value = ''
+  clearFieldErrors()
 
   try {
     const response = await getEmployeeProfile()
@@ -358,8 +404,8 @@ const loadProfile = async () => {
     galleryDraft.value = mapped.gallery.map((image) => ({ ...image, file: null, isNew: false }))
     avatarFile.value = null
     savedProfileSnapshot.value = JSON.stringify(snapshotProfileState(mapped, mapped.links, null))
-  } catch (error) {
-    profileError.value = error.response?.data?.message || 'Failed to load profile data.'
+  } catch {
+    toast.showError('Failed to load profile data.')
   } finally {
     profileLoading.value = false
   }
@@ -382,6 +428,15 @@ const triggerGalleryUpload = () => {
   galleryInput.value?.click()
 }
 
+const openGalleryImagePreview = (image) => {
+  if (!image?.preview_url && !image?.original_url) return
+  galleryImagePreviewTarget.value = image
+}
+
+const closeGalleryImagePreview = () => {
+  galleryImagePreviewTarget.value = null
+}
+
 const onProfileImageSelected = (event) => {
   const [file] = event.target.files || []
   if (!file) return
@@ -398,6 +453,21 @@ const removeProfilePhoto = () => {
 
   avatarFile.value = null
   profile.value.photo_url = ''
+}
+
+const openDeleteProfilePhotoModal = () => {
+  if (!profile.value.photo_url) return
+  profilePhotoDeleteTarget.value = { type: 'profile-photo' }
+}
+
+const closeDeleteProfilePhotoModal = () => {
+  profilePhotoDeleteTarget.value = null
+}
+
+const confirmDeleteProfilePhoto = () => {
+  if (!profilePhotoDeleteTarget.value) return
+  removeProfilePhoto()
+  closeDeleteProfilePhotoModal()
 }
 
 function addLink() {
@@ -426,7 +496,6 @@ const onGalleryFilesSelected = async (event) => {
   const files = Array.from(event.target.files || [])
   if (!files.length) return
 
-  profileError.value = ''
   try {
     for (const file of files) {
       const formData = new FormData()
@@ -435,7 +504,7 @@ const onGalleryFilesSelected = async (event) => {
     }
     await loadProfile()
   } catch {
-    profileError.value = 'Failed to save image.'
+    toast.showError('Failed to save image.')
   } finally {
     event.target.value = ''
   }
@@ -452,19 +521,26 @@ const closeDeleteGalleryModal = () => {
 const confirmDeleteGallery = async () => {
   if (!galleryDeleteTarget.value?.id) return
 
-  profileError.value = ''
   try {
-    await deleteEmployeeProfileGalleryImage(galleryDeleteTarget.value.id)
+    const deletingImageId = galleryDeleteTarget.value.id
+    await deleteEmployeeProfileGalleryImage(deletingImageId)
     await loadProfile()
+    if (galleryImagePreviewTarget.value?.id === deletingImageId) {
+      closeGalleryImagePreview()
+    }
     closeDeleteGalleryModal()
   } catch {
-    profileError.value = 'Failed to delete image.'
+    toast.showError('Failed to delete image.')
   }
 }
 
 const saveProfile = async () => {
+  clearFieldErrors()
+  if (!validateProfileForm()) {
+    return
+  }
+
   profileSaving.value = true
-  profileError.value = ''
 
   try {
     const payload = {
@@ -488,8 +564,9 @@ const saveProfile = async () => {
 
     await loadProfile()
     avatarFile.value = null
-  } catch (error) {
-    profileError.value = error.response?.data?.message || 'Failed to update profile.'
+    toast.show('Profile updated.')
+  } catch {
+    toast.showError('Failed to update profile.')
   } finally {
     profileSaving.value = false
   }
@@ -520,6 +597,81 @@ function snapshotProfileState(profileState, linkState, avatarState) {
       .filter((link) => link.label && link.url),
     avatar: Boolean(avatarState),
   }
+}
+
+function clearFieldErrors() {
+  fieldErrors.value = {
+    name: '',
+    description: '',
+    links: {},
+  }
+}
+
+function linkErrorById(linkId) {
+  return fieldErrors.value.links?.[linkId] || null
+}
+
+function isValidUrl(value) {
+  try {
+    const parsed = new URL(value)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function validateProfileForm() {
+  const errors = {
+    name: '',
+    description: '',
+    links: {},
+  }
+
+  const name = profile.value.name?.trim() || ''
+  const description = profile.value.description?.trim() || ''
+
+  if (!name) {
+    errors.name = 'Name is required.'
+  } else if (name.length > 255) {
+    errors.name = 'Name cannot be longer than 255 characters.'
+  }
+
+  if (description.length > 2000) {
+    errors.description = 'Description cannot be longer than 2000 characters.'
+  }
+
+  links.value.forEach((link) => {
+    const label = link.label?.trim() || ''
+    const url = link.url?.trim() || ''
+
+    if (!label && !url) {
+      return
+    }
+
+    const linkErrors = { label: '', url: '' }
+
+    if (!label) {
+      linkErrors.label = 'Label is required when URL is filled.'
+    } else if (label.length > 50) {
+      linkErrors.label = 'Label cannot be longer than 50 characters.'
+    }
+
+    if (!url) {
+      linkErrors.url = 'URL is required when label is filled.'
+    } else if (url.length > 500) {
+      linkErrors.url = 'URL cannot be longer than 500 characters.'
+    } else if (!isValidUrl(url)) {
+      linkErrors.url = 'Please enter a valid URL (http:// or https://).'
+    }
+
+    if (linkErrors.label || linkErrors.url) {
+      errors.links[link.id] = linkErrors
+    }
+  })
+
+  fieldErrors.value = errors
+
+  return !(errors.name || errors.description || Object.keys(errors.links).length)
 }
 
 const profileIsDirty = computed(() => {
