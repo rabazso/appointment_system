@@ -21,7 +21,7 @@
     />
 
     <VersionsView
-      :versions="bookingRuleVersions"
+      :versions="resolvedVersions"
       create-label="Schedule change"
       @create="openCreate"
     >
@@ -71,6 +71,14 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  versions: {
+    type: Array,
+    default: null,
+  },
+  refreshSection: {
+    type: Function,
+    default: null,
+  },
 })
 
 const {
@@ -92,9 +100,12 @@ const activeTitle = computed(() => {
 const activeDescription = computed(() => {
   return 'Manage booking limits and appointment rules.'
 })
-const createValidFromPolicy = computed(() => getCreateValidFromPolicy(bookingRuleVersions.value))
+const resolvedVersions = computed(() => props.versions ?? bookingRuleVersions.value)
+const createValidFromPolicy = computed(() => getCreateValidFromPolicy(resolvedVersions.value))
 
 onMounted(async () => {
+  if (props.versions !== null) return
+
   try {
     await fetchBookingRules()
   } catch (error) {
@@ -125,6 +136,10 @@ async function saveSelectedBookingRules(payload) {
       await createBookingRules(payload)
     }
 
+    if (props.refreshSection) {
+      await props.refreshSection()
+    }
+
     closeEditor()
     toast.show('Changes saved successfully.')
   } catch (error) {
@@ -135,6 +150,9 @@ async function saveSelectedBookingRules(payload) {
 async function deleteSelectedBookingRules(bookingRules) {
   try {
     await deleteBookingRules(bookingRules.id)
+    if (props.refreshSection) {
+      await props.refreshSection()
+    }
     toast.show('Changes saved successfully.')
   } catch (error) {
     toast.showError('Failed to save changes.')

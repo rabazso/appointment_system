@@ -30,7 +30,7 @@
     />
 
     <VersionsView
-      :versions="services"
+      :versions="resolvedVersions"
       create-label="Service change"
       @create="openCreate"
     >
@@ -78,6 +78,14 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  versions: {
+    type: Array,
+    default: null,
+  },
+  refreshSection: {
+    type: Function,
+    default: null,
+  },
 })
 
 const {
@@ -100,9 +108,12 @@ const activeTitle = computed(() => {
 const activeDescription = computed(() => {
   return 'Manage assigned services for this employee.'
 })
-const createValidFromPolicy = computed(() => getCreateValidFromPolicy(services.value))
+const resolvedVersions = computed(() => props.versions ?? services.value)
+const createValidFromPolicy = computed(() => getCreateValidFromPolicy(resolvedVersions.value))
 
 onMounted(async () => {
+  if (props.versions !== null) return
+
   try {
     await fetchServices()
   } catch (error) {
@@ -138,6 +149,9 @@ function closeEditor() {
 async function deleteSelectedServices(services) {
   try {
     await deleteService(services.id)
+    if (props.refreshSection) {
+      await props.refreshSection()
+    }
     closeView()
     toast.show('Changes saved successfully.')
   } catch (error) {
@@ -172,6 +186,10 @@ async function persistServices(payload, cancellations = {}) {
     await saveExistingService(selectedServices.value.id, payload)
   } else {
     await createService(payload)
+  }
+
+  if (props.refreshSection) {
+    await props.refreshSection()
   }
 
   await cancelPendingAppointments(cancellations)

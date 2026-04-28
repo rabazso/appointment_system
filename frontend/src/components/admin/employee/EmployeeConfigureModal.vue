@@ -48,7 +48,8 @@
         :key="item.section"
         type="button"
         class="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-4 text-left transition hover:bg-slate-50"
-        @click="activeSection = item.section"
+        :disabled="isOpeningSection !== null"
+        @click="openSection(item.section)"
       >
         <div class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600">
           <component
@@ -68,6 +69,8 @@
   <EmployeeAvailabilityModal
       v-else-if="activeSection === 'availability'"
       :employee="employee"
+      :versions="availabilityVersions"
+      :refresh-section="() => fetchSection('availability')"
       @back="showMenu"
       @close="$emit('close')"
     />
@@ -75,6 +78,8 @@
     <EmployeeScheduleModal
       v-else-if="activeSection === 'schedule'"
       :employee="employee"
+      :versions="scheduleVersions"
+      :refresh-section="() => fetchSection('schedule')"
       @back="showMenu"
       @close="$emit('close')"
     />
@@ -82,13 +87,17 @@
     <EmployeeServicesModal
       v-else-if="activeSection === 'services'"
       :employee="employee"
+      :versions="serviceVersions"
+      :refresh-section="() => fetchSection('services')"
       @back="showMenu"
       @close="$emit('close')"
     />
 
     <EmployeeBookingRulesModal
-      v-else
+      v-else-if="activeSection === 'bookingRules'"
       :employee="employee"
+      :versions="bookingRuleVersions"
+      :refresh-section="() => fetchSection('bookingRules')"
       @back="showMenu"
       @close="$emit('close')"
     />
@@ -96,16 +105,21 @@
 
 <script setup>
 import { ref } from 'vue'
-import { CalendarCog, CircleCheck, Clock, Scissors, Star, User } from 'lucide-vue-next'
+import { CalendarCog, CircleCheck, Clock, Scissors, User } from 'lucide-vue-next'
 import ModalShell from '@/components/admin/ModalShell.vue'
 import EmployeeAvailabilityModal from './EmployeeAvailabilityModal.vue'
 import EmployeeBookingRulesModal from './EmployeeBookingRulesModal.vue'
 import EmployeeScheduleModal from './EmployeeScheduleModal.vue'
 import EmployeeServicesModal from './EmployeeServicesModal.vue'
+import { useEmployeeAvailabilityConfigurations } from '@/composables/useEmployeeAvailabilityConfigurations'
+import { useEmployeeBookingRuleConfigurations } from '@/composables/useEmployeeBookingRuleConfigurations'
+import { useEmployeeScheduleConfigurations } from '@/composables/useEmployeeScheduleConfigurations'
+import { useEmployeeServiceConfigurations } from '@/composables/useEmployeeServiceConfigurations'
+import { useToastStore } from '@/stores/ToastStore.js'
 
 defineEmits(['close'])
 
-defineProps({
+const props = defineProps({
   employee: {
     type: Object,
     required: true,
@@ -113,6 +127,12 @@ defineProps({
 })
 
 const activeSection = ref('menu')
+const isOpeningSection = ref(null)
+const toast = useToastStore()
+const { availability: availabilityVersions, fetchAvailability } = useEmployeeAvailabilityConfigurations(props.employee.id)
+const { schedules: scheduleVersions, fetchSchedules } = useEmployeeScheduleConfigurations(props.employee.id)
+const { services: serviceVersions, fetchServices } = useEmployeeServiceConfigurations(props.employee.id)
+const { bookingRules: bookingRuleVersions, fetchBookingRules } = useEmployeeBookingRuleConfigurations(props.employee.id)
 
 const menuItems = [
   {
@@ -143,6 +163,39 @@ const menuItems = [
 
 function showMenu() {
   activeSection.value = 'menu'
+}
+
+async function openSection(section) {
+  if (isOpeningSection.value) return
+
+  isOpeningSection.value = section
+  try {
+    await fetchSection(section)
+    activeSection.value = section
+  } catch (error) {
+    toast.showError('Failed to load data.')
+  } finally {
+    isOpeningSection.value = null
+  }
+}
+
+async function fetchSection(section) {
+  if (section === 'availability') {
+    await fetchAvailability()
+    return
+  }
+
+  if (section === 'schedule') {
+    await fetchSchedules()
+    return
+  }
+
+  if (section === 'services') {
+    await fetchServices()
+    return
+  }
+
+  await fetchBookingRules()
 }
 
 function formatRating(rating) {
