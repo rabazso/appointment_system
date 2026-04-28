@@ -227,7 +227,7 @@
                 <button
                   type="button"
                   class="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-slate-900 transition hover:bg-white"
-                  @click="removeGalleryImage(image.id)"
+                  @click="openDeleteGalleryModal(image)"
                 >
                   <X class="h-4 w-4" />
                 </button>
@@ -250,26 +250,6 @@
               class="hidden"
               @change="onGalleryFilesSelected"
             >
-          </div>
-
-          <div v-if="galleryIsDirty" class="mt-3 shrink-0 border-t border-black/10 bg-white px-0 pt-3">
-            <div class="flex justify-end gap-4">
-              <button
-                type="button"
-                class="rounded-lg border border-slate-300 px-6 py-3 text-sm font-medium text-black transition-opacity hover:bg-slate-50 hover:opacity-90"
-                @click="resetProfileChanges"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                class="rounded-lg bg-orange-400 px-8 py-3 text-sm font-medium text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
-                :disabled="profileSaving"
-                @click="saveProfile"
-              >
-                {{ profileSaving ? 'Saving...' : 'Save' }}
-              </button>
-            </div>
           </div>
 
         </section>
@@ -296,6 +276,16 @@
           >
         </div>
       </div>
+
+      <ConfirmDeleteModal
+        v-if="galleryDeleteTarget"
+        title="Delete image"
+        description="This will remove the image from your public gallery."
+        question-prefix="Are you sure you want to delete "
+        target-name="this image"
+        @close="closeDeleteGalleryModal"
+        @confirm="confirmDeleteGallery"
+      />
     </div>
   </PageLayout>
 </template>
@@ -304,6 +294,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { Upload, Trash, X } from 'lucide-vue-next'
 import PageLayout from '@/components/employee/PageLayout.vue'
+import ConfirmDeleteModal from '@/components/admin/ConfirmDeleteModal.vue'
 import {
   deleteEmployeeProfileGalleryImage,
   getEmployeeProfile,
@@ -323,8 +314,7 @@ const profileImagePreviewOpen = ref(false)
 const links = ref([])
 const galleryDraft = ref([])
 const savedProfileSnapshot = ref('')
-const savedGallerySnapshot = ref('')
-const deletedGalleryIds = ref([])
+const galleryDeleteTarget = ref(null)
 
 const profile = ref({
   name: '',
@@ -368,8 +358,6 @@ const loadProfile = async () => {
     galleryDraft.value = mapped.gallery.map((image) => ({ ...image, file: null, isNew: false }))
     avatarFile.value = null
     savedProfileSnapshot.value = JSON.stringify(snapshotProfileState(mapped, mapped.links, null))
-    savedGallerySnapshot.value = JSON.stringify(snapshotGalleryState(galleryDraft.value))
-    deletedGalleryIds.value = []
   } catch (error) {
     profileError.value = error.response?.data?.message || 'Failed to load profile data.'
   } finally {
@@ -438,27 +426,39 @@ const onGalleryFilesSelected = async (event) => {
   const files = Array.from(event.target.files || [])
   if (!files.length) return
 
-  for (const file of files) {
-    galleryDraft.value.push({
-      id: createGalleryId(),
-      preview_url: URL.createObjectURL(file),
-      original_url: '',
-      file,
-      isNew: true,
-    })
+  profileError.value = ''
+  try {
+    for (const file of files) {
+      const formData = new FormData()
+      formData.append('image', file)
+      await uploadEmployeeProfileGalleryImage(formData)
+    }
+    await loadProfile()
+  } catch {
+    profileError.value = 'Failed to save image.'
+  } finally {
+    event.target.value = ''
   }
-  event.target.value = ''
 }
 
-const removeGalleryImage = async (imageId) => {
-  const index = galleryDraft.value.findIndex((image) => image.id === imageId)
-  if (index === -1) return
+const openDeleteGalleryModal = (image) => {
+  galleryDeleteTarget.value = image
+}
 
-  const [removed] = galleryDraft.value.splice(index, 1)
-  if (removed?.isNew && removed.preview_url?.startsWith('blob:')) {
-    URL.revokeObjectURL(removed.preview_url)
-  } else {
-    deletedGalleryIds.value = Array.from(new Set([...deletedGalleryIds.value, imageId]))
+const closeDeleteGalleryModal = () => {
+  galleryDeleteTarget.value = null
+}
+
+const confirmDeleteGallery = async () => {
+  if (!galleryDeleteTarget.value?.id) return
+
+  profileError.value = ''
+  try {
+    await deleteEmployeeProfileGalleryImage(galleryDeleteTarget.value.id)
+    await loadProfile()
+    closeDeleteGalleryModal()
+  } catch {
+    profileError.value = 'Failed to delete image.'
   }
 }
 
@@ -486,19 +486,6 @@ const saveProfile = async () => {
       await uploadEmployeeProfileAvatar(formData)
     }
 
-    for (const id of deletedGalleryIds.value) {
-      await deleteEmployeeProfileGalleryImage(id)
-    }
-
-    for (const image of galleryDraft.value.filter((item) => item.isNew && item.file)) {
-      const formData = new FormData()
-      formData.append('image', image.file)
-      await uploadEmployeeProfileGalleryImage(formData)
-      if (image.preview_url?.startsWith('blob:')) {
-        URL.revokeObjectURL(image.preview_url)
-      }
-    }
-
     await loadProfile()
     avatarFile.value = null
   } catch (error) {
@@ -509,11 +496,6 @@ const saveProfile = async () => {
 }
 
 const resetProfileChanges = () => {
-  for (const image of galleryDraft.value) {
-    if (image?.isNew && image.preview_url?.startsWith('blob:')) {
-      URL.revokeObjectURL(image.preview_url)
-    }
-  }
   avatarFile.value = null
   loadProfile()
 }
@@ -524,14 +506,6 @@ function createLinkId() {
   }
 
   return `link_${Date.now()}_${Math.random().toString(16).slice(2)}`
-}
-
-function createGalleryId() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-
-  return `gallery_${Date.now()}_${Math.random().toString(16).slice(2)}`
 }
 
 function snapshotProfileState(profileState, linkState, avatarState) {
@@ -548,21 +522,8 @@ function snapshotProfileState(profileState, linkState, avatarState) {
   }
 }
 
-function snapshotGalleryState(items) {
-  return (items || []).map((item) => ({
-    id: item.id,
-    isNew: Boolean(item.isNew),
-    preview_url: item.preview_url || '',
-    original_url: item.original_url || '',
-  }))
-}
-
 const profileIsDirty = computed(() => {
   return JSON.stringify(snapshotProfileState(profile.value, links.value, avatarFile.value)) !== savedProfileSnapshot.value
-})
-
-const galleryIsDirty = computed(() => {
-  return JSON.stringify(snapshotGalleryState(galleryDraft.value)) !== savedGallerySnapshot.value
 })
 
 onMounted(() => {
