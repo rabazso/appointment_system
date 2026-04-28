@@ -82,7 +82,7 @@ docker compose down -v
 **Admin**
 
 - **Admin felhasználó email címe:**
-    - admin@barbershop.com
+    - admin@barbershop.test
 
 - **Barber felhasználók jelszavai:**
     - Az admin jelszava: password
