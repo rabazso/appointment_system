@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
             $table->date('date');
-            $table->enum('type', ['vacation', 'sickness', 'personal']);
             $table->enum('status', ['pending', 'approved','rejected', 'cancelled']);
             $table->text('note')->nullable();
             $table->timestamps();

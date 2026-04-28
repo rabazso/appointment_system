@@ -22,20 +22,16 @@ class CustomerSeeder extends Seeder
                 'phone' => $faker->unique()->phoneNumber(),
             ];
 
-            if ($index % 2 === 0) {
-                $user = User::create([
-                    'email' => $definition['email'],
-                    'password' => Hash::make('password'),
-                    'role' => 'customer',
-                    'email_verified_at' => now(),
-                ]);
-            } else {
-                $user = null;
-            }
+            $user = User::create([
+                'email' => $definition['email'],
+                'password' => Hash::make('password'),
+                'role' => 'customer',
+                'email_verified_at' => now(),
+            ]);
 
             Customer::create([
                 'email' => $definition['email'],
-                'user_id' => $user?->id,
+                'user_id' => $user->id,
                 'name' => $definition['name'],
                 'phone' => $definition['phone'],
             ]);

@@ -25,7 +25,6 @@ class DatabaseSeeder extends Seeder
             EmployeeTimeOffRequestSeeder::class,
             ShopOpeningHourSeeder::class,
             ShopSpecialDaySeeder::class,
-            ShopSettingSeeder::class,
             ShopInformationSeeder::class,
             AppointmentSeeder::class,
             ReviewSeeder::class,
