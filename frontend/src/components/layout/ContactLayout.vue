@@ -25,11 +25,32 @@ const mapURL = computed(() => {
   return `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8&iwloc=&output=embed`
 })
 const openingHours = computed(() => publicShop.openingHours)
+const contactLinks = computed(() => {
+  const links = Array.isArray(publicShop.contact.links) ? publicShop.contact.links : []
+
+  return links
+    .map((link) => ({
+      label: String(link?.label || '').trim(),
+      url: normalizeUrl(link?.url),
+    }))
+    .filter((link) => link.label && link.url)
+})
 
 function formatHours(day) {
   if (!day?.isOpen) return 'Closed'
   if (!day.openTime || !day.closeTime) return 'Closed'
   return `${day.openTime} - ${day.closeTime}`
+}
+
+function normalizeUrl(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+
+  if (/^https?:\/\//i.test(raw)) {
+    return raw
+  }
+
+  return `https://${raw}`
 }
 </script>
 
@@ -105,6 +126,27 @@ function formatHours(day) {
                 <span class="font-medium">{{ day.label }}: </span>
                 <span> {{ formatHours(day) }}</span>
               </p>
+            </div>
+          </div>
+
+          <div v-if="contactLinks.length" class="flex items-start gap-4">
+            <div class="rounded-lg bg-accent/20 p-2">
+              <Mail class="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p class="font-semibold text-foreground">Links</p>
+              <ul class="space-y-1">
+                <li v-for="(link, index) in contactLinks" :key="`${link.url}-${index}`">
+                  <a
+                    :href="link.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                  >
+                    {{ link.label }}
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
         </div>

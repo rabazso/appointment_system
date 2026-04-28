@@ -24,6 +24,16 @@ const contactAddress = computed(() => publicShop.contact.address || 'Address not
 const contactPhone = computed(() => publicShop.contact.phone || 'Phone not set')
 const contactEmail = computed(() => publicShop.contact.email || 'Email not set')
 const openingHours = computed(() => publicShop.openingHours)
+const contactLinks = computed(() => {
+  const links = Array.isArray(publicShop.contact.links) ? publicShop.contact.links : []
+
+  return links
+    .map((link) => ({
+      label: String(link?.label || '').trim(),
+      url: normalizeUrl(link?.url),
+    }))
+    .filter((link) => link.label && link.url)
+})
 const phoneHref = computed(() => {
   if (!publicShop.contact.phone) return null
   return `tel:${publicShop.contact.phone.replace(/\s+/g, '')}`
@@ -36,6 +46,17 @@ const formatHours = (day) => {
   if (!day?.isOpen) return 'Closed'
   if (!day.openTime || !day.closeTime) return 'Closed'
   return `${day.openTime} - ${day.closeTime}`
+}
+
+function normalizeUrl(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+
+  if (/^https?:\/\//i.test(raw)) {
+    return raw
+  }
+
+  return `https://${raw}`
 }
 
 const router = useRouter()
@@ -102,6 +123,22 @@ const scrollToLink = async (link) => {
                       <span> {{ formatHours(day) }}</span>
                     </p>
                 </div>
+            </div>
+
+            <div v-if="contactLinks.length" class="mt-4">
+                <p class="font-semibold">Links</p>
+                <ul class="mt-1 space-y-1">
+                    <li v-for="(link, index) in contactLinks" :key="`${link.url}-${index}`">
+                        <a
+                          :href="link.url"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="underline hover:opacity-80"
+                        >
+                          {{ link.label }}
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
         <div class="col-span-1 flex-col items-center justify-start hidden md:flex">
