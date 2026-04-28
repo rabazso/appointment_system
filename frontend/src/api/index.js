@@ -91,6 +91,7 @@ export const deleteEmployeeProfileGalleryImage = (galleryId) => API.delete(`/emp
 export const getEmployeeOwnTimeOffRequests = () => API.get('/employee/time-off-requests', withAuth('employee'));
 export const postEmployeeOwnTimeOffRequest = (payload) => API.post('/employee/time-off-requests', payload, withAuth('employee'));
 export const cancelEmployeeOwnTimeOffRequest = (id) => API.delete(`/employee/time-off-requests/${id}`, withAuth('employee'));
+export const getEmployeeShopHolidaysByMonth = (month) => API.get('/employee/shop-holidays/month', withAuth('employee', { params: { month } }));
 export const getEmployeeReviews = () => API.get('/employee/reviews', withAuth('employee'));
 export const patchEmployeeReviewVisibility = (id, payload) => API.patch(`/employee/reviews/${id}`, payload, withAuth('employee'));
 export const getAdminReviews = (params = {}) => API.get('/admin/reviews', withAuth('admin', { params }));

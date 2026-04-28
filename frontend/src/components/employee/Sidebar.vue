@@ -59,7 +59,8 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@stores/AuthStore.js'
-import { Calendar, Clock3, Eye, LogOut, UserRound, X } from 'lucide-vue-next'
+import { Calendar, Eye, LogOut, Settings2, UserRound, X } from 'lucide-vue-next'
+import { Plane } from 'lucide-vue-next'
 
 const props = defineProps({
   isOpen: {
@@ -80,7 +81,7 @@ const menuItems = [
   { id: 'appointments', label: 'Appointments', icon: Calendar, to: '/employee/appointments' },
   { id: 'reviews', label: 'Reviews', icon: Eye, to: '/employee/reviews' },
   { id: 'profile', label: 'Profile', icon: UserRound, to: '/employee/profile' },
-  { id: 'time-off', label: 'Time Off', icon: Clock3, to: '/employee/time-off' },
+  { id: 'time-off', label: 'Time Off', icon: Plane, to: '/employee/time-off' },
 ]
 
 function handleSelect(routePath) {
