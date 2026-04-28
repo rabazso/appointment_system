@@ -15,7 +15,7 @@ class VersionTimelineService
 
         $this->ensureUniqueValidFrom($timeline, $validFrom);
 
-        $previousVersion = $timeline->orderByDesc('valid_from')->first();
+        $previousVersion = (clone $timeline)->orderByDesc('valid_from')->first();
         $minimumValidFrom = now()->startOfDay()->addDay();
 
         if ($previousVersion && $previousVersion->valid_from->copy()->addDay()->startOfDay()->gt($minimumValidFrom)) {
@@ -82,7 +82,7 @@ class VersionTimelineService
 
     public function previousBefore(HasMany $timeline, Carbon $validFrom, ?Model $excluding = null): ?Model
     {
-        return $timeline
+        return (clone $timeline)
             ->when($excluding, fn ($query) => $query->whereKeyNot($excluding->getKey()))
             ->where('valid_from', '<', $validFrom)
             ->orderByDesc('valid_from')
@@ -91,7 +91,7 @@ class VersionTimelineService
 
     public function nextAfter(HasMany $timeline, Carbon $validFrom, ?Model $excluding = null): ?Model
     {
-        return $timeline
+        return (clone $timeline)
             ->when($excluding, fn ($query) => $query->whereKeyNot($excluding->getKey()))
             ->where('valid_from', '>', $validFrom)
             ->orderBy('valid_from')
@@ -132,7 +132,7 @@ class VersionTimelineService
 
     private function ensureUniqueValidFrom(HasMany $timeline, Carbon $validFrom, ?Model $excluding = null): void
     {
-        $exists = $timeline
+        $exists = (clone $timeline)
             ->when($excluding, fn ($query) => $query->whereKeyNot($excluding->getKey()))
             ->whereDate('valid_from', $validFrom->toDateString())
             ->exists();
