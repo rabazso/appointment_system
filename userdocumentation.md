@@ -1,106 +1,239 @@
-# User Documentation
+# Felhasználói dokumentáció
 
-## 1. Short system overview
-In this system, users can:
-- choose a service and a barber,
-- book an appointment,
-- confirm the booking by email,
-- view or cancel appointments later,
-- leave a review after a completed appointment.
+## 1. A rendszer rövid bemutatása
 
-## 2. Before you start
-- Booking is possible with or without an account.
-- After registration, email verification is required.
+Az alkalmazás egy barbershop időpontfoglaló rendszer, ahol a vendégek online tudnak szolgáltatást, borbélyt és szabad időpontot választani. A rendszer kezeli a foglalásokat, az e-mailes megerősítést, a saját időpontok megtekintését, az értékeléseket, valamint külön felületet biztosít a borbélyoknak és az adminisztrátornak.
 
-## 3. Public pages
+A projekt célja egy valós szalon működésének modellezése: a vendég gyorsan tudjon foglalni, a borbély átlássa a saját időpontjait, az admin pedig kezelni tudja az üzlet működéséhez szükséges adatokat.
 
-### 3.1 Home page
-- Shows a short overview of services and barbers.
-- From the menu, users can open other pages and start booking.
+Főbb funkciók:
 
-### 3.2 Barbers page
-- Shows barber photo, name, and short description.
-- Booking can also be started from this page.
+- szolgáltatások és borbélyok megtekintése,
+- vendégként vagy regisztrált felhasználóként történő foglalás,
+- több szolgáltatás kiválasztása egy foglaláson belül,
+- e-mailes foglalásmegerősítés,
+- saját időpontok megtekintése és lemondása,
+- befejezett időpont után értékelés írása,
+- borbély oldali időpont- és profilkezelés,
+- admin oldali szolgáltatás-, dolgozó-, nyitvatartás- és szabadságkezelés.
 
-### 3.3 Contact page
-- Shows address, phone number, email, opening hours, and map.
+## 2. A rendszer elérése
 
-## 4. Login and account management
+Helyi fejlesztői környezetben a fontosabb címek:
 
-### 4.1 Registration
-1. Open the `Sign In` window.
-2. Choose the `Sign Up` option.
-3. Enter: first name, last name, email, password, password confirmation.
-4. Submit the form.
+- Frontend: `http://frontend.vm1.test`
+- Backend API: `http://backend.vm1.test/api`
+- phpMyAdmin: `http://pma.vm1.test`
+- Mailcatcher: `http://mailcatcher.vm1.test`
 
-### 4.2 Email verification
-1. The system sends a verification email.
-2. Click the link in that email.
-3. Only after this step can you log in.
+A Mailcatcher felületén jelennek meg a fejlesztői környezetben kiküldött e-mailek, például a regisztrációs megerősítés, a foglalás visszaigazolása és a jelszó-visszaállító link.
 
-### 4.3 Login
-1. Open login from the header.
-2. Enter your email and password.
-3. If needed, use the `Forgot password?` link.
+## 3. Felhasználói szerepkörök
 
-### 4.4 Password reset
-1. Enter your email on the reset page.
-2. Open the link sent by email.
-3. Set a new password.
+### 3.1 Vendég vagy ügyfél
 
-## 5. Booking an appointment (main flow)
+A vendég böngészheti a nyilvános oldalakat, megtekintheti a szolgáltatásokat és a borbélyokat, majd időpontot foglalhat. A foglalás regisztráció nélkül is működik, ilyenkor a rendszer nevet és e-mail-címet kér. Regisztrált ügyfélként a felhasználó később meg tudja nézni és szükség esetén le tudja mondani a saját időpontjait.
 
-### 5.1 Step-by-step booking
-1. Choose a service.
-2. Choose a barber.
-3. Choose a date and available time slot.
-4. Log in or continue as guest.
-5. Submit the booking.
+Az ügyfél lehetőségei:
 
-### 5.2 Booking rules
-- Past dates cannot be booked.
-- Only free time slots are shown.
-- Double booking is not allowed for the same barber and time.
-- One person can have only one active booking in the same calendar week.
-- A guest email cannot match an already registered user email.
+- időpontfoglalás,
+- foglalás megerősítése e-mailben,
+- saját foglalások listázása,
+- aktív időpont lemondása,
+- értékelés írása befejezett időpont után.
 
-### 5.3 Booking confirmation
-1. After submission, a confirmation email is sent.
-2. The booking is confirmed only after clicking the email link.
-3. Then the system opens the summary page.
+### 3.2 Borbély
 
-## 6. Customer dashboard
+A borbély külön belső felületen dolgozik. Itt látja a hozzá tartozó foglalásokat, kezelheti azok állapotát, szerkesztheti a publikus profilját, valamint szabadságkérelmet adhat le.
 
-### 6.1 My appointments
-- Shows: service, barber, date, time, price, status.
-- `Pending` and `Confirmed` appointments can be canceled.
+A borbély lehetőségei:
 
-### 6.2 Reviews
-- Reviews can be submitted from the `Leave a review` section on the home page.
-- Only completed appointments can be reviewed.
-- One appointment can have one review.
+- saját időpontok megtekintése,
+- időpont lemondása indoklással,
+- időpont teljesítettnek vagy `no_show` állapotúnak jelölése,
+- profilkép, bemutatkozás, linkek és galéria kezelése,
+- saját beállítások megtekintése,
+- szabadságkérelem leadása,
+- saját értékelések megtekintése.
 
-## 7. Staff and admin pages
+### 3.3 Adminisztrátor
 
-### 7.1 Staff login
-- URL: `/employee/login`
-- Main sections: appointments, profile, time off.
+Az adminisztrátor kezeli az üzlet működéséhez szükséges adatokat. Ő tud szolgáltatásokat, dolgozókat, nyitvatartást, szabadságokat, galériát és értékeléseket kezelni.
 
-### 7.2 Admin login
-- URL: `/admin/login`
-- Main sections: services, employees, schedule, time off management.
+Az admin lehetőségei:
 
-## 9. Demo accounts
+- szolgáltatások létrehozása, módosítása és törlése,
+- dolgozók létrehozása és konfigurálása,
+- dolgozókhoz szolgáltatások, árak és időtartamok rendelése,
+- munkaidők, szünetek és foglalási szabályok kezelése,
+- üzleti nyitvatartás és különleges napok beállítása,
+- szabadságkérelmek elfogadása vagy elutasítása,
+- foglalások szűrése és státuszkezelése,
+- üzletadatok és galériaképek szerkesztése,
+- értékelések láthatóságának módosítása.
+
+## 4. Nyilvános oldalak
+
+### 4.1 Kezdőlap
+
+A kezdőlap bemutatja a szalont, a szolgáltatásokat, a borbélyokat és a galériát. Innen indítható a foglalás is. Ha a felhasználó nincs bejelentkezve, a rendszer megkérdezi, hogy vendégként szeretne-e továbbmenni, vagy inkább bejelentkezik.
+
+### 4.2 Szolgáltatások
+
+A szolgáltatások listája adatbázisból töltődik be. A demo rendszerben például ilyen szolgáltatások szerepelnek:
+
+- Short haircut,
+- Normal haircut,
+- Long haircut,
+- Beard trim,
+- Fullbox,
+- Father and son haircut,
+- Brothers haircut.
+
+Az ár és az időtartam borbélyonként eltérhet, mert az admin külön állíthatja be, hogy melyik dolgozó milyen szolgáltatást vállal.
+
+### 4.3 Borbélyok és profiloldal
+
+A `Barbers` oldalon megjelennek a borbélyok képpel, névvel, bemutatkozással és értékeléssel. A profiloldalon részletesebben látható a borbély leírása, elérhetősége, szolgáltatásai, galériája és értékelései.
+
+### 4.4 Kapcsolat oldal
+
+A `Contact` oldalon az üzlet publikus adatai láthatók: cím, telefonszám, e-mail-cím, nyitvatartás, linkek és térkép. Ezeket az admin a saját felületén módosíthatja.
+
+## 5. Regisztráció és bejelentkezés
+
+### 5.1 Regisztráció
+
+A regisztráció a `Sign In` ablakból indítható a `Sign Up` lehetőséggel. A felhasználónak meg kell adnia a nevét, e-mail-címét és jelszavát. A jelszónak legalább 8 karakterből kell állnia, és tartalmaznia kell nagybetűt, kisbetűt, számot és speciális karaktert.
+
+Regisztráció után a rendszer ellenőrző e-mailt küld. A fiók csak az e-mail-cím megerősítése után használható bejelentkezésre.
+
+### 5.2 Bejelentkezés
+
+Bejelentkezéshez e-mail-cím és jelszó szükséges. Ha a felhasználó még nem erősítette meg az e-mail-címét, a rendszer nem engedi belépni, és új hitelesítő linket küld.
+
+### 5.3 Elfelejtett jelszó
+
+A `Forgot password?` linkkel jelszó-visszaállítás kérhető. A felhasználó e-mailben kap egy linket, ahol új jelszót tud megadni.
+
+## 6. Időpontfoglalás menete
+
+A foglalás a kezdőlapról, a szolgáltatások részből, a borbélyok oldaláról vagy egy borbély profiloldaláról indítható.
+
+A foglalás lépései:
+
+1. Szolgáltatás vagy szolgáltatások kiválasztása.
+2. Borbély kiválasztása.
+3. Foglalható nap és szabad időpont kiválasztása.
+4. Bejelentkezés vagy vendégadatok megadása.
+5. Foglalás elküldése.
+6. Foglalás megerősítése e-mailben.
+7. Összegző oldal megtekintése.
+
+A rendszer csak olyan borbélyokat ajánl fel, akik a kiválasztott szolgáltatásokat ténylegesen vállalják. A naptárban csak foglalható napok és szabad idősávok jelennek meg. A rendszer figyelembe veszi az üzlet nyitvatartását, a borbély munkaidejét, a szüneteket, a szabadságokat és a már meglévő foglalásokat.
+
+Vendégként történő foglalásnál név és e-mail-cím megadása kötelező. Bejelentkezett ügyfélnél a rendszer a fiókhoz tartozó adatokat használja.
+
+## 7. Foglalási szabályok és státuszok
+
+Fontosabb foglalási szabályok:
+
+- múltbeli dátumra nem lehet foglalni,
+- csak elérhető szolgáltatás választható,
+- csak szabad idősáv jelenik meg,
+- ugyanahhoz a borbélyhoz ugyanarra az időpontra nem lehet duplán foglalni,
+- szünetre, zárva tartásra vagy jóváhagyott szabadságra nem lehet foglalni,
+- vendég e-mail-címe nem egyezhet már regisztrált felhasználó e-mail-címével,
+- a foglalás csak e-mailes megerősítés után válik véglegessé.
+
+Időpont státuszok:
+
+- `pending`: a foglalás létrejött, de még megerősítésre vár,
+- `confirmed`: a vendég e-mailben megerősítette a foglalást,
+- `completed`: a szolgáltatás megtörtént,
+- `cancelled`: az időpont le lett mondva,
+- `no_show`: az ügyfél nem jelent meg.
+
+## 8. Ügyfél felület
+
+Bejelentkezett ügyfélként a `Your Appointments` oldalon láthatók a saját foglalások. Egy időpontnál megjelenik a szolgáltatás, borbély, dátum, időpont, időtartam, ár és státusz.
+
+Az ügyfél a `pending` és `confirmed` állapotú időpontokat tudja lemondani. Befejezett, vagyis `completed` időpont után értékelést írhat. Egy időponthoz csak egy értékelés tartozhat.
+
+## 9. Borbély felület
+
+A borbély felület címe: `/employee/login`.
+
+Főbb oldalak:
+
+- `Your Appointments`: saját foglalások kezelése,
+- `My Configuration`: szolgáltatások, munkaidő, elérhetőség és foglalási szabályok megtekintése,
+- `Profile`: publikus profil, profilkép, galéria és linkek szerkesztése,
+- `Time Off`: szabadságkérelmek leadása és követése,
+- `Reviews`: saját értékelések megtekintése.
+
+A borbély a jövőbeli időpontokat indoklással lemondhatja, a megtörtént időpontokat pedig `completed` vagy `no_show` állapotúra állíthatja.
+
+## 10. Adminisztrátori felület
+
+Az admin felület címe: `/admin/login`.
+
+Főbb oldalak:
+
+- `Appointments`: összes foglalás megtekintése, szűrése és státuszkezelése,
+- `Services`: szolgáltatások létrehozása, módosítása és törlése,
+- `Employees`: borbélyok kezelése és konfigurálása,
+- `Schedule`: üzleti nyitvatartás és különleges napok kezelése,
+- `Time Off`: szabadságkérelmek kezelése,
+- `Reviews`: értékelések szűrése és láthatóságuk módosítása,
+- `Shop Profile`: publikus üzletadatok és galéria szerkesztése.
+
+Az admin a dolgozókhoz külön szolgáltatásokat, árakat, időtartamokat, munkaidőt, szüneteket és foglalási szabályokat rendelhet. A rendszer verziózott beállításokat használ, ezért egy módosítás megadható jövőbeli érvényességgel is.
+
+## 11. Demo fiókok
 
 ### Admin
-- Email: `admin@barbershop.com`
-- Password: `password`
 
-### Staff
+- E-mail: `admin@barbershop.test`
+- Jelszó: `password`
+- Bejelentkezés: `/admin/login`
+
+### Borbélyok
+
+Minden borbély jelszava: `password`.
+
 - `blowout.ben@barbershop.test`
 - `crispy.chris@barbershop.test`
 - `bouncy.bella@barbershop.test`
 - `loud.lucy@barbershop.test`
 - `haircut.harry@barbershop.test`
-- Password for all: `password`
 
+Bejelentkezés: `/employee/login`.
+
+## 12. Tipikus használati folyamatok
+
+### Vendég foglalása
+
+1. A vendég megnyitja a kezdőlapot.
+2. Elindítja a foglalást.
+3. A `Continue as Guest` lehetőséget választja.
+4. Kiválasztja a szolgáltatást, borbélyt, dátumot és időpontot.
+5. Megadja a nevét és e-mail-címét.
+6. Elküldi a foglalást.
+7. Megnyitja az e-mailben kapott megerősítő linket.
+
+### Borbély napi munkája
+
+1. A borbély belép az alkalmazotti felületen.
+2. Megnézi a saját időpontjait.
+3. Szükség esetén lemond egy jövőbeli foglalást.
+4. A megtörtént időpontot lezárja `completed` állapottal.
+5. Ha az ügyfél nem jelent meg, `no_show` státuszt állít be.
+
+### Admin karbantartás
+
+1. Az admin belép az admin felületen.
+2. Ellenőrzi a foglalásokat és szabadságkérelmeket.
+3. Szükség esetén módosítja a szolgáltatásokat vagy dolgozókat.
+4. Frissíti a nyitvatartást, üzletadatokat vagy galériát.
+5. Kezeli az értékelések láthatóságát.
