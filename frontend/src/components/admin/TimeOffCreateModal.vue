@@ -95,9 +95,11 @@
                   >
                     <Calendar
                       :model-value="calendarValue(form.days[index])"
+                      :placeholder="calendarPlaceholder(index)"
                       layout="month-and-year"
                       class="rounded-md"
-                      :min-value="todayDateValue"
+                      :is-date-disabled="isPastDate"
+                      @update:placeholder="(value) => setCalendarPlaceholder(index, value)"
                       @update:model-value="(value) => setDayAtIndex(index, value)"
                     />
                   </PopoverContent>
@@ -190,6 +192,8 @@ const form = reactive(createForm())
 const submitted = ref(false)
 const toast = useToastStore()
 const openDayPickerIndex = ref(null)
+const calendarPlaceholders = ref({})
+const calendarDateCache = new Map()
 
 const filledDays = computed(() => form.days.filter(Boolean))
 const filledEmployees = computed(() => form.employees.filter(Boolean))
@@ -218,10 +222,12 @@ function createForm() {
 
 function addDay() {
   form.days.push(todayISO)
+  calendarPlaceholders.value[form.days.length - 1] = todayDateValue
 }
 
 function removeDay(index) {
   form.days.splice(index, 1)
+  calendarPlaceholders.value = {}
 
   if (openDayPickerIndex.value === index) {
     openDayPickerIndex.value = null
@@ -242,7 +248,11 @@ function calendarValue(value) {
   if (!value) return undefined
 
   try {
-    return parseDate(value)
+    if (!calendarDateCache.has(value)) {
+      calendarDateCache.set(value, parseDate(value))
+    }
+
+    return calendarDateCache.get(value)
   } catch {
     return undefined
   }
@@ -252,8 +262,21 @@ function toIsoDate(value) {
   return value?.toString?.() || ''
 }
 
+function isPastDate(value) {
+  return toIsoDate(value) < todayISO
+}
+
+function calendarPlaceholder(index) {
+  return calendarPlaceholders.value[index] || calendarValue(form.days[index]) || todayDateValue
+}
+
+function setCalendarPlaceholder(index, value) {
+  calendarPlaceholders.value[index] = value
+}
+
 function setDayAtIndex(index, value) {
   form.days[index] = toIsoDate(value)
+  setCalendarPlaceholder(index, value || todayDateValue)
   openDayPickerIndex.value = null
 }
 

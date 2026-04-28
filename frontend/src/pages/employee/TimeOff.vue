@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { parseDate } from '@internationalized/date'
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import { X, Calendar as CalendarIcon } from 'lucide-vue-next'
@@ -18,12 +18,16 @@ const successMessage = ref('')
 const requests = ref([])
 const holidays = ref([])
 const showRequestModal = ref(false)
-const requestDate = ref('')
-const requestNote = ref('')
-const isRequestDatePickerOpen = ref(false)
+const isRequestDatePickerOpen = ref(null)
 const viewMode = ref('requests')
 const statusFilter = ref('all')
 const dateOrder = ref('none')
+const todayISO = new Date().toISOString().slice(0, 10)
+const todayDateValue = parseDate(todayISO)
+const form = reactive(createForm())
+const submitted = ref(false)
+const calendarPlaceholders = ref({})
+const calendarDateCache = new Map()
 
 const hasRequests = computed(() => requests.value.length > 0)
 const visibleRequests = computed(() => {
@@ -39,14 +43,29 @@ const visibleRequests = computed(() => {
 })
 
 const hasHolidays = computed(() => holidays.value.length > 0)
-const calendarRequestDate = computed(() => {
-  if (!requestDate.value) return undefined
-  try {
-    return parseDate(requestDate.value)
-  } catch {
-    return undefined
+const requestConflictMap = computed(() => {
+  const blockingStatuses = new Set(['pending', 'approved', 'rejected'])
+  const map = {}
+
+  for (const day of form.days) {
+    const matches = requests.value.filter((request) => request.date === day)
+    const blocking = matches.find((request) => blockingStatuses.has(request.status))
+
+    if (blocking) {
+      map[day] = `This day already has a ${blocking.status} time off request.`
+    }
   }
+
+  return map
 })
+const requestHasConflict = computed(() => form.days.some((day) => Boolean(requestConflictMap.value[day])))
+const filledDays = computed(() => form.days.filter(Boolean))
+function createForm() {
+  return {
+    days: [todayISO],
+    note: '',
+  }
+}
 
 async function loadRequests() {
   try {
@@ -97,8 +116,22 @@ async function cancelRequest(request) {
 }
 
 async function submitRequest() {
-  if (!requestDate.value) {
-    errorMessage.value = 'Please select a date.'
+  submitted.value = true
+
+  if (!filledDays.value.length) {
+    errorMessage.value = 'Please select at least one day.'
+    successMessage.value = ''
+    return
+  }
+
+  if (requestHasConflict.value) {
+    errorMessage.value = 'Please remove days that already have a time off request.'
+    successMessage.value = ''
+    return
+  }
+
+  if (!form.note.trim()) {
+    errorMessage.value = 'Please add a reason.'
     successMessage.value = ''
     return
   }
@@ -107,13 +140,17 @@ async function submitRequest() {
   successMessage.value = ''
 
   try {
-    await postEmployeeOwnTimeOffRequest({
-      date: requestDate.value,
-      note: requestNote.value.trim(),
-    })
+    for (const date of filledDays.value) {
+      await postEmployeeOwnTimeOffRequest({
+        date,
+        note: form.note.trim(),
+      })
+    }
     showRequestModal.value = false
-    requestDate.value = ''
-    requestNote.value = ''
+    form.days = [todayISO]
+    form.note = ''
+    submitted.value = false
+    calendarPlaceholders.value = {}
     successMessage.value = 'Time off request submitted.'
     await loadRequests()
   } catch (error) {
@@ -135,9 +172,82 @@ function getHolidayStatusClass(isOpen) {
   return isOpen ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
 }
 
-function setRequestDate(value) {
-  requestDate.value = value?.toString?.() || ''
+function addDay() {
+  form.days.push(todayISO)
+  calendarPlaceholders.value[form.days.length - 1] = todayDateValue
+}
+
+function removeDay(index) {
+  form.days.splice(index, 1)
+  calendarPlaceholders.value = {}
+}
+
+function calendarValue(value) {
+  if (!value) return undefined
+
+  try {
+    if (!calendarDateCache.has(value)) {
+      calendarDateCache.set(value, parseDate(value))
+    }
+
+    return calendarDateCache.get(value)
+  } catch {
+    return undefined
+  }
+}
+
+function toIsoDate(value) {
+  return value?.toString?.() || ''
+}
+
+function isPastDate(value) {
+  return toIsoDate(value) < todayISO
+}
+
+function calendarPlaceholder(index) {
+  return calendarPlaceholders.value[index] || calendarValue(form.days[index]) || todayDateValue
+}
+
+function setCalendarPlaceholder(index, value) {
+  calendarPlaceholders.value[index] = value
+}
+
+function setDayAtIndex(index, value) {
+  form.days[index] = toIsoDate(value)
+  setCalendarPlaceholder(index, value || todayDateValue)
   isRequestDatePickerOpen.value = false
+}
+
+function setDayPickerOpen(index, open) {
+  isRequestDatePickerOpen.value = open ? index : null
+}
+
+function dayHasConflict(day) {
+  return Boolean(requestConflictMap.value[day])
+}
+
+function dayErrorMessage(day) {
+  return requestConflictMap.value[day] || ''
+}
+
+function openRequestModal() {
+  submitted.value = false
+  errorMessage.value = ''
+  successMessage.value = ''
+  form.days = [todayISO]
+  form.note = ''
+  calendarPlaceholders.value = {}
+  isRequestDatePickerOpen.value = null
+  showRequestModal.value = true
+}
+
+function closeRequestModal() {
+  showRequestModal.value = false
+  errorMessage.value = ''
+  successMessage.value = ''
+  submitted.value = false
+  calendarPlaceholders.value = {}
+  isRequestDatePickerOpen.value = null
 }
 
 onMounted(async () => {
@@ -152,7 +262,7 @@ onMounted(async () => {
     description="Track your requests and see shop holidays."
     action-label="Request Time Off"
     :show-action="true"
-    @action-click="showRequestModal = true"
+    @action-click="openRequestModal"
   >
     <p v-if="errorMessage" class="mb-4 rounded-md bg-red-100 px-4 py-2 text-sm text-red-700">
       {{ errorMessage }}
@@ -299,10 +409,10 @@ onMounted(async () => {
     <div
       v-if="showRequestModal"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      @click.self="showRequestModal = false"
+      @click.self="closeRequestModal"
     >
       <div class="relative flex w-96 flex-col rounded-2xl bg-white p-4 pt-12">
-        <button class="absolute top-2 right-2" @click="showRequestModal = false">
+        <button class="absolute top-2 right-2" @click="closeRequestModal">
           <X class="w-8 h-8" />
         </button>
 
@@ -310,45 +420,88 @@ onMounted(async () => {
 
         <div class="mt-4 flex w-full min-w-0 flex-col gap-4">
           <div>
-            <label class="text-xs font-semibold tracking-wider text-gray-500 leading-none">Choose a day</label>
-            <PopoverRoot :open="isRequestDatePickerOpen" @update:open="(open) => { isRequestDatePickerOpen = open }">
-              <PopoverTrigger as-child>
+            <label class="text-xs font-semibold tracking-wider text-gray-500 leading-none">Choose days</label>
+            <div class="flex flex-col gap-2">
+              <div
+                v-for="(_, index) in form.days"
+                :key="`time-off-day-${index}`"
+                class="grid items-center gap-2"
+                :class="{ '[grid-template-columns:minmax(0,1fr)_30px]': form.days.length > 1 }"
+              >
+                <PopoverRoot :open="isRequestDatePickerOpen === index" @update:open="(open) => setDayPickerOpen(index, open)">
+                  <PopoverTrigger as-child>
+                    <button
+                      type="button"
+                      class="mt-2 h-11 w-full rounded-lg border bg-white px-3 text-base outline-none transition hover:border-black [font-variant-numeric:tabular-nums] flex items-center justify-between"
+                      :class="dayHasConflict(form.days[index]) ? 'border-rose-500 text-rose-600' : 'border-black/10'"
+                    >
+                      <span>{{ form.days[index] || 'YYYY-MM-DD' }}</span>
+                      <CalendarIcon class="h-4 w-4 text-slate-500" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverPortal>
+                    <PopoverContent
+                      side="bottom"
+                      align="start"
+                      :side-offset="6"
+                      :collision-padding="12"
+                      position-strategy="fixed"
+                      class="z-[90] w-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+                    >
+                      <Calendar
+                        :model-value="calendarValue(form.days[index])"
+                        :placeholder="calendarPlaceholder(index)"
+                        :paged-navigation="true"
+                        layout="month-and-year"
+                        class="rounded-md"
+                        :is-date-disabled="isPastDate"
+                        @update:placeholder="(value) => setCalendarPlaceholder(index, value)"
+                        @update:model-value="(value) => setDayAtIndex(index, value)"
+                      />
+                    </PopoverContent>
+                  </PopoverPortal>
+                </PopoverRoot>
+                <button
+                  v-if="form.days.length > 1"
+                  type="button"
+                  class="inline-flex h-[22px] w-[22px] items-center justify-center rounded-[6px] border border-[#d1d5db] bg-white p-0 text-[12px] font-medium leading-none text-[#475569] transition hover:border-black"
+                  aria-label="Remove day"
+                  @click="removeDay(index)"
+                >
+                  x
+                </button>
+                <p
+                  v-if="submitted && dayErrorMessage(form.days[index])"
+                  class="col-span-full whitespace-pre-line break-words text-xs leading-snug text-rose-500"
+                >
+                  {{ dayErrorMessage(form.days[index]) }}
+                </p>
+              </div>
+
+              <div class="flex justify-end">
                 <button
                   type="button"
-                  class="mt-2 h-11 w-full rounded-lg border border-black/10 bg-white px-3 text-base outline-none transition hover:border-black [font-variant-numeric:tabular-nums] flex items-center justify-between"
+                  class="rounded-lg border border-black/10 bg-white p-2 text-sm font-medium transition hover:border-black"
+                  @click="addDay"
                 >
-                  <span>{{ requestDate || 'YYYY-MM-DD' }}</span>
-                  <CalendarIcon class="h-4 w-4 text-slate-500" />
+                  + Add day
                 </button>
-              </PopoverTrigger>
-              <PopoverPortal>
-                <PopoverContent
-                  side="bottom"
-                  align="start"
-                  :side-offset="6"
-                  :collision-padding="12"
-                  position-strategy="fixed"
-                  class="z-[90] w-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
-                >
-                  <Calendar
-                    :model-value="calendarRequestDate"
-                    layout="month-and-year"
-                    class="rounded-md"
-                    @update:model-value="setRequestDate"
-                  />
-                </PopoverContent>
-              </PopoverPortal>
-            </PopoverRoot>
+              </div>
+            </div>
           </div>
 
           <div>
             <label class="text-xs font-semibold tracking-wider text-gray-500 leading-none">Reason</label>
             <textarea
-              v-model="requestNote"
+              v-model="form.note"
               rows="5"
               placeholder="Reason for time off"
-              class="mt-2 w-full min-h-24 resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-base outline-none transition hover:border-black"
+              class="mt-2 w-full min-h-24 resize-none rounded-lg border bg-white px-3 py-2 text-base outline-none transition hover:border-black"
+              :class="submitted && !form.note.trim() ? 'border-rose-500' : 'border-black/10'"
             />
+            <p v-if="submitted && !form.note.trim()" class="mt-1 whitespace-normal break-words text-xs leading-snug text-rose-500">
+              Required
+            </p>
           </div>
         </div>
 
