@@ -1,21 +1,12 @@
 <template>
-  <div class="flex h-dvh overflow-hidden bg-slate-100">
-    <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
+  <PageLayout title="Services" description="Manage your business services">
+    <template #actions>
+      <Button @click="showServiceCreateModal = true">
+        + new service
+      </Button>
+    </template>
 
-    <main class="flex-1 w-full overflow-y-auto p-8">
-      <Header
-        title="Services"
-        description="Manage your business services"
-        @menu-click="sidebarOpen = true"
-      >
-        <template #actions>
-          <Button @click="showServiceCreateModal = true">
-            + new service
-          </Button>
-        </template>
-      </Header>
-
-      <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         <article
           v-for="service in services"
           :key="service.id"
@@ -59,9 +50,8 @@
             </button>
           </div>
         </article>
-      </div>
-    </main>
-  </div>
+    </div>
+  </PageLayout>
 
   <ServiceCreateModal
     v-if="showServiceCreateModal"
@@ -89,15 +79,13 @@ import { nextTick, onMounted, ref } from 'vue'
 import { Settings, Trash } from 'lucide-vue-next'
 import { deleteService, getServices, postService } from '@/api/index'
 import Button from '@/components/admin/Button.vue'
-import Header from '@/components/admin/Header.vue'
-import Sidebar from '@/components/admin/Sidebar.vue'
+import PageLayout from '@/components/admin/PageLayout.vue'
 import ServiceCreateModal from '@/components/admin/service/ServiceCreateModal.vue'
 import ServiceConfigureModal from '@/components/admin/service/ServiceConfigureModal.vue'
 import ServiceDeleteModal from '@/components/admin/service/ServiceDeleteModal.vue'
 import { useToastStore } from '@/stores/ToastStore.js'
 
 const services = ref([])
-const sidebarOpen = ref(false)
 const selectedService = ref(null)
 const showServiceCreateModal = ref(false)
 const showServiceDeleteModal = ref(false)

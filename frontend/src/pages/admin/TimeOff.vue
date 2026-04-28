@@ -1,15 +1,10 @@
 <template>
-  <div class="flex h-dvh overflow-hidden bg-slate-100">
-    <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
-
-    <main class="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
-      <Header
-        title="Time Off"
-        description="Manage vacation, sick leave, and personal days"
-        action-label="+ add time off"
-        @menu-click="sidebarOpen = true"
-        @action-click="openAddTimeOffModal"
-      />
+  <PageLayout
+    title="Time Off"
+    description="Manage vacation, sick leave, and personal days"
+    action-label="+ add time off"
+    @action-click="openAddTimeOffModal"
+  >
 
       <div class="mx-auto mb-4 flex rounded-2xl bg-white p-1 shadow-sm 2xl:hidden">
         <button
@@ -152,8 +147,7 @@
           </div>
         </aside>
       </div>
-    </main>
-  </div>
+  </PageLayout>
   <TimeOffDayModal
     v-if="showTimeOffDayModal"
     :date="selectedDate"
@@ -177,8 +171,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
-import Header from '@/components/admin/Header.vue'
-import Sidebar from '@/components/admin/Sidebar.vue'
+import PageLayout from '@/components/admin/PageLayout.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
 import TimeOffCreateModal from '@/components/admin/TimeOffCreateModal.vue'
 import TimeOffDayModal from '@/components/admin/TimeOffDayModal.vue'
@@ -193,7 +186,6 @@ import { formatYearMonth, shiftMonth, toISO } from '@/utils/date'
 import { useTimeOff } from '@/composables/useTimeOff'
 import { useToastStore } from '@/stores/ToastStore.js'
 
-const sidebarOpen = ref(false)
 const ALL_SELECT_VALUE = '__all__'
 const viewMode = ref('calendar')
 const route = useRoute()

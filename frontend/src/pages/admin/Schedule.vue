@@ -1,16 +1,11 @@
 
 <template>
-  <div class="flex h-dvh overflow-hidden bg-slate-100">
-    <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
-
-    <main class="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
-      <Header
-        title="Schedule"
-        description="Manage your shop closures and special open days"
-        action-label="+ add special day"
-        @menu-click="sidebarOpen = true"
-        @action-click="openAddSpecialDayModal"
-      />
+  <PageLayout
+    title="Schedule"
+    description="Manage your shop closures and special open days"
+    action-label="+ add special day"
+    @action-click="openAddSpecialDayModal"
+  >
 
       <div class="mx-auto mb-4 flex rounded-2xl bg-white p-1 shadow-sm 2xl:hidden">
         <button
@@ -138,8 +133,7 @@
             </div>
         </aside>
       </div>
-    </main>
-  </div>
+  </PageLayout>
   <SpecialDayModal
     v-if="showSpecialDayModal"
     :day="selectedDay"
@@ -155,8 +149,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
-import Header from '@/components/admin/Header.vue'
-import Sidebar from '@/components/admin/Sidebar.vue'
+import PageLayout from '@/components/admin/PageLayout.vue'
 import Button from '@/components/admin/Button.vue'
 import ToggleButton from '@/components/admin/ToggleButton.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
@@ -165,7 +158,6 @@ import { shiftMonth, toISO, formatYearMonth } from '@/utils/date'
 import { useShopSchedule } from '@/composables/useShopSchedule'
 import { useToastStore } from '@/stores/ToastStore.js'
 
-const sidebarOpen = ref(false)
 const viewMode = ref('calendar')
 const route = useRoute()
 const router = useRouter()

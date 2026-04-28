@@ -1,23 +1,14 @@
 <template>
-  <div class="flex h-dvh overflow-hidden bg-slate-100">
-    <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
+  <PageLayout title="Employees" description="Manage your business employees">
+    <template #actions>
+      <Button @click="showCreateEmployeeModal = true">
+        + new employee
+      </Button>
+    </template>
 
-    <main class="flex-1 w-full overflow-y-auto p-8">
-      <Header
-        title="Employees"
-        description="Manage your business employees"
-        @menu-click="sidebarOpen = true"
-      >
-        <template #actions>
-          <Button @click="showCreateEmployeeModal = true">
-            + new employee
-          </Button>
-        </template>
-      </Header>
-
-      <div
+    <div
         class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-      >
+    >
         <article
           v-for="employee in employees"
           :key="employee.id"
@@ -80,9 +71,8 @@
             </button>
           </div>
         </article>
-      </div>
-    </main>
-  </div>
+    </div>
+  </PageLayout>
 
   <EmployeeConfigurationsModal
     v-if="showEmployeeConfigModal"
@@ -120,14 +110,12 @@ import EmployeeCreateModal from '@/components/admin/employee/EmployeeCreateModal
 import EmployeeDeleteModal from '@/components/admin/employee/EmployeeDeleteModal.vue'
 import EmployeeConfigurationsModal from '@/components/admin/employee/EmployeeConfigureModal.vue'
 import EmployeeOverviewModal from '@/components/admin/employee/EmployeeOverviewModal.vue'
-import Header from '@/components/admin/Header.vue'
-import Sidebar from '@/components/admin/Sidebar.vue'
+import PageLayout from '@/components/admin/PageLayout.vue'
 import { createEmployee, deleteEmployee, getEmployees } from '@/api'
 import { useToastStore } from '@/stores/ToastStore.js'
 import { Star } from 'lucide-vue-next'
 
 const employees = ref([])
-const sidebarOpen = ref(false)
 const selectedEmployee = ref(null)
 const showEmployeeConfigModal = ref(false)
 const showEmployeeOverviewModal = ref(false)

@@ -1,13 +1,8 @@
 <template>
-  <div class="flex h-dvh overflow-hidden bg-slate-100">
-    <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
-
-    <main class="flex h-full w-full flex-1 flex-col overflow-y-auto p-8">
-      <Header
-        title="Reviews"
-        description="Manage which client reviews are visible on your employee profile."
-        @menu-click="sidebarOpen = true"
-      />
+  <PageLayout
+    title="Reviews"
+    description="Manage which client reviews are visible on your employee profile."
+  >
 
       <div class="flex min-h-0 flex-1 flex-col gap-4">
         <section class="flex min-h-0 flex-1 flex-col rounded-2xl bg-white p-6 shadow-sm md:p-8">
@@ -130,22 +125,20 @@
         </section>
       </div>
 
-      <ReviewDetailsModal
-        v-if="selectedReview"
-        :review="selectedReview"
-        :format-review-date="formatReviewDate"
-        @close="closeReview"
-        @toggle-visibility="toggleVisibility"
-      />
-    </main>
-  </div>
+    <ReviewDetailsModal
+      v-if="selectedReview"
+      :review="selectedReview"
+      :format-review-date="formatReviewDate"
+      @close="closeReview"
+      @toggle-visibility="toggleVisibility"
+    />
+  </PageLayout>
 </template>
 
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import Header from '@/components/admin/Header.vue'
-import Sidebar from '@/components/admin/Sidebar.vue'
+import PageLayout from '@/components/admin/PageLayout.vue'
 import ReviewCard from '@/components/ReviewCard.vue'
 import ReviewDetailsModal from '@/components/ReviewDetailsModal.vue'
 import {
@@ -158,7 +151,6 @@ import {
 import { useAdminReviews } from '@/composables/useAdminReviews'
 import { useToastStore } from '@/stores/ToastStore.js'
 
-const sidebarOpen = ref(false)
 const selectedReview = ref(null)
 const toast = useToastStore()
 

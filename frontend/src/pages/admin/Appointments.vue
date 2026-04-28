@@ -1,13 +1,8 @@
 <template>
-  <div class="flex h-dvh overflow-hidden bg-slate-100">
-    <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
-
-    <main class="flex-1 w-full overflow-y-auto p-8">
-      <Header
-        title="Appointments"
-        description="Browse and filter bookings across your shop."
-        @menu-click="sidebarOpen = true"
-      />
+  <PageLayout
+    title="Appointments"
+    description="Browse and filter bookings across your shop."
+  >
 
       <div class="mb-4 flex justify-end xl:hidden">
         <button
@@ -85,23 +80,21 @@
         </aside>
       </div>
 
-      <AppointmentDetailsModal
-        v-if="selectedAppointment"
-        :appointment="selectedAppointment"
-        @close="closeAppointmentModal"
-        @cancel="runAction('cancel', $event)"
-        @complete="runAction('complete')"
-        @no-show="runAction('no-show')"
-      />
-    </main>
-  </div>
+    <AppointmentDetailsModal
+      v-if="selectedAppointment"
+      :appointment="selectedAppointment"
+      @close="closeAppointmentModal"
+      @cancel="runAction('cancel', $event)"
+      @complete="runAction('complete')"
+      @no-show="runAction('no-show')"
+    />
+  </PageLayout>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
 import { Calendar } from 'lucide-vue-next'
-import Header from '@/components/admin/Header.vue'
-import Sidebar from '@/components/admin/Sidebar.vue'
+import PageLayout from '@/components/admin/PageLayout.vue'
 import AppointmentCard from '@/components/admin/appointments/AppointmentCard.vue'
 import AppointmentDetailsModal from '@/components/admin/appointments/AppointmentDetailsModal.vue'
 import AppointmentsFilters from '@/components/admin/appointments/AppointmentsFilters.vue'
@@ -113,7 +106,6 @@ import {
 import { useAdminAppointments } from '@/composables/useAdminAppointments'
 import { useToastStore } from '@/stores/ToastStore.js'
 
-const sidebarOpen = ref(false)
 const mobileFiltersOpen = ref(false)
 const selectedAppointmentId = ref(null)
 const toast = useToastStore()

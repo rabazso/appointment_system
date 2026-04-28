@@ -1,13 +1,8 @@
 <template>
-  <div class="flex h-dvh overflow-hidden bg-slate-100">
-    <Sidebar :isOpen="sidebarOpen" @close="sidebarOpen = false" />
-
-    <main class="flex min-h-0 flex-1 flex-col overflow-hidden p-4 md:p-6 xl:p-8">
-      <Header
-        title="Shop Profile"
-        description="Manage your public contact details and gallery"
-        @menu-click="sidebarOpen = true"
-      />
+  <PageLayout
+    title="Shop Profile"
+    description="Manage your public contact details and gallery"
+  >
 
       <div class="mx-auto mb-4 flex rounded-2xl bg-white p-1 shadow-sm xl:hidden">
         <button
@@ -233,7 +228,6 @@
 
         </section>
       </div>
-    </main>
 
     <div
       v-if="activeImage"
@@ -267,15 +261,14 @@
       @confirm="confirmDeleteGalleryImage"
     />
 
-  </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { onMounted, ref } from 'vue'
 import { Trash, X } from 'lucide-vue-next'
 import ConfirmDeleteModal from '@/components/admin/ConfirmDeleteModal.vue'
-import Header from '@/components/admin/Header.vue'
-import Sidebar from '@/components/admin/Sidebar.vue'
+import PageLayout from '@/components/admin/PageLayout.vue'
 import { useShopInformation } from '@/composables/useShopInformation'
 import { useShopGallery } from '@/composables/useShopGallery'
 import { useToastStore } from '@/stores/ToastStore.js'
@@ -296,7 +289,6 @@ const {
 } = useShopGallery()
 const toast = useToastStore()
 
-const sidebarOpen = ref(false)
 const viewMode = ref('contact')
 const activeImage = ref(null)
 const imagePendingDelete = ref(null)
