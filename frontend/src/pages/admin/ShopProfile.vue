@@ -1,5 +1,6 @@
 <template>
   <PageLayout
+    role="admin"
     title="Shop Profile"
     description="Manage your public contact details and gallery"
   >
@@ -254,7 +255,7 @@
     <ConfirmDeleteModal
       v-if="imagePendingDelete"
       title="Delete image"
-      description="This will permanently remove the selected gallery image."
+    description="This will permanently remove the selected gallery image."
       question-prefix="Are you sure you want to delete "
       target-name="this image"
       @close="imagePendingDelete = null"
@@ -268,7 +269,7 @@
 import { onMounted, ref } from 'vue'
 import { Trash, X } from 'lucide-vue-next'
 import ConfirmDeleteModal from '@/components/admin/ConfirmDeleteModal.vue'
-import PageLayout from '@/components/admin/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import { useShopInformation } from '@/composables/useShopInformation'
 import { useShopGallery } from '@/composables/useShopGallery'
 import { useToastStore } from '@/stores/ToastStore.js'

@@ -1,6 +1,7 @@
 
 <template>
   <PageLayout
+    role="admin"
     title="Schedule"
     description="Manage your shop closures and special open days"
     action-label="+ add special day"
@@ -149,7 +150,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
-import PageLayout from '@/components/admin/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import Button from '@/components/admin/Button.vue'
 import ToggleButton from '@/components/admin/ToggleButton.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'

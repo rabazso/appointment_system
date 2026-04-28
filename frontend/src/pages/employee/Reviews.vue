@@ -1,6 +1,6 @@
 <template>
   <PageLayout
-    current-section="reviews"
+    role="employee"
     title="Reviews"
     description="Check reviews written for your appointments."
   >
@@ -91,7 +91,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import PageLayout from '@/components/employee/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import ReviewCard from '@/components/ReviewCard.vue'
 import ReviewDetailsModal from '@/components/ReviewDetailsModal.vue'
 import {

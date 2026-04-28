@@ -1,5 +1,6 @@
 <template>
   <PageLayout
+    role="admin"
     title="Time Off"
     description="Manage vacation, sick leave, and personal days"
     action-label="+ add time off"
@@ -171,7 +172,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
-import PageLayout from '@/components/admin/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
 import TimeOffCreateModal from '@/components/admin/TimeOffCreateModal.vue'
 import TimeOffDayModal from '@/components/admin/TimeOffDayModal.vue'

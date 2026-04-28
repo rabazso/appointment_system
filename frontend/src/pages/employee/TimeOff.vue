@@ -5,7 +5,7 @@ import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka
 import { X, Calendar as CalendarIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
-import PageLayout from '@/components/employee/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import {
   cancelEmployeeOwnTimeOffRequest,
   getEmployeeOwnTimeOffRequests,
@@ -257,7 +257,7 @@ onMounted(async () => {
 
 <template>
   <PageLayout
-    current-section="time-off"
+    role="employee"
     title="Time Off"
     description="Track your requests and see shop holidays."
     action-label="Request Time Off"

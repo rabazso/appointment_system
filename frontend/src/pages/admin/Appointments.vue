@@ -1,5 +1,6 @@
 <template>
   <PageLayout
+    role="admin"
     title="Appointments"
     description="Browse and filter bookings across your shop."
   >
@@ -94,7 +95,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { Calendar } from 'lucide-vue-next'
-import PageLayout from '@/components/admin/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import AppointmentCard from '@/components/admin/appointments/AppointmentCard.vue'
 import AppointmentDetailsModal from '@/components/admin/appointments/AppointmentDetailsModal.vue'
 import AppointmentsFilters from '@/components/admin/appointments/AppointmentsFilters.vue'

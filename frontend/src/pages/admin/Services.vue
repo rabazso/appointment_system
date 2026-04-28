@@ -1,5 +1,8 @@
 <template>
-  <PageLayout title="Services" description="Manage your business services">
+  <PageLayout
+    role="admin"
+    title="Services"
+    description="Manage your business services">
     <template #actions>
       <Button @click="showServiceCreateModal = true">
         + new service
@@ -79,7 +82,7 @@ import { nextTick, onMounted, ref } from 'vue'
 import { Settings, Trash } from 'lucide-vue-next'
 import { deleteService, getServices, postService } from '@/api/index'
 import Button from '@/components/admin/Button.vue'
-import PageLayout from '@/components/admin/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import ServiceCreateModal from '@/components/admin/service/ServiceCreateModal.vue'
 import ServiceConfigureModal from '@/components/admin/service/ServiceConfigureModal.vue'
 import ServiceDeleteModal from '@/components/admin/service/ServiceDeleteModal.vue'

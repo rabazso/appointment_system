@@ -1,6 +1,6 @@
 <template>
   <PageLayout
-    current-section="profile"
+    role="employee"
     title="Profile"
     description="Update your public profile, photo, and gallery."
   >
@@ -308,7 +308,7 @@
       <ConfirmDeleteModal
         v-if="profilePhotoDeleteTarget"
         title="Delete image"
-        description="This will remove your current profile photo."
+    description="This will remove your current profile photo."
         question-prefix="Are you sure you want to delete "
         target-name="this image"
         @close="closeDeleteProfilePhotoModal"
@@ -318,7 +318,7 @@
       <ConfirmDeleteModal
         v-if="galleryDeleteTarget"
         title="Delete image"
-        description="This will remove the image from your public gallery."
+    description="This will remove the image from your public gallery."
         question-prefix="Are you sure you want to delete "
         target-name="this image"
         @close="closeDeleteGalleryModal"
@@ -331,7 +331,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { Upload, Trash, X } from 'lucide-vue-next'
-import PageLayout from '@/components/employee/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import ConfirmDeleteModal from '@/components/admin/ConfirmDeleteModal.vue'
 import { useToastStore } from '@/stores/ToastStore.js'
 import {

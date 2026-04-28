@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import AppointmentSchedule from '@/components/employee/AppointmentSchedule.vue'
 import AppointmentCancelModal from '@/components/employee/appointment-schedule/AppointmentCancelModal.vue'
-import PageLayout from '@/components/employee/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import {
   cancelEmployeeAppointment,
   completeEmployeeAppointment,
@@ -150,7 +150,7 @@ onMounted(() => {
 
 <template>
   <PageLayout
-    current-section="appointments"
+    role="employee"
     title="Your Appointments"
     description="Manage your appointments and daily workflow."
   >

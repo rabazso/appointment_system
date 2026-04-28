@@ -1,6 +1,6 @@
 <template>
   <PageLayout
-    current-section="configuration"
+    role="employee"
     title="My Configuration"
     description="View your active and upcoming booking configurations."
   >
@@ -121,7 +121,7 @@
       <template v-else-if="versionViewerMode === 'details' && activeVersionViewer === 'services' && selectedVersionFromViewer">
         <ModalHeader
           title="Service details"
-          description="Review the selected assigned services."
+    description="Review the selected assigned services."
         />
         <VersionDetailActions
           :valid-from="selectedVersionFromViewer.valid_from"
@@ -150,7 +150,7 @@
       <template v-else-if="versionViewerMode === 'details' && activeVersionViewer === 'schedule' && selectedVersionFromViewer">
         <ModalHeader
           title="Schedule details"
-          description="Review the selected weekly schedule."
+    description="Review the selected weekly schedule."
         />
         <VersionDetailActions
           :valid-from="selectedVersionFromViewer.valid_from"
@@ -202,7 +202,7 @@
 <script setup>
 import { CalendarRange, Clock3, Scissors, Settings2 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
-import PageLayout from '@/components/employee/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import VersionCard from '@/components/admin/VersionCard.vue'
 import VersionsView from '@/components/admin/VersionsView.vue'
 import ModalHeader from '@/components/admin/ModalHeader.vue'

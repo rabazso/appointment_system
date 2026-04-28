@@ -1,5 +1,6 @@
 <template>
   <PageLayout
+    role="admin"
     title="Reviews"
     description="Manage which client reviews are visible on your employee profile."
   >
@@ -138,7 +139,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import PageLayout from '@/components/admin/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import ReviewCard from '@/components/ReviewCard.vue'
 import ReviewDetailsModal from '@/components/ReviewDetailsModal.vue'
 import {

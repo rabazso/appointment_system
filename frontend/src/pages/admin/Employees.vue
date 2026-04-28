@@ -1,5 +1,8 @@
 <template>
-  <PageLayout title="Employees" description="Manage your business employees">
+  <PageLayout
+    role="admin"
+    title="Employees"
+    description="Manage your business employees">
     <template #actions>
       <Button @click="showCreateEmployeeModal = true">
         + new employee
@@ -110,7 +113,7 @@ import EmployeeCreateModal from '@/components/admin/employee/EmployeeCreateModal
 import EmployeeDeleteModal from '@/components/admin/employee/EmployeeDeleteModal.vue'
 import EmployeeConfigurationsModal from '@/components/admin/employee/EmployeeConfigureModal.vue'
 import EmployeeOverviewModal from '@/components/admin/employee/EmployeeOverviewModal.vue'
-import PageLayout from '@/components/admin/PageLayout.vue'
+import PageLayout from '@/components/PageLayout.vue'
 import { createEmployee, deleteEmployee, getEmployees } from '@/api'
 import { useToastStore } from '@/stores/ToastStore.js'
 import { Star } from 'lucide-vue-next'
