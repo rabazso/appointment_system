@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <div class="flex justify-end">
+    <div v-if="showCreate" class="flex justify-end">
       <button
         type="button"
         class="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-[#ff9838] px-5 text-sm font-semibold text-black shadow-[0_10px_24px_rgba(249,115,22,0.18)] transition hover:bg-[#ffab5c] disabled:cursor-not-allowed disabled:opacity-50"
@@ -49,6 +49,10 @@ defineProps({
   createLabel: {
     type: String,
     default: 'Schedule change',
+  },
+  showCreate: {
+    type: Boolean,
+    default: true,
   },
 })
 

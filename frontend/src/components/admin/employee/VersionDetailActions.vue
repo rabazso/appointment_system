@@ -8,7 +8,7 @@
       {{ validTo || 'Open-ended' }}
     </div>
 
-    <div class="flex gap-2">
+    <div v-if="showActions" class="flex gap-2">
       <button
         type="button"
         class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-gray-500 transition hover:bg-slate-50"
@@ -40,6 +40,10 @@ defineProps({
   validTo: {
     type: String,
     default: null,
+  },
+  showActions: {
+    type: Boolean,
+    default: true,
   },
 })
 </script>

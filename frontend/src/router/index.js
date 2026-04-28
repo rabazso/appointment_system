@@ -18,7 +18,9 @@ import VerifyEmail from '@pages/verifyEmail.vue'
 import AdminSignIn from '@pages/admin/AdminSignIn.vue'
 import EmployeeSignIn from '@pages/employee/EmployeeSignIn.vue'
 import AppointmentsPage from '@pages/employee/Appointments.vue'
+import MyConfigurationPage from '@pages/employee/MyConfiguration.vue'
 import ProfilePage from '@pages/employee/Profile.vue'
+import EmployeeReviewsPage from '@pages/employee/Reviews.vue'
 import TimeOffPage from '@pages/employee/TimeOff.vue'
 import AdminReviews from '@pages/admin/Reviews.vue'
 import TimeOff from '@pages/admin/TimeOff.vue'
@@ -113,6 +115,24 @@ const routes = [
     component: AppointmentsPage,
     meta: {
       title: 'Employee Appointments',
+      requiresEmployee: true,
+    },
+  },
+  {
+    path: '/employee/configuration',
+    name: 'EmployeeConfiguration',
+    component: MyConfigurationPage,
+    meta: {
+      title: 'Employee Configuration',
+      requiresEmployee: true,
+    },
+  },
+  {
+    path: '/employee/reviews',
+    name: 'EmployeeReviews',
+    component: EmployeeReviewsPage,
+    meta: {
+      title: 'Employee Reviews',
       requiresEmployee: true,
     },
   },

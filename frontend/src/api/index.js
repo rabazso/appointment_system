@@ -156,6 +156,12 @@ export const cancelUserAppointment = (appointmentId) => API.post(`/user/appointm
 export const forgotPassword = (email) => API.post('/forgot-password', { email });
 export const resetPassword = (payload) => API.post('/reset-password', payload);
 
+export const getEmployeeOwnConfigurationServices = () => API.get('/employee/configuration/services', withAuth('employee'));
+export const getEmployeeOwnConfigurationSchedules = () => API.get('/employee/configuration/schedules', withAuth('employee'));
+export const getEmployeeOwnConfigurationAvailability = () => API.get('/employee/configuration/availability', withAuth('employee'));
+export const getEmployeeOwnConfigurationBookingRules = () => API.get('/employee/configuration/booking-rules', withAuth('employee'));
+
+
 export const previewEmployeeScheduleAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-schedule', payload, withAuth('admin'));
 export const previewEmployeeServicesAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-services', payload, withAuth('admin'));
 export const previewEmployeeAvailabilityAffectedAppointments = (payload) => API.post('/admin/appointments/affected-preview/employee-availability', payload, withAuth('admin'));

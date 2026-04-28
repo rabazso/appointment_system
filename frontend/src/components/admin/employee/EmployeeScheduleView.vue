@@ -12,6 +12,7 @@
     <VersionDetailActions
       :valid-from="schedule.valid_from"
       :valid-to="schedule.valid_to"
+      :show-actions="showActions"
       @edit="$emit('edit')"
       @delete="$emit('delete')"
     />
@@ -71,6 +72,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  showActions: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const weekDayOptions = WEEKDAYS.map((day) => ({
@@ -80,6 +85,6 @@ const weekDayOptions = WEEKDAYS.map((day) => ({
 }))
 
 function getBreaksForWeekday(weekday) {
-  return props.schedule.breaks?.filter((breakEntry) => breakEntry.weekday === weekday) ?? []
+  return props.schedule?.breaks?.filter((breakEntry) => breakEntry.weekday === weekday) ?? []
 }
 </script>

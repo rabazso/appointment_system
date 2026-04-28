@@ -20,7 +20,7 @@
         </div>
       </div>
 
-      <div class="flex shrink-0 gap-2 self-start">
+      <div v-if="showActions" class="flex shrink-0 gap-2 self-start">
         <button
           type="button"
           class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-gray-500 transition hover:bg-slate-50"
@@ -58,7 +58,11 @@ const props = defineProps({
   index: {
     type: Number,
     required: true,
-  }
+  },
+  showActions: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const current = computed(() => props.index === 0)

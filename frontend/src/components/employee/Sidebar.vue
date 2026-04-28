@@ -80,6 +80,7 @@ const auth = useAuthStore()
 const menuItems = [
   { id: 'appointments', label: 'Appointments', icon: Calendar, to: '/employee/appointments' },
   { id: 'reviews', label: 'Reviews', icon: Eye, to: '/employee/reviews' },
+  { id: 'configuration', label: 'My Configuration', icon: Settings2, to: '/employee/configuration' },
   { id: 'profile', label: 'Profile', icon: UserRound, to: '/employee/profile' },
   { id: 'time-off', label: 'Time Off', icon: Plane, to: '/employee/time-off' },
 ]

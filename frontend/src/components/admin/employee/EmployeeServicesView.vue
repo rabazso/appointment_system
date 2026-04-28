@@ -12,6 +12,7 @@
     <VersionDetailActions
       :valid-from="services.valid_from"
       :valid-to="services.valid_to"
+      :show-actions="showActions"
       @edit="$emit('edit')"
       @delete="$emit('delete')"
     />
@@ -48,6 +49,10 @@ defineProps({
   services: {
     type: Object,
     required: true,
+  },
+  showActions: {
+    type: Boolean,
+    default: true,
   },
 })
 </script>
