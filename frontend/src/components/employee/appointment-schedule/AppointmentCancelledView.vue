@@ -30,7 +30,7 @@ const props = defineProps({
         </p>
         <div class="mt-3 rounded-2xl bg-rose-50 px-3 py-2">
           <p class="text-xs font-bold uppercase tracking-[0.16em] text-rose-600">Cancellation reason</p>
-          <p class="mt-1 text-sm leading-snug text-slate-700">{{ appointment.cancellation_reason }}</p>
+          <p class="mt-1 break-all text-sm leading-snug text-slate-700">{{ appointment.cancellation_reason }}</p>
         </div>
       </article>
     </div>
