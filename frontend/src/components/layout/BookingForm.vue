@@ -622,10 +622,12 @@ watch(isAuthenticated, (loggedIn) => {
           <CardContent>
             <div class="grid gap-3 md:grid-cols-2">
               <Label v-for="service in services" :key="service.id"
+                     data-testid="booking-service-option"
                      class="flex gap-3 p-4 rounded-lg border-2"
                      :disabled="!isServiceSelectable(service)"
                      :class="selectedServiceIdsSet.has(Number(service.id)) ? 'border-primary bg-primary/5' : 'border-border bg-background'">
                 <input
+                  data-testid="booking-service-checkbox"
                   type="checkbox"
                   class="mt-1 h-4 w-4 accent-primary"
                   :disabled="!isServiceSelectable(service)"
@@ -674,6 +676,7 @@ watch(isAuthenticated, (loggedIn) => {
             <RadioGroup v-model="selectedBarber">
               <div class="grid gap-3 md:grid-cols-2">
                 <Label v-for="barber in barbers" :key="barber.id"
+                       data-testid="booking-barber-option"
                        class="flex items-center gap-3 p-4 rounded-lg border-2"
                        :class="Number(selectedBarber) === Number(barber.id) ? 'border-primary bg-primary/5' : 'border-border bg-background'">
                   <RadioGroupItem :value="barber.id" class="mt-1" />
@@ -760,6 +763,7 @@ watch(isAuthenticated, (loggedIn) => {
                 </p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   <Button v-for="time in timeSlots" :key="time"
+                          data-testid="booking-time-slot"
                           variant="outline"
                           type="button" 
                           :class="selectedTime === time ? 'border-accent border-2 bg-primary/10' : 'bg-background'"
@@ -796,9 +800,9 @@ watch(isAuthenticated, (loggedIn) => {
               {{ bookingErrorMessage }}
             </div>
             <Label class="block font-semibold">Name</Label>
-            <input v-model="userData.name" type="text" placeholder="Your full name" required class="w-full border border-border rounded-md p-2 bg-background text-foreground"/>
+            <input data-testid="booking-guest-name" v-model="userData.name" type="text" placeholder="Your full name" required class="w-full border border-border rounded-md p-2 bg-background text-foreground"/>
             <Label class="block font-semibold">Email</Label>
-            <input v-model="userData.email" type="email" placeholder="you@example.com" required class="w-full border border-border rounded-md p-2 bg-background text-foreground"/>
+            <input data-testid="booking-guest-email" v-model="userData.email" type="email" placeholder="you@example.com" required class="w-full border border-border rounded-md p-2 bg-background text-foreground"/>
           </CardContent>
         </AccordionContent>
       </Card>
@@ -859,7 +863,7 @@ watch(isAuthenticated, (loggedIn) => {
     </CardContent>
   </Card>
 
-  <Button v-if="shouldShowConfirmButton" type="submit" size="lg" class="w-full text-lg font-bold mt-3" :disabled="!canSubmitBooking">
+  <Button v-if="shouldShowConfirmButton" data-testid="booking-confirm" type="submit" size="lg" class="w-full text-lg font-bold mt-3" :disabled="!canSubmitBooking">
     Confirm Booking
   </Button>
 </form>
