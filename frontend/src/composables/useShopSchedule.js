@@ -7,6 +7,7 @@ import {
   patchShopSpecialDay,
   postShopSpecialDay,
 } from '@/api/index'
+import { formatYearMonth } from '@/utils/date'
 
 export function useShopSchedule() {
   function normalizeTimeForInput(time) {
@@ -98,9 +99,44 @@ export function useShopSchedule() {
     )
   }
 
+  function parseMonthQuery(value) {
+    if (typeof value !== 'string') return null
+    if (value.length !== 7) return null
+
+    const parts = value.split('-')
+    if (parts.length !== 2) return null
+
+    const [yearRaw, monthRaw] = parts
+    if (yearRaw.length !== 4 || monthRaw.length !== 2) return null
+
+    const year = Number(yearRaw)
+    const month = Number(monthRaw)
+
+    if (!Number.isInteger(year) || !Number.isInteger(month)) {
+      return null
+    }
+
+    if (month < 1 || month > 12) {
+      return null
+    }
+
+    return new Date(year, month - 1, 1)
+  }
+
+  function syncMonthFromQuery(query, fallbackDate = new Date()) {
+    return parseMonthQuery(query?.month) ?? fallbackDate
+  }
+
+  function buildMonthQuery(displayMonth, defaultMonthKey = formatYearMonth(new Date())) {
+    const month = formatYearMonth(displayMonth)
+    return month === defaultMonthKey ? {} : { month }
+  }
+
   return {
+    buildMonthQuery,
     fetchSpecialDayByDate,
     fetchSpecialDays,
+    syncMonthFromQuery,
     saveSpecialDays,
     fetchOpeningHours,
     saveOpeningHours,

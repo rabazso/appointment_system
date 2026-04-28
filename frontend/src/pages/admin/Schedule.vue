@@ -154,6 +154,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import Button from '@/components/admin/Button.vue'
@@ -166,6 +167,9 @@ import { useToastStore } from '@/stores/ToastStore.js'
 
 const sidebarOpen = ref(false)
 const viewMode = ref('calendar')
+const route = useRoute()
+const router = useRouter()
+const syncingFromRoute = ref(false)
 
 const displayMonth = ref(new Date())
 const monthLabel = computed(() =>
@@ -196,9 +200,11 @@ const selectedDay = ref(null)
 const specialDayModalMode = ref('create')
 const toast = useToastStore()
 const {
+  buildMonthQuery,
   fetchSpecialDayByDate,
   fetchSpecialDays,
   saveSpecialDays,
+  syncMonthFromQuery,
   fetchOpeningHours,
   saveOpeningHours: persistOpeningHours,
 } = useShopSchedule()
@@ -400,10 +406,30 @@ function applyBackendOpeningHourErrors(error) {
   openingHoursSubmitted.value = true
 }
 
-watch(monthLabel, loadSpecialDays)
+function syncStateFromQuery(query) {
+  displayMonth.value = syncMonthFromQuery(query, new Date())
+}
+
+watch(
+  () => route.query,
+  (query) => {
+    syncingFromRoute.value = true
+    syncStateFromQuery(query)
+    syncingFromRoute.value = false
+    loadSpecialDays()
+  },
+  { immediate: true },
+)
+
+watch(
+  displayMonth,
+  () => {
+    if (syncingFromRoute.value) return
+    router.replace({ query: buildMonthQuery(displayMonth.value, formatYearMonth(new Date())) })
+  },
+)
 
 onMounted(() => {
-  loadSpecialDays()
   loadOpeningHours()
 })
 </script>
