@@ -43,41 +43,53 @@
           <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
             <div class="min-w-0 space-y-2">
               <label class="text-sm font-semibold text-slate-900">Phone</label>
-              <div class="rounded-xl border border-black/10 bg-white px-4 py-3 transition focus-within:border-black">
+              <div
+                class="rounded-xl border bg-white px-4 py-3 transition"
+                :class="fieldErrors.phone ? 'border-rose-500 focus-within:border-rose-500' : 'border-black/10 focus-within:border-black'"
+              >
                 <input
                   v-model="form.phone"
                   type="text"
                   placeholder="+36 ..."
                   class="w-full bg-transparent text-sm outline-none"
-                  @input="markDirty"
+                  @input="handleFieldInput('phone')"
                 />
               </div>
+              <p v-if="fieldErrors.phone" class="text-xs text-rose-600">{{ fieldErrors.phone }}</p>
             </div>
 
             <div class="min-w-0 space-y-2">
               <label class="text-sm font-semibold text-slate-900">Email</label>
-              <div class="rounded-xl border border-black/10 bg-white px-4 py-3 transition focus-within:border-black">
+              <div
+                class="rounded-xl border bg-white px-4 py-3 transition"
+                :class="fieldErrors.email ? 'border-rose-500 focus-within:border-rose-500' : 'border-black/10 focus-within:border-black'"
+              >
                 <input
                   v-model="form.email"
                   type="email"
                   placeholder="hello@shop.com"
                   class="w-full bg-transparent text-sm outline-none"
-                  @input="markDirty"
+                  @input="handleFieldInput('email')"
                 />
               </div>
+              <p v-if="fieldErrors.email" class="text-xs text-rose-600">{{ fieldErrors.email }}</p>
             </div>
 
             <div class="space-y-2 md:col-span-2">
               <label class="text-sm font-semibold text-slate-900">Address</label>
-              <div class="rounded-xl border border-black/10 bg-white px-4 py-3 transition focus-within:border-black">
+              <div
+                class="rounded-xl border bg-white px-4 py-3 transition"
+                :class="fieldErrors.address ? 'border-rose-500 focus-within:border-rose-500' : 'border-black/10 focus-within:border-black'"
+              >
                 <input
                   v-model="form.address"
                   type="text"
                   placeholder="Street, city"
                   class="w-full bg-transparent text-sm outline-none"
-                  @input="markDirty"
+                  @input="handleFieldInput('address')"
                 />
               </div>
+              <p v-if="fieldErrors.address" class="text-xs text-rose-600">{{ fieldErrors.address }}</p>
             </div>
           </div>
 
@@ -108,18 +120,22 @@
                     v-model="link.label"
                     type="text"
                     placeholder="Instagram"
-                    class="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-                    @input="markDirty"
+                    class="w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+                    :class="linkErrorByIndex(index)?.label ? 'border-rose-500' : 'border-black/10'"
+                    @input="handleLinkInput(index, 'label')"
                   />
+                  <p v-if="linkErrorByIndex(index)?.label" class="mt-1 text-xs text-rose-600">{{ linkErrorByIndex(index)?.label }}</p>
                 </div>
                 <div class="min-w-0">
                   <input
                     v-model="link.url"
                     type="url"
                     placeholder="https://..."
-                    class="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-                    @input="markDirty"
+                    class="w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+                    :class="linkErrorByIndex(index)?.url ? 'border-rose-500' : 'border-black/10'"
+                    @input="handleLinkInput(index, 'url')"
                   />
+                  <p v-if="linkErrorByIndex(index)?.url" class="mt-1 text-xs text-rose-600">{{ linkErrorByIndex(index)?.url }}</p>
                 </div>
                 <div class="flex items-center">
                   <button
@@ -284,6 +300,12 @@ const sidebarOpen = ref(false)
 const viewMode = ref('contact')
 const activeImage = ref(null)
 const imagePendingDelete = ref(null)
+const fieldErrors = ref({
+  phone: '',
+  email: '',
+  address: '',
+  links: {},
+})
 
 const MAX_IMAGE_SIZE_BYTES = 4096 * 1024
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -295,17 +317,23 @@ onMounted(async () => {
 async function loadSettings() {
   try {
     await fetchShopInformation()
+    clearFieldErrors()
   } catch (error) {
     toast.showError('Failed to load data.')
   }
 }
 
 async function saveSettings() {
+  clearFieldErrors()
+  if (!validateForm()) {
+    return
+  }
+
   try {
     await saveShopInformation(shopInformationId.value, {
-      phone: form.phone || null,
-      email: form.email || null,
-      address: form.address || null,
+      phone: form.phone?.trim() || null,
+      email: form.email?.trim() || null,
+      address: form.address?.trim() || null,
       links: form.links
         .map((link) => ({
           label: link.label?.trim() || null,
@@ -316,6 +344,7 @@ async function saveSettings() {
 
     toast.show('Changes saved successfully.')
   } catch (error) {
+    applyServerValidationErrors(error?.response?.data?.errors)
     toast.showError('Failed to save changes.')
   }
 }
@@ -393,12 +422,126 @@ function addLink() {
 
 function removeLink(index) {
   form.links.splice(index, 1)
+  fieldErrors.value.links = {}
 }
 
-function markDirty() {}
-
 function resetChanges() {
+  clearFieldErrors()
   loadSettings()
+}
+
+function clearFieldErrors() {
+  fieldErrors.value = {
+    phone: '',
+    email: '',
+    address: '',
+    links: {},
+  }
+}
+
+function handleFieldInput(field) {
+  if (fieldErrors.value[field]) {
+    fieldErrors.value[field] = ''
+  }
+}
+
+function handleLinkInput(index, field) {
+  const linkErrors = fieldErrors.value.links?.[index]
+  if (!linkErrors) return
+
+  if (linkErrors[field]) {
+    linkErrors[field] = ''
+  }
+
+  if (!linkErrors.label && !linkErrors.url) {
+    delete fieldErrors.value.links[index]
+  }
+}
+
+function linkErrorByIndex(index) {
+  return fieldErrors.value.links?.[index] || null
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+function isValidUrl(value) {
+  try {
+    const parsed = new URL(value)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function validateForm() {
+  const errors = {
+    phone: '',
+    email: '',
+    address: '',
+    links: {},
+  }
+
+  const phone = form.phone?.trim() || ''
+  const email = form.email?.trim() || ''
+
+  if (phone.length > 255) {
+    errors.phone = 'Phone cannot be longer than 255 characters.'
+  }
+
+  if (email.length > 255) {
+    errors.email = 'Email cannot be longer than 255 characters.'
+  } else if (email && !isValidEmail(email)) {
+    errors.email = 'Please enter a valid email address.'
+  }
+
+  form.links.forEach((link, index) => {
+    const label = link.label?.trim() || ''
+    const url = link.url?.trim() || ''
+    const linkErrors = { label: '', url: '' }
+
+    if (label.length > 255) {
+      linkErrors.label = 'Label cannot be longer than 255 characters.'
+    }
+
+    if (url.length > 2048) {
+      linkErrors.url = 'URL cannot be longer than 2048 characters.'
+    } else if (url && !isValidUrl(url)) {
+      linkErrors.url = 'Please enter a valid URL (http:// or https://).'
+    }
+
+    if (linkErrors.label || linkErrors.url) {
+      errors.links[index] = linkErrors
+    }
+  })
+
+  fieldErrors.value = errors
+  return !(errors.phone || errors.email || errors.address || Object.keys(errors.links).length)
+}
+
+function applyServerValidationErrors(errors) {
+  if (!errors || typeof errors !== 'object') return
+
+  Object.entries(errors).forEach(([key, messages]) => {
+    const message = Array.isArray(messages) ? messages[0] : messages
+    if (!message) return
+
+    if (key === 'phone' || key === 'email' || key === 'address') {
+      fieldErrors.value[key] = String(message)
+      return
+    }
+
+    const linkMatch = key.match(/^links\.(\d+)\.(label|url)$/)
+    if (linkMatch) {
+      const index = Number(linkMatch[1])
+      const field = linkMatch[2]
+      if (!fieldErrors.value.links[index]) {
+        fieldErrors.value.links[index] = { label: '', url: '' }
+      }
+      fieldErrors.value.links[index][field] = String(message)
+    }
+  })
 }
 
 </script>
