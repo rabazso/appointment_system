@@ -17,7 +17,7 @@ Main technologies:
 2. Run:
 
 ```bash
-./start.sh
+bash start.sh
 ```
 
 This script:
@@ -25,11 +25,14 @@ This script:
 - creates the required Docker volumes,
 - installs frontend packages,
 - starts the containers,
-- runs `composer install`,
-- runs `php artisan migrate:fresh --seed`.
+- runs `composer install`.
 
 Important:
+- By default, `start.sh` does not run database migrations or seeders.
+- Use `bash start.sh -m` or `bash start.sh --migrate` to run `php artisan migrate`.
+- Use `bash start.sh -fs` or `bash start.sh --fresh-seed` to run `php artisan migrate:fresh --seed`.
 - `migrate:fresh --seed` deletes old database data and loads fresh demo data.
+- Use `bash start.sh --help` to list the available options.
 
 ### 2.2 Stop
 ```bash
