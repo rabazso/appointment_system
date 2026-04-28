@@ -1,19 +1,36 @@
 <template>
   <div
-    class="relative flex h-full flex-col overflow-hidden bg-white transition duration-200 border border-transparent hover:border-black hover:rounded-sm"
-    :class="{
-      '!border-black rounded-sm': isToday,
-      'opacity-75': !isInCurrentMonth,
-    }"
+    class="relative flex h-full flex-col overflow-hidden transition duration-200 border border-transparent hover:border-black hover:rounded-sm"
+    :class="[
+      backgroundClass,
+      cellClass,
+      {
+        '!border-black rounded-sm': isToday,
+        'opacity-75': !isInCurrentMonth,
+      },
+    ]"
     @click="emit('day-click')"
   >
+    <div
+      v-if="cellBackgroundClass || cellBackgroundStyle"
+      class="absolute inset-x-0 bottom-0 transition-all duration-300"
+      :class="cellBackgroundClass"
+      :style="cellBackgroundStyle"
+    ></div>
+
+    <div
+      v-if="cellOverlayClass"
+      class="pointer-events-none absolute inset-0"
+      :class="cellOverlayClass"
+    ></div>
+
     <div class="relative z-1 flex shrink-0 items-start justify-end leading-none text-sm font-semibold text-black">
-      <span class="bg-white px-0.5">
+      <span class="px-0.5" :class="dayBadgeBackgroundClass">
         {{ dayNumber }}
       </span>
     </div>
 
-    <div class="absolute inset-0 flex items-center justify-center">
+    <div class="absolute inset-0 z-1 flex items-center justify-center">
       <span
         v-if="dotContent"
         class="mx-auto h-1.5 w-1.5 rounded-full bg-black leading-none sm:hidden"
@@ -40,6 +57,21 @@ const props = defineProps({
   contentClass: String,
   dotContent: Boolean,
   dotContentClass: String,
+  cellClass: String,
+  cellBackgroundClass: String,
+  cellOverlayClass: String,
+  cellBackgroundStyle: {
+    type: [Object, String],
+    default: undefined,
+  },
+  backgroundClass: {
+    type: String,
+    default: 'bg-white',
+  },
+  dayBadgeBackgroundClass: {
+    type: String,
+    default: 'bg-white',
+  },
   isPast: Boolean,
   isToday: Boolean,
   isInCurrentMonth: Boolean,
