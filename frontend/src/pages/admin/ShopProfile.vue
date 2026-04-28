@@ -9,25 +9,23 @@
         @menu-click="sidebarOpen = true"
       />
 
-      <div class="mb-4 flex justify-center xl:hidden">
-        <div class="inline-flex rounded-full bg-black px-1.5 py-1 shadow-lg shadow-black/20">
+      <div class="mx-auto mb-4 flex rounded-2xl bg-white p-1 shadow-sm xl:hidden">
         <button
           type="button"
-          class="rounded-full px-5 py-2.5 text-sm font-semibold transition"
-          :class="viewMode === 'contact' ? 'bg-secondary text-white' : 'bg-transparent text-white/90 hover:bg-white/10'"
+          class="rounded-md px-4 py-2 font-semibold transition"
+          :class="viewMode === 'contact' ? 'bg-secondary' : 'bg-white'"
           @click="viewMode = 'contact'"
         >
           Contact
         </button>
         <button
           type="button"
-          class="rounded-full px-5 py-2.5 text-sm font-semibold transition"
-          :class="viewMode === 'gallery' ? 'bg-secondary text-white' : 'bg-transparent text-white/90 hover:bg-white/10'"
+          class="rounded-md px-4 py-2 font-semibold transition"
+          :class="viewMode === 'gallery' ? 'bg-secondary' : 'bg-white'"
           @click="viewMode = 'gallery'"
         >
           Gallery
         </button>
-        </div>
       </div>
 
       <div class="flex min-h-0 flex-1 flex-col gap-4 xl:grid xl:grid-cols-2 xl:overflow-hidden">
@@ -217,24 +215,6 @@
             No gallery images yet
           </div>
 
-          <div v-if="galleryDirty" class="mt-4 shrink-0 -mx-6 -mb-6 rounded-b-2xl border-t border-black/10 bg-white px-6 py-4">
-            <div class="flex justify-end gap-3">
-              <button
-                type="button"
-                class="inline-flex rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                @click="resetGalleryChanges"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                class="inline-flex rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-black shadow-[0_10px_24px_rgba(249,115,22,0.18)] transition hover:bg-[#ffab5c]"
-                @click="saveGalleryWithValidation"
-              >
-                Save changes
-              </button>
-            </div>
-          </div>
         </section>
       </div>
     </main>
@@ -261,12 +241,23 @@
       </div>
     </div>
 
+    <ConfirmDeleteModal
+      v-if="imagePendingDelete"
+      title="Delete image"
+      description="This will permanently remove the selected gallery image."
+      question-prefix="Are you sure you want to delete "
+      target-name="this image"
+      @close="imagePendingDelete = null"
+      @confirm="confirmDeleteGalleryImage"
+    />
+
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref } from 'vue'
 import { Trash, X } from 'lucide-vue-next'
+import ConfirmDeleteModal from '@/components/admin/ConfirmDeleteModal.vue'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import { useShopInformation } from '@/composables/useShopInformation'
@@ -283,16 +274,16 @@ const {
 } = useShopInformation()
 const {
   images: galleryItems,
-  deletedImageIds: deletedGalleryIds,
-  galleryDirty,
   fetchShopImages,
-  saveGallery,
+  uploadImages,
+  deleteImage,
 } = useShopGallery()
 const toast = useToastStore()
 
 const sidebarOpen = ref(false)
 const viewMode = ref('contact')
 const activeImage = ref(null)
+const imagePendingDelete = ref(null)
 
 const MAX_IMAGE_SIZE_BYTES = 4096 * 1024
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -337,50 +328,51 @@ async function loadGallery() {
   }
 }
 
-function onGalleryChange(event) {
+async function onGalleryChange(event) {
   const files = Array.from(event.target.files ?? [])
   event.target.value = ''
 
-  for (const file of files) {
-    galleryItems.value = [
-      {
-        id: createGalleryId(),
-        preview_url: URL.createObjectURL(file),
-        original_url: URL.createObjectURL(file),
-        isNew: true,
-        file,
-      },
-      ...galleryItems.value,
-    ]
+  try {
+    validateGalleryImages(files)
+    await uploadImages(files)
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save image.')
   }
 }
 
-function validateGalleryImages() {
-  const newImages = galleryItems.value.filter((image) => image.isNew)
-  const invalidTypeImage = newImages.find((image) => image.file && !ALLOWED_IMAGE_TYPES.includes(image.file.type))
+function validateGalleryImages(files) {
+  const invalidTypeImage = files.find((file) => file && !ALLOWED_IMAGE_TYPES.includes(file.type))
 
   if (invalidTypeImage) {
     throw new Error('Only JPG, PNG and WebP images are allowed.')
   }
 
-  const oversizedImage = newImages.find((image) => image.file && image.file.size > MAX_IMAGE_SIZE_BYTES)
+  const oversizedImage = files.find((file) => file && file.size > MAX_IMAGE_SIZE_BYTES)
 
   if (oversizedImage) {
     throw new Error('One or more images are too large. Maximum size is 4 MB.')
   }
 }
 
-function removeGalleryImage(image) {
-  if (image.isNew) {
-    galleryItems.value = galleryItems.value.filter((item) => item.id !== image.id)
-    return
-  }
+async function removeGalleryImage(image) {
+  imagePendingDelete.value = image
+}
 
-  deletedGalleryIds.value = Array.from(new Set([...deletedGalleryIds.value, image.id]))
-  galleryItems.value = galleryItems.value.filter((item) => item.id !== image.id)
+async function confirmDeleteGalleryImage() {
+  const image = imagePendingDelete.value
+  if (!image) return
 
-  if (activeImage.value?.id === image.id) {
-    activeImage.value = null
+  try {
+    await deleteImage(image.id)
+
+    if (activeImage.value?.id === image.id) {
+      activeImage.value = null
+    }
+    imagePendingDelete.value = null
+    toast.show('Changes saved successfully.')
+  } catch (error) {
+    toast.showError('Failed to save changes.')
   }
 }
 
@@ -390,20 +382,6 @@ function openPreview(image) {
 
 function closePreview() {
   activeImage.value = null
-}
-
-async function resetGalleryChanges() {
-  await loadGallery()
-}
-
-async function saveGalleryWithValidation() {
-  try {
-    validateGalleryImages()
-    await saveGallery()
-    toast.show('Changes saved successfully.')
-  } catch (error) {
-    toast.showError('Failed to save changes.')
-  }
 }
 
 function addLink() {
@@ -421,14 +399,6 @@ function markDirty() {}
 
 function resetChanges() {
   loadSettings()
-}
-
-function createGalleryId() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-
-  return `gallery_${Date.now()}_${Math.random().toString(16).slice(2)}`
 }
 
 </script>
