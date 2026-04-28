@@ -122,7 +122,7 @@ const menuItems = [
 
 async function handleSignOut() {
   emit('close')
-  await auth.logout()
+  await auth.logout('admin')
   router.push('/admin/login')
 }
 </script>

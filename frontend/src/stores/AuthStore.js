@@ -2,50 +2,100 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { logout as apiLogout } from '@/api';
 
+function saveValue(key, value) {
+  if (value) localStorage.setItem(key, value);
+  else localStorage.removeItem(key);
+}
+
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref(localStorage.getItem('token') || null);
-  const user_id = ref(localStorage.getItem('user_id') || null);
-  const user_name = ref(localStorage.getItem('user_name') || null);
-  const role = ref(localStorage.getItem('role') || null);
+  const customer_token = ref(localStorage.getItem('customer_token') || null);
+  const customer_user_id = ref(localStorage.getItem('customer_user_id') || null);
+  const customer_user_name = ref(localStorage.getItem('customer_user_name') || null);
+  const customer_role = ref(localStorage.getItem('customer_role') || null);
 
-  const isLoggedIn = computed(() => !!token.value);
+  const admin_token = ref(localStorage.getItem('admin_token') || null);
+  const admin_user_id = ref(localStorage.getItem('admin_user_id') || null);
+  const admin_user_name = ref(localStorage.getItem('admin_user_name') || null);
+  const admin_role = ref(localStorage.getItem('admin_role') || null);
 
-  function setToken(newToken) {
-    token.value = newToken;
-    if (newToken) localStorage.setItem('token', newToken);
-    else localStorage.removeItem('token');
-  }
+  const employee_token = ref(localStorage.getItem('employee_token') || null);
+  const employee_user_id = ref(localStorage.getItem('employee_user_id') || null);
+  const employee_user_name = ref(localStorage.getItem('employee_user_name') || null);
+  const employee_role = ref(localStorage.getItem('employee_role') || null);
 
-  function setUser(newUserId) {
-    user_id.value = newUserId;
-    if (newUserId) localStorage.setItem('user_id', newUserId);
-    else localStorage.removeItem('user_id');
-  }
+  const sessions = {
+    customer: {
+      token: customer_token,
+      user_id: customer_user_id,
+      user_name: customer_user_name,
+      role: customer_role,
+    },
+    admin: {
+      token: admin_token,
+      user_id: admin_user_id,
+      user_name: admin_user_name,
+      role: admin_role,
+    },
+    employee: {
+      token: employee_token,
+      user_id: employee_user_id,
+      user_name: employee_user_name,
+      role: employee_role,
+    },
+  };
 
-  function setName(newUserName) {
-    user_name.value = newUserName;
-    if (newUserName) localStorage.setItem('user_name', newUserName);
-    else localStorage.removeItem('user_name');
-  }
+  const isCustomerLoggedIn = computed(() => !!customer_token.value);
+  const isAdminLoggedIn = computed(() => !!admin_token.value);
+  const isEmployeeLoggedIn = computed(() => !!employee_token.value);
 
-  function setRole(newRole) {
-    role.value = newRole;
-    if (newRole) localStorage.setItem('role', newRole);
-    else localStorage.removeItem('role');
-  }
-
-  async function logout() {
-    try {
-      await apiLogout();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setToken(null);
-      setUser(null);
-      setName(null);
-      setRole(null);
+  function setSession(type, data) {
+    const session = sessions[type]
+    if ('token' in data) {
+      session.token.value = data.token
+      saveValue(`${type}_token`, data.token)
+    }
+    if ('user_id' in data) {
+      session.user_id.value = data.user_id
+      saveValue(`${type}_user_id`, data.user_id)
+    }
+    if ('user_name' in data) {
+      session.user_name.value = data.user_name
+      saveValue(`${type}_user_name`, data.user_name)
+    }
+    if ('role' in data) {
+      session.role.value = data.role
+      saveValue(`${type}_role`, data.role)
     }
   }
 
-  return { token, user_id, user_name, role, isLoggedIn, setToken, setUser, setName, setRole, logout };
+  function clearSession(type = 'customer') {
+    setSession(type, {token: null, user_id: null, user_name: null, role: null});
+  }
+
+  async function logout(type = 'customer') {
+    await apiLogout(type).finally(() => {
+      clearSession(type);
+    });
+  }
+
+  return {
+    customer_token,
+    customer_user_id,
+    customer_user_name,
+    customer_role,
+    admin_token,
+    admin_user_id,
+    admin_user_name,
+    admin_role,
+    employee_token,
+    employee_user_id,
+    employee_user_name,
+    employee_role,
+    isCustomerLoggedIn,
+    isAdminLoggedIn,
+    isEmployeeLoggedIn,
+    setSession,
+    clearSession,
+    logout,
+  };
 });

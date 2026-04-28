@@ -32,14 +32,9 @@ const showToast = ref(false)
 const accountMenuOpen = ref(false)
 const accountMenuRef = ref(null)
 
-const isAuthenticated = computed(() => auth.isLoggedIn)
-const isBarberId = computed(() => {
-  const id = Number(auth.user_id)
-  return Number.isInteger(id) && id >= 1 && id <= 5
-})
-const isBarberUser = computed(() => ['employee', 'barber', 'admin'].includes(auth.role) || isBarberId.value)
-const accountButtonLabel = computed(() => auth.user_name || 'Account')
-const dashboardPath = computed(() => (isBarberUser.value ? '/employee/dashboard' : '/yourAppointments'))
+const isAuthenticated = computed(() => auth.isCustomerLoggedIn)
+const accountButtonLabel = computed(() => auth.customer_user_name || 'Account')
+const dashboardPath = computed(() => '/yourAppointments')
 const isDashboardActive = computed(() => route.path === dashboardPath.value)
 
 let bgcolor = ref(props.variant === 'background' ? 'bg-background' : 'bg-primary')
@@ -111,11 +106,7 @@ function toggleAccountMenu() {
 
 function goToDashboard() {
   accountMenuOpen.value = false
-  if (isBarberUser.value) {
-    router.push('/employee/dashboard')
-    return
-  }
-  router.push('/yourAppointments')
+  router.push(dashboardPath.value)
 }
 
 async function hydrateAccountInfo() {
@@ -123,10 +114,10 @@ async function hydrateAccountInfo() {
   try {
     const response = await getCurrentUser()
     if (response?.data?.name) {
-      auth.setName(response.data.name)
+      auth.setSession('customer', { user_name: response.data.name })
     }
-    if (response?.data?.role && !auth.role) {
-      auth.setRole(response.data.role)
+    if (response?.data?.role && !auth.customer_role) {
+      auth.setSession('customer', { role: response.data.role })
     }
   } catch (error) {
     console.error('Failed to hydrate account info', error)

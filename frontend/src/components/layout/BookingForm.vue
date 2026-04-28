@@ -50,11 +50,10 @@ const needsBarberRefresh = ref(false)
 
 const barberRef = ref(null)
 const dateTimeRef = ref(null)
-const noteRef = ref(null)
 const userDataRef = ref(null)
 
 const store = useAuthStore()
-const isAuthenticated = computed(() => store.isLoggedIn)
+const isAuthenticated = computed(() => store.isCustomerLoggedIn)
 const pad = (n) => n.toString().padStart(2,'0')
 const serviceIds = computed(() => selectedServices.value.map((serviceId) => Number(serviceId)))
 const guestName = computed(() => userData.value.name.trim())
@@ -68,7 +67,6 @@ const selectedServiceNames = computed(() => selectedServiceObjs.value.map((servi
 const selectedBarberObj = computed(() =>
   barbers.value.find((barber) => Number(barber.id) === Number(selectedBarber.value)),
 )
-const bookingNote = computed(() => customerNote.value.trim())
 const bookingTotalDuration = computed(() => Number(bookingSummary.value.total_duration || 0))
 const bookingTotalPrice = computed(() => Number(bookingSummary.value.total_price || 0))
 const bookableDateSet = computed(() => new Set(
@@ -290,9 +288,11 @@ watch(calendarDate, async (date) => {
 
 async function handleTimeSelection(time) {
   selectedTime.value = time
-  openSection.value = 'note'
-  await nextTick()
-  noteRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  if (!isAuthenticated.value) {
+    openSection.value = 'userdata'
+    await nextTick()
+    userDataRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 }
 
 async function loadTimeSlots() {
@@ -317,12 +317,8 @@ async function loadTimeSlots() {
 
 const isReadyForUser = () => serviceIds.value.length > 0 && selectedBarber.value && selectedTime.value && selectedDate.value
 const canSubmitBooking = computed(() => isReadyForUser() && (isAuthenticated.value || guestDetailsReady.value))
-const shouldShowBookingSummary = computed(() =>
-  isReadyForUser() && (openSection.value === 'note' || openSection.value === 'userdata')
-)
-const shouldShowConfirmButton = computed(() =>
-  isReadyForUser() && (openSection.value === 'note' || openSection.value === 'userdata')
-)
+const shouldShowBookingSummary = computed(() => isReadyForUser())
+const shouldShowConfirmButton = computed(() => isReadyForUser())
 
 function apiCollection(response) {
   return response?.data?.data || response?.data || []
@@ -552,10 +548,7 @@ const handleSubmit = async () => {
     toast.showError('Failed to book appointment.')
 
     if (err?.response?.status === 401) {
-      store.setToken(null)
-      store.setUser(null)
-      store.setName(null)
-      store.setRole(null)
+      store.clearSession('customer')
       bookingErrorMessage.value = 'Your login expired. Please log in again.'
       return
     }
@@ -785,43 +778,12 @@ watch(isAuthenticated, (loggedIn) => {
       </div>
     </AccordionItem>
 
-    <AccordionItem value="note" :disabled="!selectedTime">
-        <div ref="noteRef">
-      <Card>
-        <AccordionTrigger>
-          <div class="flex items-center gap-2">
-            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white font-semibold">4</div>
-            <div>
-              <CardTitle>Note</CardTitle>
-              <CardDescription>Optional note for the barber</CardDescription>
-            </div>
-          </div>
-        </AccordionTrigger>
-        <AccordionContent>
-          <CardContent class="space-y-3">
-            <Label class="block font-semibold">Your note</Label>
-            <textarea
-              v-model="customerNote"
-              maxlength="120"
-              rows="4"
-              placeholder="Any extra details for your appointment..."
-              class="w-full resize-none border border-border rounded-md p-3 bg-background text-foreground"
-            />
-            <p class="text-xs text-muted-foreground">
-              {{ customerNote.length }}/120
-            </p>
-          </CardContent>
-        </AccordionContent>
-      </Card>
-      </div>
-    </AccordionItem>
-
     <AccordionItem value="userdata" :disabled="!selectedTime" v-if="!isAuthenticated">
         <div ref="userDataRef">
       <Card>
         <AccordionTrigger>
           <div class="flex items-center gap-2">
-            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white font-semibold">5</div>
+            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white font-semibold">4</div>
             <div>
               <CardTitle>Your Details</CardTitle>
               <CardDescription>Enter your information to complete the booking</CardDescription>
@@ -871,10 +833,6 @@ watch(isAuthenticated, (loggedIn) => {
         <p class="text-muted-foreground">Time:</p>
         <p class="font-semibold">{{ selectedTime }}</p>
       </div>
-      <div v-if="bookingNote" class="flex items-start justify-between gap-4">
-        <p class="text-muted-foreground">Note:</p>
-        <p class="max-w-[70%] min-w-0 font-semibold text-right whitespace-pre-wrap break-all">{{ bookingNote }}</p>
-      </div>
       <div class="flex justify-between">
         <p class="text-muted-foreground">Total duration:</p>
         <p v-if="bookingSummaryLoaded" class="font-semibold">{{ bookingTotalDuration }} min</p>
@@ -884,6 +842,19 @@ watch(isAuthenticated, (loggedIn) => {
         <p class="text-muted-foreground">Total:</p>
         <p v-if="bookingSummaryLoaded" class="font-semibold">${{ bookingTotalPrice }}</p>
         <p v-else class="font-semibold text-muted-foreground">Calculating...</p>
+      </div>
+      <div class="mt-4 border-t border-border pt-4">
+        <Label class="block font-semibold">Note</Label>
+        <textarea
+          v-model="customerNote"
+          maxlength="120"
+          rows="4"
+          placeholder="Any extra details for your appointment..."
+          class="mt-2 w-full resize-none rounded-md border border-border bg-background p-3 text-foreground"
+        />
+        <p class="mt-1 text-xs text-muted-foreground">
+          {{ customerNote.length }}/120
+        </p>
       </div>
     </CardContent>
   </Card>

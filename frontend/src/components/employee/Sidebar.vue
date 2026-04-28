@@ -90,7 +90,7 @@ function handleSelect(routePath) {
 
 async function handleSignOut() {
   emit('close')
-  await auth.logout()
+  await auth.logout('employee')
   router.push('/employee/login')
 }
 </script>

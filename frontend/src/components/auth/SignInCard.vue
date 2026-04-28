@@ -24,10 +24,11 @@ async function submitHandler() {
   loading.value = true
   try {
     const response = await login(data.value)
-
-    store.setToken(response.token)
-    store.setUser(response.user.id)
-    store.setRole(response.user.role)
+    store.setSession('customer', {
+      token: response.token,
+      user_id: response.user.id,
+      role: response.user.role,
+    })
 
     emit('success', 'Successfully signed in')
     emit('close')

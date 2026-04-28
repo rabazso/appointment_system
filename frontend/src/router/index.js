@@ -95,12 +95,17 @@ const routes = [
     name: 'YourAppointments',
     component: YourAppointments,
     meta: {
-      title: 'YourAppointments'
+      title: 'YourAppointments',
+      requiresCustomer: true,
     }
   },
   {
     path: '/employee',
-    redirect: '/employee/appointments',
+    redirect: '/employee/login',
+  },
+  {
+    path: '/admin',
+    redirect: '/admin/login',
   },
   {
     path: '/employee/appointments',
@@ -261,24 +266,31 @@ export const router = createRouter({
   }
 })
 
+const getAuthToken = (type) => localStorage.getItem(`${type}_token`)
+
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
-  const role = localStorage.getItem('role')
+  const customerToken = getAuthToken('customer')
+  const adminToken = getAuthToken('admin')
+  const employeeToken = getAuthToken('employee')
+  const requiresCustomer = to.matched.some((route) => route.meta?.requiresCustomer)
   const requiresEmployee = to.matched.some((route) => route.meta?.requiresEmployee)
   const requiresAdmin = to.matched.some((route) => route.meta?.requiresAdmin)
 
+  if (requiresCustomer && !customerToken) {
+    next('/')
+    return
+  }
+
   if (requiresEmployee) {
-    const canAccessEmployee = Boolean(token) && role === 'employee'
-    if (!canAccessEmployee) {
-      next(token ? '/' : '/employee/login')
+    if (!employeeToken) {
+      next('/employee/login')
       return
     }
   }
 
   if (requiresAdmin) {
-    const canAccessAdmin = Boolean(token) && role === 'admin'
-    if (!canAccessAdmin) {
-      next(token ? '/' : '/admin/login')
+    if (!adminToken) {
+      next('/admin/login')
       return
     }
   }

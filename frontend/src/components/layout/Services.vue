@@ -19,7 +19,7 @@ const loginOpen = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 
-const isLoggedIn = computed(() => auth.isLoggedIn)
+const isLoggedIn = computed(() => auth.isCustomerLoggedIn)
 
 onMounted(async () => {
   try {

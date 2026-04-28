@@ -23,7 +23,7 @@ const loginOpen = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 
-const isLoggedIn = computed(() => authStore.isLoggedIn)
+const isLoggedIn = computed(() => authStore.isCustomerLoggedIn)
 
 function onImageError(event) {
   event.target.src = '/images/barber_placeholder.png'
