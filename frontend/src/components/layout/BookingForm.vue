@@ -255,11 +255,6 @@ watch(selectedBarber, async (barberId) => {
 
   await loadTimeSlots()
 
-  const todayIso = dateToString(todayDate)
-  if (firstBookableDay && firstBookableDay.date !== todayIso && timeSlots.value.length > 0) {
-    selectedTime.value = timeSlots.value[0]
-  }
-
   openSection.value = 'datetime'
   await nextTick()
   dateTimeRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
