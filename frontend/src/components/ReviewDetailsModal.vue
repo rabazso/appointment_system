@@ -24,6 +24,7 @@
 
         <div class="flex shrink-0 items-start gap-2">
           <button
+            v-if="showVisibilityToggle"
             type="button"
             class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-slate-700 transition hover:border-black"
             :aria-label="review.is_visible ? 'Make review hidden' : 'Make review visible'"
@@ -83,6 +84,10 @@ defineProps({
   formatReviewDate: {
     type: Function,
     required: true,
+  },
+  showVisibilityToggle: {
+    type: Boolean,
+    default: true,
   },
 })
 
