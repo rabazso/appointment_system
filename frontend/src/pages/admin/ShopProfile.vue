@@ -27,125 +27,127 @@
       <div class="flex min-h-0 flex-1 flex-col gap-4 xl:grid xl:grid-cols-2 xl:overflow-hidden">
         <section
           :class="[viewMode === 'contact' ? 'flex' : 'hidden', 'xl:flex']"
-          class="min-h-0 flex-1 flex-col rounded-2xl bg-white p-6 shadow-sm"
+          class="min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-sm"
         >
-          <div class="mb-6 flex items-start justify-between gap-4">
-            <div>
-              <h2 class="text-2xl font-semibold text-black">Contact</h2>
-              <p class="mt-1 text-sm text-slate-500">These details appear across your public shop profile.</p>
-            </div>
-          </div>
-
-          <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-            <div class="min-w-0 space-y-2">
-              <label class="text-sm font-semibold text-slate-900">Phone</label>
-              <div
-                class="rounded-xl border bg-white px-4 py-3 transition"
-                :class="fieldErrors.phone ? 'border-rose-500 focus-within:border-rose-500' : 'border-black/10 focus-within:border-black'"
-              >
-                <input
-                  v-model="form.phone"
-                  type="text"
-                  placeholder="+36 ..."
-                  class="w-full bg-transparent text-sm outline-none"
-                  @input="handleFieldInput('phone')"
-                />
+          <div class="min-h-0 flex-1 overflow-y-auto pr-1">
+            <div class="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <h2 class="text-2xl font-semibold text-black">Contact</h2>
+                <p class="mt-1 text-sm text-slate-500">These details appear across your public shop profile.</p>
               </div>
-              <p v-if="fieldErrors.phone" class="text-xs text-rose-600">{{ fieldErrors.phone }}</p>
             </div>
 
-            <div class="min-w-0 space-y-2">
-              <label class="text-sm font-semibold text-slate-900">Email</label>
-              <div
-                class="rounded-xl border bg-white px-4 py-3 transition"
-                :class="fieldErrors.email ? 'border-rose-500 focus-within:border-rose-500' : 'border-black/10 focus-within:border-black'"
-              >
-                <input
-                  v-model="form.email"
-                  type="email"
-                  placeholder="hello@shop.com"
-                  class="w-full bg-transparent text-sm outline-none"
-                  @input="handleFieldInput('email')"
-                />
-              </div>
-              <p v-if="fieldErrors.email" class="text-xs text-rose-600">{{ fieldErrors.email }}</p>
-            </div>
-
-            <div class="space-y-2 md:col-span-2">
-              <label class="text-sm font-semibold text-slate-900">Address</label>
-              <div
-                class="rounded-xl border bg-white px-4 py-3 transition"
-                :class="fieldErrors.address ? 'border-rose-500 focus-within:border-rose-500' : 'border-black/10 focus-within:border-black'"
-              >
-                <input
-                  v-model="form.address"
-                  type="text"
-                  placeholder="Street, city"
-                  class="w-full bg-transparent text-sm outline-none"
-                  @input="handleFieldInput('address')"
-                />
-              </div>
-              <p v-if="fieldErrors.address" class="text-xs text-rose-600">{{ fieldErrors.address }}</p>
-            </div>
-          </div>
-
-          <section class="mt-6 flex min-h-0 flex-1 flex-col">
-            <div class="flex items-center justify-between gap-3">
-              <h3 class="text-sm font-semibold">Links: </h3>
-              <button
-                type="button"
-                class="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                @click="addLink"
-              >
-                + Add
-              </button>
-            </div>
-
-            <div class="mt-4 min-h-0 flex-1 space-y-3 overflow-auto pr-1">
-              <p v-if="form.links.length === 0" class="text-sm text-center text-slate-500">
-                No links added.
-              </p>
-
-              <div
-                v-for="(link, index) in form.links"
-                :key="index"
-                class="grid gap-3 md:grid-cols-[10rem_minmax(0,1fr)_auto]"
-              >
-                <div class="min-w-0">
+            <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+              <div class="min-w-0 space-y-2">
+                <label class="text-sm font-semibold text-slate-900">Phone</label>
+                <div
+                  class="rounded-xl border bg-white px-4 py-3 transition"
+                  :class="fieldErrors.phone ? 'border-rose-500 focus-within:border-rose-500' : 'border-black/10 focus-within:border-black'"
+                >
                   <input
-                    v-model="link.label"
+                    v-model="form.phone"
                     type="text"
-                    placeholder="Instagram"
-                    class="w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-                    :class="linkErrorByIndex(index)?.label ? 'border-rose-500' : 'border-black/10'"
-                    @input="handleLinkInput(index, 'label')"
+                    placeholder="+36 ..."
+                    class="w-full bg-transparent text-sm outline-none"
+                    @input="handleFieldInput('phone')"
                   />
-                  <p v-if="linkErrorByIndex(index)?.label" class="mt-1 text-xs text-rose-600">{{ linkErrorByIndex(index)?.label }}</p>
                 </div>
-                <div class="min-w-0">
+                <p v-if="fieldErrors.phone" class="text-xs text-rose-600">{{ fieldErrors.phone }}</p>
+              </div>
+
+              <div class="min-w-0 space-y-2">
+                <label class="text-sm font-semibold text-slate-900">Email</label>
+                <div
+                  class="rounded-xl border bg-white px-4 py-3 transition"
+                  :class="fieldErrors.email ? 'border-rose-500 focus-within:border-rose-500' : 'border-black/10 focus-within:border-black'"
+                >
                   <input
-                    v-model="link.url"
-                    type="url"
-                    placeholder="https://..."
-                    class="w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-                    :class="linkErrorByIndex(index)?.url ? 'border-rose-500' : 'border-black/10'"
-                    @input="handleLinkInput(index, 'url')"
+                    v-model="form.email"
+                    type="email"
+                    placeholder="hello@shop.com"
+                    class="w-full bg-transparent text-sm outline-none"
+                    @input="handleFieldInput('email')"
                   />
-                  <p v-if="linkErrorByIndex(index)?.url" class="mt-1 text-xs text-rose-600">{{ linkErrorByIndex(index)?.url }}</p>
                 </div>
-                <div class="flex items-center">
-                  <button
-                    type="button"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 text-gray-500 transition hover:border-black"
-                    @click="removeLink(index)"
-                    aria-label="Remove link"
-                  >
-                    <Trash class="size-4" />
-                  </button>
+                <p v-if="fieldErrors.email" class="text-xs text-rose-600">{{ fieldErrors.email }}</p>
+              </div>
+
+              <div class="space-y-2 md:col-span-2">
+                <label class="text-sm font-semibold text-slate-900">Address</label>
+                <div
+                  class="rounded-xl border bg-white px-4 py-3 transition"
+                  :class="fieldErrors.address ? 'border-rose-500 focus-within:border-rose-500' : 'border-black/10 focus-within:border-black'"
+                >
+                  <input
+                    v-model="form.address"
+                    type="text"
+                    placeholder="Street, city"
+                    class="w-full bg-transparent text-sm outline-none"
+                    @input="handleFieldInput('address')"
+                  />
                 </div>
+                <p v-if="fieldErrors.address" class="text-xs text-rose-600">{{ fieldErrors.address }}</p>
               </div>
             </div>
-          </section>
+
+            <section class="mt-6 flex min-h-0 flex-1 flex-col">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="text-sm font-semibold">Links: </h3>
+                <button
+                  type="button"
+                  class="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  @click="addLink"
+                >
+                  + Add
+                </button>
+              </div>
+
+              <div class="mt-4 min-h-0 flex-1 space-y-3 overflow-auto pr-1">
+                <p v-if="form.links.length === 0" class="text-sm text-center text-slate-500">
+                  No links added.
+                </p>
+
+                <div
+                  v-for="(link, index) in form.links"
+                  :key="index"
+                  class="grid gap-3 md:grid-cols-[10rem_minmax(0,1fr)_auto]"
+                >
+                  <div class="min-w-0">
+                    <input
+                      v-model="link.label"
+                      type="text"
+                      placeholder="Instagram"
+                      class="w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+                      :class="linkErrorByIndex(index)?.label ? 'border-rose-500' : 'border-black/10'"
+                      @input="handleLinkInput(index, 'label')"
+                    />
+                    <p v-if="linkErrorByIndex(index)?.label" class="mt-1 text-xs text-rose-600">{{ linkErrorByIndex(index)?.label }}</p>
+                  </div>
+                  <div class="min-w-0">
+                    <input
+                      v-model="link.url"
+                      type="url"
+                      placeholder="https://..."
+                      class="w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+                      :class="linkErrorByIndex(index)?.url ? 'border-rose-500' : 'border-black/10'"
+                      @input="handleLinkInput(index, 'url')"
+                    />
+                    <p v-if="linkErrorByIndex(index)?.url" class="mt-1 text-xs text-rose-600">{{ linkErrorByIndex(index)?.url }}</p>
+                  </div>
+                  <div class="flex items-center">
+                    <button
+                      type="button"
+                      class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 text-gray-500 transition hover:border-black"
+                      @click="removeLink(index)"
+                      aria-label="Remove link"
+                    >
+                      <Trash class="size-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
 
           <div v-if="isDirty" class="mt-4 shrink-0 -mx-6 -mb-6 rounded-b-2xl border-t border-black/10 bg-white px-6 py-4">
             <div class="flex justify-end gap-3">
@@ -173,7 +175,7 @@
 
         <section
           :class="[viewMode === 'gallery' ? 'flex' : 'hidden', 'xl:flex']"
-          class="min-h-0 flex-1 flex-col rounded-2xl bg-white p-6 shadow-sm"
+          class="min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl bg-white p-6 shadow-sm"
         >
           <ImageGalleryManager
             :images="galleryItems"
