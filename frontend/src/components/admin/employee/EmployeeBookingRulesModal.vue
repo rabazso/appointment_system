@@ -26,56 +26,28 @@
       @create="openCreate"
     >
       <template #card="{ version, index }">
-        <article class="rounded-xl border border-slate-200 bg-white p-4">
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0 flex-1 space-y-4">
-              <div class="grid gap-2 sm:grid-cols-2">
-                <div class="rounded-lg bg-slate-50 px-3 py-2">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Slot interval</p>
-                  <p class="mt-1 text-base font-semibold text-slate-900">
-                    {{ version.booking_interval_minutes }} min
-                  </p>
-                </div>
-
-                <div class="rounded-lg bg-slate-50 px-3 py-2">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Booking window</p>
-                  <p class="mt-1 text-base font-semibold text-slate-900">
-                    {{ version.booking_window_days }} days
-                  </p>
-                </div>
-              </div>
-
-              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-700">
-                <span class="text-slate-900">
-                  <span class="font-medium">{{ index === 0 ? 'Valid since:' : 'Valid from:' }}</span>
-                  {{ version.valid_from }}
-                </span>
-                <span v-if="version.valid_to">
-                  <span class="font-medium">{{ index === 0 ? 'Valid until:' : 'Valid to:' }}</span>
-                  {{ version.valid_to }}
-                </span>
-              </div>
+        <VersionCard
+          :valid-from="version.valid_from"
+          :valid-to="version.valid_to"
+          :index="index"
+          @view="openEdit(version)"
+          @edit="openEdit(version)"
+          @delete="deleteSelectedBookingRules(version)"
+        >
+          <div class="gap-1 flex flex-row flex-wrap">
+            <div class="">
+              <p class="mx-auto text-base font-semibold text-slate-800">
+                Booking slot interval: <span class="">{{ version.booking_interval_minutes }} min</span>
+              </p>
             </div>
 
-            <div class="flex shrink-0 gap-2">
-              <button
-                type="button"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-gray-500 transition hover:bg-slate-50"
-                @click="openEdit(version)"
-              >
-                <Pencil class="h-4 w-4" />
-              </button>
-              <button
-                v-if="index !== 0"
-                type="button"
-                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-gray-500 transition hover:bg-slate-50"
-                @click="deleteSelectedBookingRules(version)"
-              >
-                <Trash class="h-4 w-4" />
-              </button>
+            <div class="">
+              <p class="mx-auto text-base font-semibold text-slate-800">
+                Booking window: <span class="">{{ version.booking_window_days }} days</span>
+              </p>
             </div>
           </div>
-        </article>
+        </VersionCard>
       </template>
     </VersionsView>
   </ModalShell>
@@ -83,7 +55,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { Pencil, Trash } from 'lucide-vue-next'
+import VersionCard from '@/components/admin/VersionCard.vue'
 import VersionsView from '@/components/admin/VersionsView.vue'
 import { useEmployeeBookingRuleConfigurations } from '@/composables/useEmployeeBookingRuleConfigurations'
 import ModalHeader from '@/components/admin/ModalHeader.vue'

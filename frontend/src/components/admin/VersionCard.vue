@@ -8,13 +8,13 @@
         <slot>
         </slot>
 
-        <div class="mb-3 flex flex-wrap items-center gap-2">
+        <div class="mt-3 flex flex-col items-start">
           <span
-            class="rounded-full px-2.5 py-1 text-xs font-semibold"
+            class="text-sm font-semibold p-1"
           >
             {{ current ? 'valid since: ' : 'valid from: ' }}{{validFrom}}
           </span>
-          <span v-if="validTo" class="text-sm text-slate-500">
+          <span v-if="validTo" class="text-sm font-semibold p-1 ">
             {{ current ? 'valid until: ' : 'valid to: ' }}{{validTo}}
           </span>
         </div>
