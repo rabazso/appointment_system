@@ -20,24 +20,13 @@ export function useTimeOff() {
   async function fetchTimeOffRequests(month) {
     const response = await getEmployeeTimeOffRequestsByMonth(month)
 
-    return mapTimeOffRequests(response.data.data)
+    return response.data.data
   }
 
   async function fetchPendingTimeOffRequests() {
     const response = await getEmployeeTimeOffRequests({ status: 'pending' })
 
-    return mapTimeOffRequests(response.data.data)
-  }
-
-  function mapTimeOffRequests(timeOffRequests) {
-    return timeOffRequests.map((timeOff) => ({
-      id: timeOff.id,
-      employeeId: timeOff.employee_id,
-      employee: timeOff.employee_name,
-      date: timeOff.date,
-      status: timeOff.status,
-      note: timeOff.note ?? '',
-    }))
+    return response.data.data
   }
 
   async function saveTimeOffRequests(timeOff) {
@@ -55,6 +44,33 @@ export function useTimeOff() {
 
   async function updateTimeOffStatus(id, status, note) {
     await patchEmployeeTimeOffRequest(id, {status, note,})
+  }
+
+  async function checkTimeOffConflicts(timeOff) {
+    const employees = [...new Set((timeOff.employees || []).map((value) => String(value)).filter(Boolean))]
+    const days = [...new Set((timeOff.days || []).filter(Boolean))]
+    const blockingStatuses = new Set(['pending', 'approved', 'rejected'])
+
+    const pairs = employees.flatMap((employeeId) => days.map((date) => ({ employeeId, date })))
+    const checks = await Promise.all(
+      pairs.map(async ({ employeeId, date }) => {
+        const response = await getEmployeeTimeOffRequests({
+          employee_id: employeeId,
+          date,
+        })
+
+        const requests = response.data.data || []
+        const hasConflict = requests.some((request) => blockingStatuses.has(request.status))
+
+        return {
+          employee_id: employeeId,
+          date,
+          hasConflict,
+        }
+      }),
+    )
+
+    return checks.filter((result) => result.hasConflict)
   }
 
   function parseMonthQuery(value) {
@@ -114,6 +130,7 @@ export function useTimeOff() {
     fetchPendingTimeOffRequests,
     fetchTimeOffRequests,
     saveTimeOffRequests,
+    checkTimeOffConflicts,
     syncFiltersFromQuery,
     updateTimeOffStatus,
   }

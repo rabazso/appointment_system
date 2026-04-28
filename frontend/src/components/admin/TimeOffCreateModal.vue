@@ -16,11 +16,14 @@
             <div
               v-for="(_, index) in form.employees"
               :key="`time-off-employee-${index}`"
-              class="grid items-center gap-2"
+              class="grid items-center gap-1"
               :class="{ '[grid-template-columns:minmax(0,1fr)_30px]': form.employees.length > 1 }"
             >
               <Select v-model="form.employees[index]">
-                <SelectTrigger>
+                <SelectTrigger
+                  class="w-full"
+                  :class="conflictEmployeeSet.has(String(form.employees[index] || '')) ? 'border-rose-500 ring-1 ring-rose-500' : ''"
+                >
                   <SelectValue placeholder="Select employee" />
                 </SelectTrigger>
                 <SelectContent>
@@ -39,6 +42,12 @@
               >
                 x
               </button>
+              <p
+                v-if="conflictMessagesByEmployee[String(form.employees[index] || '')]"
+                class="col-span-full whitespace-pre-line break-words text-xs leading-snug text-rose-500"
+              >
+                {{ conflictMessagesByEmployee[String(form.employees[index] || '')] }}
+              </p>
             </div>
 
             <div class="flex justify-end">
@@ -163,6 +172,14 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  conflictEmployeeIds: {
+    type: Array,
+    default: () => [],
+  },
+  conflictMessagesByEmployee: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
 const emit = defineEmits(['close', 'save'])
@@ -176,6 +193,7 @@ const openDayPickerIndex = ref(null)
 
 const filledDays = computed(() => form.days.filter(Boolean))
 const filledEmployees = computed(() => form.employees.filter(Boolean))
+const conflictEmployeeSet = computed(() => new Set((props.conflictEmployeeIds || []).map((id) => String(id))))
 const noteError = computed(() => {
   if (!submitted.value) {
     return ''

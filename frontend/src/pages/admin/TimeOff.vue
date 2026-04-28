@@ -119,11 +119,11 @@
               :key="request.id"
               class="flex min-h-48 flex-col rounded-3xl border border-black/10 bg-white p-4 shadow-sm"
             >
-              <p class="min-h-6 truncate font-semibold">{{ request.employee }}</p>
+              <p class="min-h-6 truncate font-semibold">{{ request.employee_name }}</p>
               <p class="mt-1 min-h-5 text-sm font-semibold">
                 {{ request.date }}
               </p>
-              <p class="mt-3 line-clamp-2 min-h-[2lh] text-sm leading-5">{{ request.note }}</p>
+              <p class="mt-3 line-clamp-2 min-h-[2lh] text-sm leading-5">{{ request.note ?? '' }}</p>
 
               <div class="mt-auto flex gap-3 pt-4">
                 <button
@@ -166,6 +166,8 @@
     v-if="showTimeOffCreateModal"
     :initial-date="selectedDate"
     :employees="employeeOptions"
+    :conflict-employee-ids="conflictEmployeeIds"
+    :conflict-messages-by-employee="timeOffValidationErrorsByEmployee"
     @close="closeTimeOffModals"
     @save="saveTimeOff"
   />
@@ -207,10 +209,13 @@ const showTimeOffDayModal = ref(false)
 const showTimeOffCreateModal = ref(false)
 const selectedTimeOffs = ref([])
 const selectedDate = ref('')
+const conflictEmployeeIds = ref([])
+const timeOffValidationErrorsByEmployee = ref({})
 const todayISO = toISO(new Date())
 const toast = useToastStore()
 const {
   buildQueryFromFilters,
+  checkTimeOffConflicts,
   fetchEmployees,
   fetchPendingTimeOffRequests,
   fetchTimeOffRequests,
@@ -247,7 +252,7 @@ const calendarFilterEmployeeSelect = computed({
 const calendarRequests = computed(() => {
   return calendarTimeOffs.value.filter((request) => {
     const statusMatch = calendarFilterStatus.value === '' || request.status === calendarFilterStatus.value
-    const employeeMatch = calendarFilterEmployee.value === '' || request.employee === calendarFilterEmployee.value
+    const employeeMatch = calendarFilterEmployee.value === '' || request.employee_name === calendarFilterEmployee.value
     return statusMatch && employeeMatch
   })
 })
@@ -317,6 +322,8 @@ function goNextMonth() {
 function openAddTimeOffModal() {
   selectedTimeOffs.value = []
   selectedDate.value = todayISO
+  conflictEmployeeIds.value = []
+  timeOffValidationErrorsByEmployee.value = {}
   showTimeOffDayModal.value = false
   showTimeOffCreateModal.value = true
 }
@@ -343,6 +350,8 @@ function openTimeOffModalForDate(dateISO) {
 }
 
 function openCreateTimeOffForDate() {
+  conflictEmployeeIds.value = []
+  timeOffValidationErrorsByEmployee.value = {}
   showTimeOffDayModal.value = false
   showTimeOffCreateModal.value = true
 }
@@ -352,10 +361,41 @@ function closeTimeOffModals() {
   showTimeOffCreateModal.value = false
   selectedTimeOffs.value = []
   selectedDate.value = ''
+  conflictEmployeeIds.value = []
+  timeOffValidationErrorsByEmployee.value = {}
 }
 
 async function saveTimeOff(timeOff) {
   try {
+    conflictEmployeeIds.value = []
+    timeOffValidationErrorsByEmployee.value = {}
+
+    const conflicts = await checkTimeOffConflicts(timeOff)
+
+    if (conflicts.length > 0) {
+      const uniqueEmployeeIds = [...new Set(conflicts.map((conflict) => String(conflict.employee_id)))]
+      conflictEmployeeIds.value = uniqueEmployeeIds
+      const grouped = conflicts.reduce((accumulator, conflict) => {
+        const employeeId = String(conflict.employee_id)
+        if (!accumulator[employeeId]) {
+          accumulator[employeeId] = new Set()
+        }
+        accumulator[employeeId].add(conflict.date)
+        return accumulator
+      }, {})
+
+      const messages = {}
+      for (const [employeeId, datesSet] of Object.entries(grouped)) {
+        const dates = [...datesSet].sort()
+        messages[employeeId] = dates
+          .map((date) => `This employee already has a request on ${date}.`)
+          .join('\n')
+      }
+
+      timeOffValidationErrorsByEmployee.value = messages
+      return
+    }
+
     await saveTimeOffRequests(timeOff)
     await loadTimeOffRequests()
     await loadPendingRequests()

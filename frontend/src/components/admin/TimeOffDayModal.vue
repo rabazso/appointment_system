@@ -28,8 +28,8 @@
             @click="toggleExpandableItem(item)"
           >
             <div class="min-w-0">
-              <p class="truncate font-semibold">{{ item.name || item.employee }}</p>
-              <p v-if="item.name" class="truncate text-gray-500">{{ item.employee }}</p>
+              <p class="truncate font-semibold">{{ item.name || item.employee_name }}</p>
+              <p v-if="item.name" class="truncate text-gray-500">{{ item.employee_name }}</p>
               <p v-if="item.note" class="mt-1 line-clamp-2 min-h-[2lh] text-sm">{{ item.note }}</p>
             </div>
 
