@@ -21,7 +21,7 @@
     />
 
     <VersionsView
-      :versions="resolvedVersions"
+      :versions="availability"
       create-label="Availability change"
       @create="openCreate"
     >
@@ -73,14 +73,6 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  versions: {
-    type: Array,
-    default: null,
-  },
-  refreshSection: {
-    type: Function,
-    default: null,
-  },
 })
 
 const {
@@ -97,12 +89,9 @@ const affectedPreview = ref(null)
 const pendingPayload = ref(null)
 const toast = useToastStore()
 
-const resolvedVersions = computed(() => props.versions ?? availability.value)
-const createValidFromPolicy = computed(() => getCreateValidFromPolicy(resolvedVersions.value))
+const createValidFromPolicy = computed(() => getCreateValidFromPolicy(availability.value))
 
 onMounted(async () => {
-  if (props.versions !== null) return
-
   try {
     await fetchAvailability()
   } catch (error) {
@@ -154,10 +143,6 @@ async function persistAvailability(payload, cancellations = {}) {
     await createAvailability(payload)
   }
 
-  if (props.refreshSection) {
-    await props.refreshSection()
-  }
-
   await cancelPendingAppointments(cancellations)
   closeAffectedPreview()
   closeEditor()
@@ -182,9 +167,6 @@ function closeAffectedPreview() {
 async function deleteSelectedAvailability(availabilityVersion) {
   try {
     await deleteAvailability(availabilityVersion.id)
-    if (props.refreshSection) {
-      await props.refreshSection()
-    }
     toast.show('Changes saved successfully.')
   } catch (error) {
     toast.showError('Failed to save changes.')

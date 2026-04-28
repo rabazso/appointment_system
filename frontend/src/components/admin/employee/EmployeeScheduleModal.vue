@@ -30,7 +30,7 @@
     />
 
     <VersionsView
-      :versions="resolvedVersions"
+      :versions="schedules"
       create-label="Schedule change"
       @create="openCreate"
     >
@@ -78,14 +78,6 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  versions: {
-    type: Array,
-    default: null,
-  },
-  refreshSection: {
-    type: Function,
-    default: null,
-  },
 })
 
 const {
@@ -108,12 +100,9 @@ const activeTitle = computed(() => {
 const activeDescription = computed(() => {
   return 'Review schedule changes and working hours.'
 })
-const resolvedVersions = computed(() => props.versions ?? schedules.value)
-const createValidFromPolicy = computed(() => getCreateValidFromPolicy(resolvedVersions.value))
+const createValidFromPolicy = computed(() => getCreateValidFromPolicy(schedules.value))
 
 onMounted(async () => {
-  if (props.versions !== null) return
-
   try {
     await fetchSchedules()
   } catch (error) {
@@ -134,9 +123,6 @@ function closeView() {
 async function deleteSelectedSchedule(schedule) {
   try {
     await deleteSchedule(schedule.id)
-    if (props.refreshSection) {
-      await props.refreshSection()
-    }
     closeView()
     toast.show('Changes saved successfully.')
   } catch (error) {
@@ -186,10 +172,6 @@ async function persistSchedule(payload, cancellations = {}) {
     await saveExistingSchedule(selectedSchedule.value.id, payload)
   } else {
     await createSchedule(payload)
-  }
-
-  if (props.refreshSection) {
-    await props.refreshSection()
   }
 
   await cancelPendingAppointments(cancellations)
