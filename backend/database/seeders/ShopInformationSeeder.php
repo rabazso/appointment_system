@@ -13,7 +13,20 @@ class ShopInformationSeeder extends Seeder
             'email' => 'hello@barbershop.test',
             'phone' => '+36 30 123 4567',
             'address' => 'Budapest, Example Street 12.',
-            'links' => [],
+            'links' => [
+                [
+                    'label' => 'Instagram',
+                    'url' => 'https://instagram.com/examplebarbershop',
+                ],
+                [
+                    'label' => 'Facebook',
+                    'url' => 'https://facebook.com/examplebarbershop',
+                ],
+                [
+                    'label' => 'TikTok',
+                    'url' => 'https://tiktok.com/@examplebarbershop',
+                ],
+            ],
         ]);
     }
 }

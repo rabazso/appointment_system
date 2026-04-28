@@ -12,7 +12,8 @@ class ReviewSeeder extends Seeder
     {
         $appointments = Appointment::query()
             ->where('status', 'completed')
-            ->take(5)
+            ->inRandomOrder()
+            ->take(25)
             ->get();
 
         $comments = [
@@ -21,17 +22,24 @@ class ReviewSeeder extends Seeder
             ['rating' => 5, 'comment' => 'Precise work and a great atmosphere.'],
             ['rating' => 4, 'comment' => 'Quick and clean haircut.'],
             ['rating' => 3, 'comment' => 'It was okay.'],
+            ['rating' => 5, 'comment' => 'The fade was exactly what I asked for.'],
+            ['rating' => 5, 'comment' => 'Great attention to detail and a relaxed visit.'],
+            ['rating' => 4, 'comment' => 'Nice cut and helpful styling advice.'],
+            ['rating' => 2, 'comment' => 'The appointment started later than expected.'],
+            ['rating' => 5, 'comment' => 'Best beard trim I have had in a while.'],
+            ['rating' => 4, 'comment' => 'Good result and the booking was easy.'],
+            ['rating' => 3, 'comment' => 'Solid haircut, but the finish could be cleaner.'],
         ];
 
         foreach ($appointments as $index => $appointment) {
-            $reviewData = $comments[array_rand($comments)];
+            $reviewData = $comments[$index % count($comments)];
 
             Review::create([
                 'appointment_id' => $appointment->id,
                 'customer_id' => $appointment->customer_id,
                 'rating' => $reviewData['rating'],
                 'comment' => $reviewData['comment'],
-                'is_visible' => true,
+                'is_visible' => $index % 7 !== 0,
             ]);
         }
     }

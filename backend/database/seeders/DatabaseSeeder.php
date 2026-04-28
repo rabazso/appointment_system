@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             ShopOpeningHourSeeder::class,
             ShopSpecialDaySeeder::class,
             ShopInformationSeeder::class,
+            ShopImageSeeder::class,
             AppointmentSeeder::class,
             ReviewSeeder::class,
             UserSeeder::class,
