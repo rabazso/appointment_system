@@ -61,7 +61,7 @@
             <div class="ml-auto flex flex-wrap items-end justify-end gap-2">
               <div class="relative">
                 <Select v-model="calendarFilterStatusSelect">
-                  <SelectTrigger class="min-h-11 rounded-2xl border-black/10 bg-white px-4 font-medium shadow-sm">
+                  <SelectTrigger>
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -76,7 +76,7 @@
 
               <div class="relative">
                 <Select v-model="calendarFilterEmployeeSelect">
-                  <SelectTrigger class="min-h-11 rounded-2xl border-black/10 bg-white px-4 font-medium shadow-sm">
+                  <SelectTrigger>
                     <SelectValue placeholder="All employees" />
                   </SelectTrigger>
                   <SelectContent>
@@ -174,6 +174,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { useRoute, useRouter } from 'vue-router'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
@@ -193,6 +194,9 @@ import { useToastStore } from '@/stores/ToastStore.js'
 const sidebarOpen = ref(false)
 const ALL_SELECT_VALUE = '__all__'
 const viewMode = ref('calendar')
+const route = useRoute()
+const router = useRouter()
+const syncingFromRoute = ref(false)
 const displayMonth = ref(new Date())
 const calendarFilterStatus = ref('')
 const calendarFilterEmployee = ref('')
@@ -206,10 +210,12 @@ const selectedDate = ref('')
 const todayISO = toISO(new Date())
 const toast = useToastStore()
 const {
+  buildQueryFromFilters,
   fetchEmployees,
   fetchPendingTimeOffRequests,
   fetchTimeOffRequests,
   saveTimeOffRequests,
+  syncFiltersFromQuery,
   updateTimeOffStatus,
 } = useTimeOff()
 
@@ -291,6 +297,13 @@ function getCalendarStatusDotClass(status) {
   if (status === 'rejected') return 'bg-rose-500'
   if (status === 'cancelled') return 'border border-black-500 bg-transparent'
   return 'bg-black'
+}
+
+function syncStateFromQuery(query) {
+  const nextState = syncFiltersFromQuery(query, new Date())
+  displayMonth.value = nextState.displayMonth
+  calendarFilterStatus.value = nextState.status
+  calendarFilterEmployee.value = nextState.employee
 }
 
 function goPrevMonth() {
@@ -395,11 +408,36 @@ async function loadPendingRequests() {
   }
 }
 
-watch(monthLabel, loadTimeOffRequests)
+watch(
+  () => route.query,
+  (query) => {
+    syncingFromRoute.value = true
+    syncStateFromQuery(query)
+    syncingFromRoute.value = false
+    loadTimeOffRequests()
+  },
+  { immediate: true },
+)
+
+watch(
+  [displayMonth, calendarFilterStatus, calendarFilterEmployee],
+  () => {
+    if (syncingFromRoute.value) return
+    router.replace({
+      query: buildQueryFromFilters(
+        {
+          displayMonth: displayMonth.value,
+          status: calendarFilterStatus.value,
+          employee: calendarFilterEmployee.value,
+        },
+        formatYearMonth(new Date()),
+      ),
+    })
+  },
+)
 
 onMounted(() => {
   loadEmployees()
-  loadTimeOffRequests()
   loadPendingRequests()
 })
 </script>

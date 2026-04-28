@@ -5,6 +5,7 @@ import {
   patchEmployeeTimeOffRequest,
   postEmployeeTimeOffRequest,
 } from '@/api/index'
+import { formatYearMonth } from '@/utils/date'
 
 export function useTimeOff() {
   async function fetchEmployees() {
@@ -56,11 +57,64 @@ export function useTimeOff() {
     await patchEmployeeTimeOffRequest(id, {status, note,})
   }
 
+  function parseMonthQuery(value) {
+    if (typeof value !== 'string') return null
+    if (value.length !== 7) return null
+
+    const parts = value.split('-')
+    if (parts.length !== 2) return null
+
+    const [yearRaw, monthRaw] = parts
+    if (yearRaw.length !== 4 || monthRaw.length !== 2) return null
+
+    const year = Number(yearRaw)
+    const month = Number(monthRaw)
+
+    if (!Number.isInteger(year) || !Number.isInteger(month)) {
+      return null
+    }
+
+    if (month < 1 || month > 12) {
+      return null
+    }
+
+    return new Date(year, month - 1, 1)
+  }
+
+  function syncFiltersFromQuery(query, fallbackDate = new Date()) {
+    return {
+      displayMonth: parseMonthQuery(query?.month) ?? fallbackDate,
+      status: typeof query?.status === 'string' ? query.status : '',
+      employee: typeof query?.employee === 'string' ? query.employee : '',
+    }
+  }
+
+  function buildQueryFromFilters(filters, defaultMonthKey = formatYearMonth(new Date())) {
+    const query = {}
+    const month = formatYearMonth(filters.displayMonth)
+
+    if (month !== defaultMonthKey) {
+      query.month = month
+    }
+
+    if (filters.status) {
+      query.status = filters.status
+    }
+
+    if (filters.employee) {
+      query.employee = filters.employee
+    }
+
+    return query
+  }
+
   return {
+    buildQueryFromFilters,
     fetchEmployees,
     fetchPendingTimeOffRequests,
     fetchTimeOffRequests,
     saveTimeOffRequests,
+    syncFiltersFromQuery,
     updateTimeOffStatus,
   }
 }
