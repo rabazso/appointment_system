@@ -62,7 +62,7 @@ const props = defineProps({
   },
   dayBadgeBackgroundClass: {
     type: String,
-    default: 'bg-white'
+    default: 'bg-transparent'
   }
 })
 

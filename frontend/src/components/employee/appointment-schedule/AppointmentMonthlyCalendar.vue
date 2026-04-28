@@ -45,7 +45,7 @@ const daysByIso = computed(() => {
 
 function handleDayClick(dateISO) {
   const day = daysByIso.value[dateISO]
-  if (!day || !day.inCurrentMonth || !day.isWorkingDay) {
+  if (!day.inCurrentMonth || !day.isWorkingDay) {
     return
   }
 

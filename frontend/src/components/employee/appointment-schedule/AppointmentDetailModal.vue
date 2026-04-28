@@ -18,25 +18,23 @@ const currentTime = ref(Date.now())
 let currentTimeInterval = null
 
 const hasAppointmentEnded = computed(() => {
-  if (props.appointment?.status !== 'confirmed') {
+  if (props.appointment.status !== 'confirmed') {
     return false
   }
 
   const end = props.appointment.end.getTime()
-
-  return Number.isFinite(end) && currentTime.value >= end
+  return currentTime.value >= end
 })
 
 const canCompleteAppointment = computed(() => hasAppointmentEnded.value)
 const canMarkNoShow = computed(() => hasAppointmentEnded.value)
 const canCancelAppointment = computed(() => {
-  if (!props.isAppointmentCancellable(props.appointment?.status)) {
+  if (!props.isAppointmentCancellable(props.appointment.status)) {
     return false
   }
 
   const start = props.appointment.start.getTime()
-
-  return Number.isFinite(start) && currentTime.value < start
+  return currentTime.value < start
 })
 
 const serviceSummary = computed(() => props.appointment.service)
