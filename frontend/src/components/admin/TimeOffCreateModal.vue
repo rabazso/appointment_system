@@ -71,40 +71,12 @@
               class="grid items-center gap-2"
               :class="{ '[grid-template-columns:minmax(0,1fr)_30px]': form.days.length > 1 }"
             >
-              <PopoverRoot
-                :open="openDayPickerIndex === index"
-                @update:open="(open) => setDayPickerOpen(index, open)"
-              >
-                <PopoverTrigger as-child>
-                  <button
-                    type="button"
-                    class="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-base outline-none transition hover:border-black [font-variant-numeric:tabular-nums] flex items-center justify-between"
-                  >
-                    <span>{{ form.days[index] || 'YYYY-MM-DD' }}</span>
-                    <CalendarIcon class="h-4 w-4 text-slate-500" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverPortal>
-                  <PopoverContent
-                    side="bottom"
-                    align="start"
-                    :side-offset="6"
-                    :collision-padding="12"
-                    position-strategy="fixed"
-                    class="z-[90] w-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
-                  >
-                    <Calendar
-                      :model-value="calendarValue(form.days[index])"
-                      :placeholder="calendarPlaceholder(index)"
-                      layout="month-and-year"
-                      class="rounded-md"
-                      :is-date-disabled="isPastDate"
-                      @update:placeholder="(value) => setCalendarPlaceholder(index, value)"
-                      @update:model-value="(value) => setDayAtIndex(index, value)"
-                    />
-                  </PopoverContent>
-                </PopoverPortal>
-              </PopoverRoot>
+              <input
+                v-model="form.days[index]"
+                type="date"
+                :min="todayISO"
+                class="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-base outline-none transition hover:border-black"
+              />
               <button
                 v-if="form.days.length > 1"
                 type="button"
@@ -150,12 +122,9 @@
 </template>
 
 <script setup>
-import { parseDate } from '@internationalized/date'
 import { computed, reactive, ref } from 'vue'
-import { Calendar as CalendarIcon, X } from 'lucide-vue-next'
-import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
+import { X } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
-import { Calendar } from '@/components/ui/calendar'
 import {
   Select,
   SelectContent,
@@ -186,14 +155,10 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save'])
 const todayISO = new Date().toISOString().slice(0, 10)
-const todayDateValue = parseDate(todayISO)
 
 const form = reactive(createForm())
 const submitted = ref(false)
 const toast = useToastStore()
-const openDayPickerIndex = ref(null)
-const calendarPlaceholders = ref({})
-const calendarDateCache = new Map()
 
 const filledDays = computed(() => form.days.filter(Boolean))
 const filledEmployees = computed(() => form.employees.filter(Boolean))
@@ -222,18 +187,10 @@ function createForm() {
 
 function addDay() {
   form.days.push(todayISO)
-  calendarPlaceholders.value[form.days.length - 1] = todayDateValue
 }
 
 function removeDay(index) {
   form.days.splice(index, 1)
-  calendarPlaceholders.value = {}
-
-  if (openDayPickerIndex.value === index) {
-    openDayPickerIndex.value = null
-  } else if (openDayPickerIndex.value > index) {
-    openDayPickerIndex.value -= 1
-  }
 }
 
 function addEmployee() {
@@ -242,46 +199,6 @@ function addEmployee() {
 
 function removeEmployee(index) {
   form.employees.splice(index, 1)
-}
-
-function calendarValue(value) {
-  if (!value) return undefined
-
-  try {
-    if (!calendarDateCache.has(value)) {
-      calendarDateCache.set(value, parseDate(value))
-    }
-
-    return calendarDateCache.get(value)
-  } catch {
-    return undefined
-  }
-}
-
-function toIsoDate(value) {
-  return value?.toString?.() || ''
-}
-
-function isPastDate(value) {
-  return toIsoDate(value) < todayISO
-}
-
-function calendarPlaceholder(index) {
-  return calendarPlaceholders.value[index] || calendarValue(form.days[index]) || todayDateValue
-}
-
-function setCalendarPlaceholder(index, value) {
-  calendarPlaceholders.value[index] = value
-}
-
-function setDayAtIndex(index, value) {
-  form.days[index] = toIsoDate(value)
-  setCalendarPlaceholder(index, value || todayDateValue)
-  openDayPickerIndex.value = null
-}
-
-function setDayPickerOpen(index, isOpen) {
-  openDayPickerIndex.value = isOpen ? index : (openDayPickerIndex.value === index ? null : openDayPickerIndex.value)
 }
 
 function saveTimeOff() {

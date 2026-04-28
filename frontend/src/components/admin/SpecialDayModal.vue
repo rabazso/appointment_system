@@ -27,38 +27,12 @@
               :key="`special-day-${index}`"
               class="flex items-center gap-2"
             >
-              <PopoverRoot
-                :open="openDayPickerIndex === index"
-                @update:open="(open) => setDayPickerOpen(index, open)"
-              >
-                <PopoverTrigger as-child>
-                  <button
-                    type="button"
-                    class="hover:border-black transition min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 py-2 text-left outline-none [font-variant-numeric:tabular-nums] flex items-center justify-between"
-                  >
-                    <span>{{ form.days[index] || 'YYYY-MM-DD' }}</span>
-                    <CalendarIcon class="h-4 w-4 text-slate-500" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverPortal>
-                  <PopoverContent
-                    side="bottom"
-                    align="start"
-                    :side-offset="6"
-                    :collision-padding="12"
-                    position-strategy="fixed"
-                    class="z-[90] w-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
-                  >
-                    <Calendar
-                      :model-value="calendarValue(form.days[index])"
-                      layout="month-and-year"
-                      class="rounded-md"
-                      :min-value="todayDateValue"
-                      @update:model-value="(value) => setDayAtIndex(index, value)"
-                    />
-                  </PopoverContent>
-                </PopoverPortal>
-              </PopoverRoot>
+              <input
+                v-model="form.days[index]"
+                type="date"
+                :min="todayISO"
+                class="hover:border-black transition min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 py-2 text-left outline-none"
+              />
 
               <button
                 v-if="form.days.length > 1"
@@ -128,13 +102,10 @@
 </template>
 
 <script setup>
-import { parseDate } from '@internationalized/date'
 import { computed, reactive, ref, watch } from 'vue'
-import { Calendar as CalendarIcon, X } from 'lucide-vue-next'
-import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
+import { X } from 'lucide-vue-next'
 import Button from '@/components/admin/Button.vue'
 import ToggleButton from '@/components/admin/ToggleButton.vue'
-import { Calendar } from '@/components/ui/calendar'
 
 const props = defineProps({
   day: {
@@ -160,8 +131,6 @@ const emit = defineEmits(['close', 'save'])
 const form = reactive(createForm(props.day))
 const lookedUpSpecialDays = ref({})
 const todayISO = new Date().toISOString().slice(0, 10)
-const todayDateValue = parseDate(todayISO)
-const openDayPickerIndex = ref(null)
 
 const title = computed(() => (props.mode === 'edit' ? 'Edit special day' : 'Add special day'))
 const initialSnapshot = computed(() => normalizeForm(createForm(props.day)))
@@ -269,35 +238,6 @@ function addDay() {
 
 function removeDay(index) {
   form.days.splice(index, 1)
-
-  if (openDayPickerIndex.value === index) {
-    openDayPickerIndex.value = null
-  } else if (openDayPickerIndex.value > index) {
-    openDayPickerIndex.value -= 1
-  }
-}
-
-function calendarValue(value) {
-  if (!value) return undefined
-
-  try {
-    return parseDate(value)
-  } catch {
-    return undefined
-  }
-}
-
-function toIsoDate(value) {
-  return value?.toString?.() || ''
-}
-
-function setDayAtIndex(index, value) {
-  form.days[index] = toIsoDate(value)
-  openDayPickerIndex.value = null
-}
-
-function setDayPickerOpen(index, isOpen) {
-  openDayPickerIndex.value = isOpen ? index : (openDayPickerIndex.value === index ? null : openDayPickerIndex.value)
 }
 
 function saveDay() {

@@ -94,99 +94,30 @@
 
       <div>
         <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">Date</label>
-        <PopoverRoot v-model:open="isSingleDateOpen">
-          <PopoverTrigger as-child>
-            <button
-              type="button"
-              class="mt-1 flex w-full items-center justify-between [font-variant-numeric:tabular-nums] rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-            >
-              <span>{{ singleDate || 'YYYY-MM-DD' }}</span>
-              <CalendarIcon class="h-4 w-4 text-slate-500" />
-            </button>
-          </PopoverTrigger>
-          <PopoverPortal>
-            <PopoverContent
-              side="bottom"
-              align="start"
-              :side-offset="6"
-              :collision-padding="12"
-              position-strategy="fixed"
-              class="z-[90] w-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
-            >
-              <Calendar
-                :model-value="calendarValue(singleDate)"
-                layout="month-and-year"
-                class="rounded-md"
-                @update:model-value="(value) => setSingleDate(value)"
-              />
-            </PopoverContent>
-          </PopoverPortal>
-        </PopoverRoot>
+        <input
+          v-model="singleDate"
+          type="date"
+          class="mt-1 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+        />
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">From</label>
-          <PopoverRoot v-model:open="isDateFromOpen">
-            <PopoverTrigger as-child>
-              <button
-                type="button"
-                class="mt-1 flex w-full items-center justify-between [font-variant-numeric:tabular-nums] rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-              >
-                <span>{{ model.dateFrom || 'YYYY-MM-DD' }}</span>
-                <CalendarIcon class="h-4 w-4 text-slate-500" />
-              </button>
-            </PopoverTrigger>
-            <PopoverPortal>
-              <PopoverContent
-                side="bottom"
-                align="start"
-                :side-offset="6"
-                :collision-padding="12"
-                position-strategy="fixed"
-                class="z-[90] w-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
-              >
-                <Calendar
-                  :model-value="calendarValue(model.dateFrom)"
-                  layout="month-and-year"
-                  class="rounded-md"
-                  @update:model-value="(value) => setDateFrom(value)"
-                />
-              </PopoverContent>
-            </PopoverPortal>
-          </PopoverRoot>
+          <input
+            v-model="model.dateFrom"
+            type="date"
+            class="mt-1 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+          />
         </div>
 
         <div>
           <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">To</label>
-          <PopoverRoot v-model:open="isDateToOpen">
-            <PopoverTrigger as-child>
-              <button
-                type="button"
-                class="mt-1 flex w-full items-center justify-between [font-variant-numeric:tabular-nums] rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-              >
-                <span>{{ model.dateTo || 'YYYY-MM-DD' }}</span>
-                <CalendarIcon class="h-4 w-4 text-slate-500" />
-              </button>
-            </PopoverTrigger>
-            <PopoverPortal>
-              <PopoverContent
-                side="bottom"
-                align="start"
-                :side-offset="6"
-                :collision-padding="12"
-                position-strategy="fixed"
-                class="z-[90] w-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
-              >
-                <Calendar
-                  :model-value="calendarValue(model.dateTo)"
-                  layout="month-and-year"
-                  class="rounded-md"
-                  @update:model-value="(value) => setDateTo(value)"
-                />
-              </PopoverContent>
-            </PopoverPortal>
-          </PopoverRoot>
+          <input
+            v-model="model.dateTo"
+            type="date"
+            class="mt-1 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+          />
         </div>
       </div>
 
@@ -219,11 +150,8 @@
 </template>
 
 <script setup>
-import { parseDate } from '@internationalized/date'
-import { Calendar as CalendarIcon, X } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
-import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
-import { Calendar } from '@/components/ui/calendar'
+import { X } from 'lucide-vue-next'
+import { computed } from 'vue'
 import {
   Select,
   SelectContent,
@@ -289,41 +217,6 @@ const singleDate = computed({
     props.model.dateTo = value
   },
 })
-
-const isSingleDateOpen = ref(false)
-const isDateFromOpen = ref(false)
-const isDateToOpen = ref(false)
-
-function calendarValue(value) {
-  if (!value) {
-    return undefined
-  }
-
-  try {
-    return parseDate(value)
-  } catch {
-    return undefined
-  }
-}
-
-function toIsoDate(value) {
-  return value?.toString?.() || ''
-}
-
-function setSingleDate(value) {
-  singleDate.value = toIsoDate(value)
-  isSingleDateOpen.value = false
-}
-
-function setDateFrom(value) {
-  props.model.dateFrom = toIsoDate(value)
-  isDateFromOpen.value = false
-}
-
-function setDateTo(value) {
-  props.model.dateTo = toIsoDate(value)
-  isDateToOpen.value = false
-}
 
 function setQuickDate(value) {
   const today = new Date()

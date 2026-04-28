@@ -1,10 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { parseDate } from '@internationalized/date'
-import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
-import { X, Calendar as CalendarIcon } from 'lucide-vue-next'
+import { X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
 import PageLayout from '@/components/PageLayout.vue'
 import { useToastStore } from '@/stores/ToastStore.js'
 import {
@@ -17,16 +14,12 @@ import {
 const requests = ref([])
 const holidays = ref([])
 const showRequestModal = ref(false)
-const isRequestDatePickerOpen = ref(null)
 const viewMode = ref('requests')
 const statusFilter = ref('all')
 const dateOrder = ref('none')
 const todayISO = new Date().toISOString().slice(0, 10)
-const todayDateValue = parseDate(todayISO)
 const form = reactive(createForm())
 const submitted = ref(false)
-const calendarPlaceholders = ref({})
-const calendarDateCache = new Map()
 const toast = useToastStore()
 
 const hasRequests = computed(() => requests.value.length > 0)
@@ -141,7 +134,6 @@ async function submitRequest() {
     form.days = [todayISO]
     form.note = ''
     submitted.value = false
-    calendarPlaceholders.value = {}
     toast.show('Changes saved successfully.')
     await loadRequests()
   } catch {
@@ -163,52 +155,10 @@ function getHolidayStatusClass(isOpen) {
 
 function addDay() {
   form.days.push(todayISO)
-  calendarPlaceholders.value[form.days.length - 1] = todayDateValue
 }
 
 function removeDay(index) {
   form.days.splice(index, 1)
-  calendarPlaceholders.value = {}
-}
-
-function calendarValue(value) {
-  if (!value) return undefined
-
-  try {
-    if (!calendarDateCache.has(value)) {
-      calendarDateCache.set(value, parseDate(value))
-    }
-
-    return calendarDateCache.get(value)
-  } catch {
-    return undefined
-  }
-}
-
-function toIsoDate(value) {
-  return value?.toString?.() || ''
-}
-
-function isPastDate(value) {
-  return toIsoDate(value) < todayISO
-}
-
-function calendarPlaceholder(index) {
-  return calendarPlaceholders.value[index] || calendarValue(form.days[index]) || todayDateValue
-}
-
-function setCalendarPlaceholder(index, value) {
-  calendarPlaceholders.value[index] = value
-}
-
-function setDayAtIndex(index, value) {
-  form.days[index] = toIsoDate(value)
-  setCalendarPlaceholder(index, value || todayDateValue)
-  isRequestDatePickerOpen.value = false
-}
-
-function setDayPickerOpen(index, open) {
-  isRequestDatePickerOpen.value = open ? index : null
 }
 
 function dayHasConflict(day) {
@@ -223,16 +173,12 @@ function openRequestModal() {
   submitted.value = false
   form.days = [todayISO]
   form.note = ''
-  calendarPlaceholders.value = {}
-  isRequestDatePickerOpen.value = null
   showRequestModal.value = true
 }
 
 function closeRequestModal() {
   showRequestModal.value = false
   submitted.value = false
-  calendarPlaceholders.value = {}
-  isRequestDatePickerOpen.value = null
 }
 
 onMounted(async () => {
@@ -406,39 +352,13 @@ onMounted(async () => {
                 class="grid items-center gap-2"
                 :class="{ '[grid-template-columns:minmax(0,1fr)_30px]': form.days.length > 1 }"
               >
-                <PopoverRoot :open="isRequestDatePickerOpen === index" @update:open="(open) => setDayPickerOpen(index, open)">
-                  <PopoverTrigger as-child>
-                    <button
-                      type="button"
-                      class="mt-2 h-11 w-full rounded-lg border bg-white px-3 text-base outline-none transition hover:border-black [font-variant-numeric:tabular-nums] flex items-center justify-between"
-                      :class="dayHasConflict(form.days[index]) ? 'border-rose-500 text-rose-600' : 'border-black/10'"
-                    >
-                      <span>{{ form.days[index] || 'YYYY-MM-DD' }}</span>
-                      <CalendarIcon class="h-4 w-4 text-slate-500" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverPortal>
-                    <PopoverContent
-                      side="bottom"
-                      align="start"
-                      :side-offset="6"
-                      :collision-padding="12"
-                      position-strategy="fixed"
-                      class="z-[90] w-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
-                    >
-                      <Calendar
-                        :model-value="calendarValue(form.days[index])"
-                        :placeholder="calendarPlaceholder(index)"
-                        :paged-navigation="true"
-                        layout="month-and-year"
-                        class="rounded-md"
-                        :is-date-disabled="isPastDate"
-                        @update:placeholder="(value) => setCalendarPlaceholder(index, value)"
-                        @update:model-value="(value) => setDayAtIndex(index, value)"
-                      />
-                    </PopoverContent>
-                  </PopoverPortal>
-                </PopoverRoot>
+                <input
+                  v-model="form.days[index]"
+                  type="date"
+                  :min="todayISO"
+                  class="mt-2 h-11 w-full rounded-lg border bg-white px-3 text-base outline-none transition hover:border-black"
+                  :class="dayHasConflict(form.days[index]) ? 'border-rose-500 text-rose-600' : 'border-black/10'"
+                />
                 <button
                   v-if="form.days.length > 1"
                   type="button"

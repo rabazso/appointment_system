@@ -2,36 +2,14 @@
   <div class="space-y-3">
     <div v-if="!dateDisabled">
       <label class="mr-4 text-sm">Valid from:</label>
-      <PopoverRoot v-model:open="isDateOpen">
-        <PopoverTrigger as-child>
-          <button
-            type="button"
-            class="mt-1 flex min-w-[220px] items-center justify-between rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black [font-variant-numeric:tabular-nums]"
-          >
-            <span>{{ modelValue || 'YYYY-MM-DD' }}</span>
-            <CalendarIcon class="h-4 w-4 text-slate-500" />
-          </button>
-        </PopoverTrigger>
-        <PopoverPortal>
-          <PopoverContent
-            side="bottom"
-            align="start"
-            :side-offset="6"
-            :collision-padding="12"
-            position-strategy="fixed"
-            class="z-[90] w-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
-          >
-            <Calendar
-              :model-value="calendarValue(modelValue)"
-              layout="month-and-year"
-              class="rounded-md"
-              :min-value="calendarValue(min)"
-              :max-value="calendarValue(max)"
-              @update:model-value="setModelDate"
-            />
-          </PopoverContent>
-        </PopoverPortal>
-      </PopoverRoot>
+      <input
+        :value="modelValue"
+        type="date"
+        :min="min || undefined"
+        :max="max || undefined"
+        class="mt-1 min-w-[220px] rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
+        @input="emit('update:modelValue', $event.target.value)"
+      />
     </div>
 
     <div class="flex justify-end gap-3">
@@ -55,12 +33,6 @@
 </template>
 
 <script setup>
-import { parseDate } from '@internationalized/date'
-import { Calendar as CalendarIcon } from 'lucide-vue-next'
-import { ref } from 'vue'
-import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
-import { Calendar } from '@/components/ui/calendar'
-
 const props = defineProps({
   modelValue: {
     type: String,
@@ -89,20 +61,4 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['cancel', 'save', 'update:modelValue'])
-const isDateOpen = ref(false)
-
-function calendarValue(value) {
-  if (!value) return undefined
-
-  try {
-    return parseDate(value)
-  } catch {
-    return undefined
-  }
-}
-
-function setModelDate(value) {
-  emit('update:modelValue', value?.toString?.() || '')
-  isDateOpen.value = false
-}
 </script>
