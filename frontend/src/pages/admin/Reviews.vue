@@ -16,33 +16,39 @@
           </div>
 
           <div v-else class="flex min-h-0 flex-1 flex-col">
-            <div class="mb-4 grid gap-3 xl:grid-cols-[9rem_9rem_14rem]">
+            <div class="mb-4 grid gap-3 xl:grid-cols-[max-content_max-content_max-content] xl:justify-start">
               <div>
                 <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Rating</span>
-                <label class="relative block">
-                  <Star class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <select v-model="filters.minRating" class="w-full appearance-none rounded-xl border border-black/10 bg-white py-3 pl-9 pr-9 text-sm outline-none transition focus:border-black">
-                    <option value="all">All</option>
-                    <option value="5">5+</option>
-                    <option value="4">4+</option>
-                    <option value="3">3+</option>
-                    <option value="2">2+</option>
-                    <option value="1">1+</option>
-                  </select>
-                  <ChevronDown class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <label class="block">
+                  <Select v-model="filters.minRating">
+                    <SelectTrigger class="w-full">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="4">4</SelectItem>
+                      <SelectItem value="3">3</SelectItem>
+                      <SelectItem value="2">2</SelectItem>
+                      <SelectItem value="1">1</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </label>
               </div>
 
               <div>
                 <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Visibility</span>
-                <label class="relative block">
-                  <Eye class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <select v-model="filters.visibility" class="w-full appearance-none rounded-xl border border-black/10 bg-white py-3 pl-9 pr-9 text-sm outline-none transition focus:border-black">
-                    <option value="all">All</option>
-                    <option value="visible">Visible</option>
-                    <option value="hidden">Hidden</option>
-                  </select>
-                  <ChevronDown class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <label class="block">
+                  <Select v-model="filters.visibility">
+                    <SelectTrigger class="w-full">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="visible">Visible</SelectItem>
+                      <SelectItem value="hidden">Hidden</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </label>
               </div>
 
@@ -50,39 +56,16 @@
                 <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Employee</span>
                 <Select v-model="filters.employeeId">
                   <SelectTrigger class="w-full">
-                    <SelectValue :placeholder="selectedEmployee ? selectedEmployee.name : 'All employees'">
-                      <span v-if="selectedEmployee" class="flex items-center gap-2">
-                        <span>{{ selectedEmployee.name }}</span>
-                        <span
-                          v-if="selectedEmployee.rating !== null && selectedEmployee.rating !== undefined"
-                          class="inline-flex items-center gap-1 text-slate-500"
-                        >
-                          <Star class="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                          {{ formatRating(selectedEmployee.rating) }}
-                        </span>
-                      </span>
-                    </SelectValue>
+                    <SelectValue placeholder="All employees" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">
-                      All employees
-                    </SelectItem>
+                    <SelectItem value="all">All employees</SelectItem>
                     <SelectItem
-                      v-for="employee in employeeOptions"
-                      :key="employee.id"
-                      :value="String(employee.id)"
-                      :text-value="`${employee.name} ${employee.rating !== null && employee.rating !== undefined ? formatRating(employee.rating) : ''}`"
-                    >
-                      <span class="flex items-center gap-2">
-                        <span>{{ employee.name }}</span>
-                        <span
-                          v-if="employee.rating !== null && employee.rating !== undefined"
-                          class="inline-flex items-center gap-1 text-slate-500"
-                        >
-                          <Star class="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                          {{ formatRating(employee.rating) }}
-                        </span>
-                      </span>
+                    v-for="employee in employeeOptions"
+                    :key="employee.id"
+                    :value="String(employee.id)"
+                  >
+                    {{ employee.name }}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -149,7 +132,6 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Eye, Star, ChevronDown } from 'lucide-vue-next'
 import Header from '@/components/admin/Header.vue'
 import Sidebar from '@/components/admin/Sidebar.vue'
 import ReviewCard from '@/components/ReviewCard.vue'
@@ -179,14 +161,6 @@ const {
 } = useAdminReviews()
 
 const originalReviews = ref([])
-
-const selectedEmployee = computed(() => {
-  if (filters.employeeId === 'all') return null
-
-  return employeeOptions.value.find(
-    (employee) => String(employee.id) === String(filters.employeeId),
-  ) ?? null
-})
 
 const dirtyReviews = computed(() =>
   reviews.value.filter((review) => review._dirty),
@@ -277,11 +251,6 @@ watch(
   },
   { immediate: true },
 )
-
-function formatRating(value) {
-  const rating = Number(value)
-  return Number.isFinite(rating) ? rating.toFixed(1) : '0.0'
-}
 
 function formatReviewDate(value) {
   return value ? String(value).slice(0, 10) : ''

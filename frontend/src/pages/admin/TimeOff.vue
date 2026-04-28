@@ -60,22 +60,32 @@
 
             <div class="ml-auto flex flex-wrap items-end justify-end gap-2">
               <div class="relative">
-                <select v-model="calendarFilterStatus" class="min-h-11 appearance-none rounded-2xl font-medium border border-black/10 bg-white shadow-sm outline-none transition px-4 hover:border-black">
-                  <option value="">All statuses</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
+                <Select v-model="calendarFilterStatusSelect">
+                  <SelectTrigger class="min-h-11 rounded-2xl border-black/10 bg-white px-4 font-medium shadow-sm">
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem :value="ALL_SELECT_VALUE">All statuses</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div class="relative">
-                <select v-model="calendarFilterEmployee" class="min-h-11 appearance-none rounded-2xl font-medium border border-black/10 bg-white  shadow-sm outline-none transition px-4 hover:border-black">
-                  <option value="">All employees</option>
-                  <option v-for="employee in employeeOptions" :key="employee.id" :value="employee.name">
-                    {{ employee.name }}
-                  </option>
-                </select>
+                <Select v-model="calendarFilterEmployeeSelect">
+                  <SelectTrigger class="min-h-11 rounded-2xl border-black/10 bg-white px-4 font-medium shadow-sm">
+                    <SelectValue placeholder="All employees" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem :value="ALL_SELECT_VALUE">All employees</SelectItem>
+                    <SelectItem v-for="employee in employeeOptions" :key="employee.id" :value="employee.name">
+                      {{ employee.name }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -169,11 +179,19 @@ import Sidebar from '@/components/admin/Sidebar.vue'
 import CalendarView from '@/components/admin/calendar/CalendarView.vue'
 import TimeOffCreateModal from '@/components/admin/TimeOffCreateModal.vue'
 import TimeOffDayModal from '@/components/admin/TimeOffDayModal.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { formatYearMonth, shiftMonth, toISO } from '@/utils/date'
 import { useTimeOff } from '@/composables/useTimeOff'
 import { useToastStore } from '@/stores/ToastStore.js'
 
 const sidebarOpen = ref(false)
+const ALL_SELECT_VALUE = '__all__'
 const viewMode = ref('calendar')
 const displayMonth = ref(new Date())
 const calendarFilterStatus = ref('')
@@ -204,6 +222,20 @@ const monthLabel = computed(() =>
 
 const filteredRequests = computed(() => {
   return pendingRequests.value
+})
+
+const calendarFilterStatusSelect = computed({
+  get: () => (calendarFilterStatus.value === '' ? ALL_SELECT_VALUE : calendarFilterStatus.value),
+  set: (value) => {
+    calendarFilterStatus.value = value === ALL_SELECT_VALUE ? '' : value
+  },
+})
+
+const calendarFilterEmployeeSelect = computed({
+  get: () => (calendarFilterEmployee.value === '' ? ALL_SELECT_VALUE : calendarFilterEmployee.value),
+  set: (value) => {
+    calendarFilterEmployee.value = value === ALL_SELECT_VALUE ? '' : value
+  },
 })
 
 const calendarRequests = computed(() => {

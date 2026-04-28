@@ -31,40 +31,50 @@
 
       <div>
         <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">Service</label>
-        <select
-          v-model="model.serviceId"
-          class="mt-1 w-full appearance-none rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-        >
-          <option value="">All services</option>
-          <option v-for="service in services" :key="service.id" :value="String(service.id)">
-            {{ service.name }}
-          </option>
-        </select>
+        <Select v-model="serviceIdSelect">
+          <SelectTrigger class="mt-1 w-full rounded-xl border-black/10 bg-white px-3 py-2 text-sm">
+            <SelectValue placeholder="All services" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem :value="ALL_SELECT_VALUE">All services</SelectItem>
+            <SelectItem v-for="service in services" :key="service.id" :value="String(service.id)">
+              {{ service.name }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
         <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">Employee</label>
-        <select
-          v-model="model.employeeId"
-          class="mt-1 w-full appearance-none rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-        >
-          <option value="">All employees</option>
-          <option v-for="employee in employees" :key="employee.id" :value="String(employee.id)">
-            {{ employee.name }}
-          </option>
-        </select>
+        <Select v-model="employeeIdSelect">
+          <SelectTrigger class="mt-1 w-full rounded-xl border-black/10 bg-white px-3 py-2 text-sm">
+            <SelectValue placeholder="All employees" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem :value="ALL_SELECT_VALUE">All employees</SelectItem>
+            <SelectItem v-for="employee in employees" :key="employee.id" :value="String(employee.id)">
+              {{ employee.name }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
         <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">Status</label>
-        <select
-          v-model="model.status"
-          class="mt-1 w-full appearance-none rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-        >
-          <option v-for="option in statusOptions" :key="option.value || 'all'" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
+        <Select v-model="statusSelect">
+          <SelectTrigger class="mt-1 w-full rounded-xl border-black/10 bg-white px-3 py-2 text-sm">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="option in statusOptions"
+              :key="option.value || 'all'"
+              :value="option.value === '' ? ALL_SELECT_VALUE : option.value"
+            >
+              {{ option.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
@@ -183,21 +193,25 @@
       <div>
         <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">Order by</label>
         <div class="mt-2 grid grid-cols-2 gap-2">
-          <select
-            v-model="model.orderBy"
-            class="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-          >
-            <option value="start_datetime">Date & time</option>
-            <option value="created_at">Created at</option>
-          </select>
+          <Select v-model="model.orderBy">
+            <SelectTrigger class="w-full rounded-xl border-black/10 bg-white px-3 py-2 text-sm">
+              <SelectValue placeholder="Date & time" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="start_datetime">Date & time</SelectItem>
+              <SelectItem value="created_at">Created at</SelectItem>
+            </SelectContent>
+          </Select>
 
-          <select
-            v-model="model.orderDirection"
-            class="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm outline-none transition hover:border-black"
-          >
-            <option value="desc">Desc</option>
-            <option value="asc">Asc</option>
-          </select>
+          <Select v-model="model.orderDirection">
+            <SelectTrigger class="w-full rounded-xl border-black/10 bg-white px-3 py-2 text-sm">
+              <SelectValue placeholder="Desc" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Desc</SelectItem>
+              <SelectItem value="asc">Asc</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
@@ -210,6 +224,13 @@ import { Calendar as CalendarIcon, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import { Calendar } from '@/components/ui/calendar'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 const emit = defineEmits(['reset', 'close'])
 
@@ -229,6 +250,29 @@ const props = defineProps({
   statusOptions: {
     type: Array,
     required: true,
+  },
+})
+
+const ALL_SELECT_VALUE = '__all__'
+
+const serviceIdSelect = computed({
+  get: () => (props.model.serviceId === '' ? ALL_SELECT_VALUE : props.model.serviceId),
+  set: (value) => {
+    props.model.serviceId = value === ALL_SELECT_VALUE ? '' : value
+  },
+})
+
+const employeeIdSelect = computed({
+  get: () => (props.model.employeeId === '' ? ALL_SELECT_VALUE : props.model.employeeId),
+  set: (value) => {
+    props.model.employeeId = value === ALL_SELECT_VALUE ? '' : value
+  },
+})
+
+const statusSelect = computed({
+  get: () => (props.model.status === '' ? ALL_SELECT_VALUE : props.model.status),
+  set: (value) => {
+    props.model.status = value === ALL_SELECT_VALUE ? '' : value
   },
 })
 

@@ -19,15 +19,16 @@
               class="grid items-center gap-2"
               :class="{ '[grid-template-columns:minmax(0,1fr)_30px]': form.employees.length > 1 }"
             >
-              <select
-                v-model="form.employees[index]"
-                class="w-full appearance-none rounded-lg border border-black/10 bg-white px-3 py-2 text-base outline-none transition hover:border-black"
-              >
-                <option disabled value="">Select employee</option>
-                <option v-for="employee in employees" :key="employee.id" :value="employee.id">
-                  {{ employee.name }}
-                </option>
-              </select>
+              <Select v-model="form.employees[index]">
+                <SelectTrigger class="w-full rounded-lg border-black/10 bg-white px-3 py-2 text-base">
+                  <SelectValue placeholder="Select employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="employee in employees" :key="employee.id" :value="String(employee.id)">
+                    {{ employee.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
 
               <button
                 v-if="form.employees.length > 1"
@@ -144,6 +145,13 @@ import { Calendar as CalendarIcon, X } from 'lucide-vue-next'
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import Button from '@/components/admin/Button.vue'
 import { Calendar } from '@/components/ui/calendar'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useToastStore } from '@/stores/ToastStore.js'
 
 const props = defineProps({
