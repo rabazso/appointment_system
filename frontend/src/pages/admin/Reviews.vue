@@ -21,7 +21,7 @@
                 <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Rating</span>
                 <label class="block">
                   <Select v-model="filters.minRating">
-                    <SelectTrigger class="w-full">
+                    <SelectTrigger>
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
                     <SelectContent>
@@ -40,7 +40,7 @@
                 <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Visibility</span>
                 <label class="block">
                   <Select v-model="filters.visibility">
-                    <SelectTrigger class="w-full">
+                    <SelectTrigger>
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
                     <SelectContent>
@@ -55,7 +55,7 @@
               <div>
                 <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Employee</span>
                 <Select v-model="filters.employeeId">
-                  <SelectTrigger class="w-full">
+                  <SelectTrigger>
                     <SelectValue placeholder="All employees" />
                   </SelectTrigger>
                   <SelectContent>

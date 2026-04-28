@@ -32,7 +32,7 @@
       <div>
         <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">Service</label>
         <Select v-model="serviceIdSelect">
-          <SelectTrigger class="mt-1 w-full rounded-xl border-black/10 bg-white px-3 py-2 text-sm">
+          <SelectTrigger>
             <SelectValue placeholder="All services" />
           </SelectTrigger>
           <SelectContent>
@@ -47,7 +47,7 @@
       <div>
         <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">Employee</label>
         <Select v-model="employeeIdSelect">
-          <SelectTrigger class="mt-1 w-full rounded-xl border-black/10 bg-white px-3 py-2 text-sm">
+          <SelectTrigger>
             <SelectValue placeholder="All employees" />
           </SelectTrigger>
           <SelectContent>
@@ -62,7 +62,7 @@
       <div>
         <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">Status</label>
         <Select v-model="statusSelect">
-          <SelectTrigger class="mt-1 w-full rounded-xl border-black/10 bg-white px-3 py-2 text-sm">
+          <SelectTrigger>
             <SelectValue placeholder="All" />
           </SelectTrigger>
           <SelectContent>
@@ -194,7 +194,7 @@
         <label class="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">Order by</label>
         <div class="mt-2 grid grid-cols-2 gap-2">
           <Select v-model="model.orderBy">
-            <SelectTrigger class="w-full rounded-xl border-black/10 bg-white px-3 py-2 text-sm">
+            <SelectTrigger>
               <SelectValue placeholder="Date & time" />
             </SelectTrigger>
             <SelectContent>
@@ -204,7 +204,7 @@
           </Select>
 
           <Select v-model="model.orderDirection">
-            <SelectTrigger class="w-full rounded-xl border-black/10 bg-white px-3 py-2 text-sm">
+            <SelectTrigger>
               <SelectValue placeholder="Desc" />
             </SelectTrigger>
             <SelectContent>

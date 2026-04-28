@@ -20,7 +20,7 @@
               :class="{ '[grid-template-columns:minmax(0,1fr)_30px]': form.employees.length > 1 }"
             >
               <Select v-model="form.employees[index]">
-                <SelectTrigger class="w-full rounded-lg border-black/10 bg-white px-3 py-2 text-base">
+                <SelectTrigger>
                   <SelectValue placeholder="Select employee" />
                 </SelectTrigger>
                 <SelectContent>
