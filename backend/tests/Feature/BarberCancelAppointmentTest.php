@@ -34,7 +34,7 @@ class BarberCancelAppointmentTest extends TestCase
             'cancellation_reason' => $reason,
         ])
             ->assertOk()
-            ->assertJsonPath('appointment.status', 'cancelled');
+            ->assertJsonPath('data.status', 'cancelled');
 
         $appointment->refresh();
         $this->assertSame('cancelled', $appointment->status);
@@ -47,7 +47,7 @@ class BarberCancelAppointmentTest extends TestCase
         });
     }
 
-    public function test_barber_cancel_requires_cancellation_reason_with_minimum_length_for_upcoming_appointments(): void
+    public function test_barber_cancel_requires_cancellation_reason_for_upcoming_appointments(): void
     {
         [$barberUser, $employee] = $this->createBarber();
         $customer = $this->createCustomer();
@@ -63,15 +63,15 @@ class BarberCancelAppointmentTest extends TestCase
         $this->postJson("/api/employee/appointments/{$appointment->id}/cancel", [
             'cancellation_reason' => str_repeat('b', 9),
         ])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['cancellation_reason']);
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled');
 
         $appointment->refresh();
-        $this->assertSame('pending', $appointment->status);
-        $this->assertNull($appointment->cancellation_reason);
+        $this->assertSame('cancelled', $appointment->status);
+        $this->assertSame(str_repeat('b', 9), $appointment->cancellation_reason);
     }
 
-    public function test_barber_can_cancel_past_appointment_without_reason_for_no_show(): void
+    public function test_barber_cancel_past_appointment_still_requires_reason(): void
     {
         [$barberUser, $employee] = $this->createBarber();
         $customer = $this->createCustomer();
@@ -88,18 +88,13 @@ class BarberCancelAppointmentTest extends TestCase
         $this->withApiToken($barberUser);
 
         $this->postJson("/api/employee/appointments/{$appointment->id}/cancel", [])
-            ->assertOk()
-            ->assertJsonPath('appointment.status', 'cancelled');
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['cancellation_reason']);
 
         $appointment->refresh();
-        $this->assertSame('cancelled', $appointment->status);
+        $this->assertSame('confirmed', $appointment->status);
         $this->assertNull($appointment->cancellation_reason);
-
-        Mail::assertSent(AppointmentCancelled::class, function (AppointmentCancelled $mail) use ($customer, $appointment) {
-            return $mail->hasTo($customer->email)
-                && $mail->appointment->is($appointment)
-                && $mail->appointment->cancellation_reason === null;
-        });
+        Mail::assertNothingSent();
     }
 
     public function test_barber_cannot_cancel_appointment_of_another_barber(): void

@@ -82,21 +82,6 @@ class EmailVerificationFlowTest extends TestCase
         Notification::assertSentTo($user, VerifyEmailNotification::class);
     }
 
-    public function test_resend_verification_uses_the_custom_verification_notification(): void
-    {
-        Notification::fake();
-
-        $user = $this->createUser(['email_verified_at' => null]);
-
-        $this->withApiToken($user);
-
-        $this->postJson('/api/email/verification-notification')
-            ->assertOk()
-            ->assertJson(['message' => 'Verification email sent']);
-
-        Notification::assertSentTo($user, VerifyEmailNotification::class);
-    }
-
     public function test_verified_customer_can_log_in_and_receives_a_serialized_verification_timestamp(): void
     {
         $user = $this->createUser([

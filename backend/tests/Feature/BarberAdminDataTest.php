@@ -34,11 +34,11 @@ class BarberAdminDataTest extends TestCase
 
         $this->getJson('/api/employee/appointments')
             ->assertOk()
-            ->assertJsonPath('0.id', $appointment->id)
-            ->assertJsonPath('0.client', $customer->name)
-            ->assertJsonPath('0.service', $service->name)
-            ->assertJsonPath('0.status', 'confirmed')
-            ->assertJsonPath('0.start_datetime', $appointment->fresh()->start_datetime?->toIso8601String());
+            ->assertJsonPath('data.0.id', $appointment->id)
+            ->assertJsonPath('data.0.client', $customer->name)
+            ->assertJsonPath('data.0.service', $service->name)
+            ->assertJsonPath('data.0.status', 'confirmed')
+            ->assertJsonPath('data.0.start_datetime', $appointment->fresh()->start_datetime?->toIso8601String());
     }
 
     public function test_barber_profile_endpoint_returns_employee_name_and_image_urls(): void
@@ -117,9 +117,9 @@ class BarberAdminDataTest extends TestCase
 
         $this->getJson('/api/employee/reviews')
             ->assertOk()
-            ->assertJsonPath('0.client', $customer->name)
-            ->assertJsonPath('0.rating', 5)
-            ->assertJsonPath('0.text', 'Great barber.');
+            ->assertJsonPath('data.0.client', $customer->name)
+            ->assertJsonPath('data.0.rating', 5)
+            ->assertJsonPath('data.0.comment', 'Great barber.');
     }
 
     private function createBarber(array $employeeOverrides = []): array

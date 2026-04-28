@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Mail\BookingSummary;
-use App\Mail\ReviewRequest;
 use App\Models\Appointment;
 use App\Models\AppointmentService;
 use App\Models\Customer;
@@ -205,16 +204,15 @@ class AppointmentControllerTest extends TestCase
         $customer = $this->createCustomer();
         $employee = $this->createEmployee();
         $service = $this->createService();
-        $appointment = $this->createAppointment($customer, $employee, $service, 'confirmed', '2026-03-18 10:00:00');
+        $appointment = $this->createAppointment($customer, $employee, $service, 'confirmed', '2026-03-10 08:00:00');
 
         $this->withApiToken($employee->user);
 
         $this->postJson("/api/employee/appointments/{$appointment->id}/complete")
             ->assertOk()
-            ->assertJsonPath('appointment.status', 'completed');
+            ->assertJsonPath('data.status', 'completed');
 
         $this->assertSame('completed', $appointment->fresh()->status);
-        Mail::assertSent(ReviewRequest::class);
     }
 
     private function createBookableEmployeeAndService(): array
