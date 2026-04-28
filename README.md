@@ -97,3 +97,5 @@ docker compose down -v
     - https://www.figma.com/design/N1b9XKxpfRqADkj0BSPut2/Appointment_system_Contacts?node-id=0-1&t=JKIQJ3ntb9OVvsOd-1
     - https://www.figma.com/design/RCk9qOHnUlyXwd3OEAtfnp/Appointment_system?node-id=106-2&t=42EUqwyHLpQoSOQw-1
     - https://www.figma.com/design/OExiQWelH4z2fcJBK4kptC/Appointment_system_mobile_view?node-id=0-1&t=ipiEFPSaM4f2PNXq-1
+
+Munkamegosztas: https://trello.com/b/Pgrl8nTC/appointmentsystem
